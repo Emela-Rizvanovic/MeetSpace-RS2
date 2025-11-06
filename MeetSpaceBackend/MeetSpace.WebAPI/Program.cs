@@ -1,25 +1,64 @@
-var builder = WebApplication.CreateBuilder(args);
+using MeetSpace.Services.Database;
+using MeetSpace.Services.Interfaces;
+using MeetSpace.Services.Mapping;
+using AutoMapper;
+using MeetSpace.Services.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
-// Add services to the container.
-
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+internal class Program
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    private static void Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+
+        // DbContext
+        builder.Services.AddDbContext<MeetSpaceDbContext>(options =>
+            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+        );
+
+        // Registracija servisa
+        builder.Services.AddScoped<ISpaceService, SpaceService>();
+        builder.Services.AddScoped<IFacilityService, FacilityService>();
+        builder.Services.AddScoped<ISpaceTypeService, SpaceTypeService>();
+        builder.Services.AddScoped<IAmenityCategoryService, AmenityCategoryService>();
+        builder.Services.AddScoped<IAmenityService, AmenityService>();
+        builder.Services.AddScoped<IReportTypeService, ReportTypeService>();
+        builder.Services.AddScoped<IRoleService, RoleService>();
+
+        // Registracija AutoMappera
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<SpaceProfile>());
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<FacilityProfile>());
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<SpaceTypeProfile>());
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<AmenityCategoryProfile>());
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<AmenityProfile>());
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<ReportTypeProfile>());
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<RoleProfile>());
+
+
+        // Add controllers
+        builder.Services.AddControllers();
+
+        // Swagger/OpenAPI
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
+
+        var app = builder.Build();
+
+        // Configure the HTTP request pipeline
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+
+        app.UseHttpsRedirection();
+
+        // Za sada auth možemo ignorisati dok testiramo
+        // app.UseAuthorization();
+
+        app.MapControllers();
+
+        app.Run();
+    }
 }
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
