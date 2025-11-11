@@ -25,6 +25,7 @@ internal class Program
         builder.Services.AddScoped<IAmenityService, AmenityService>();
         builder.Services.AddScoped<IReportTypeService, ReportTypeService>();
         builder.Services.AddScoped<IRoleService, RoleService>();
+        builder.Services.AddScoped<IUserService, UserService>();
 
         // Registracija AutoMappera
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<SpaceProfile>());
@@ -34,6 +35,7 @@ internal class Program
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<AmenityProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<ReportTypeProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<RoleProfile>());
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<UserProfile>());
 
 
         // Add controllers
