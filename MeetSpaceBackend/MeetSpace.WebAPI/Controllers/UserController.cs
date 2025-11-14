@@ -3,6 +3,7 @@ using MeetSpace.Models.Responses;
 using MeetSpace.Models.SearchObjects;
 using MeetSpace.Services.Interfaces;
 using MeetSpace.WebAPI.BaseControllers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MeetSpace.WebAPI.Controllers
@@ -18,9 +19,51 @@ namespace MeetSpace.WebAPI.Controllers
             _userService = service;
         }
 
-        // Minimalni CRUD koristi BaseCRUDController
-        // Za sada nema dodatnih custom metoda
-        // Kada bude potrebno, možemo dodati npr. pretragu po datumu, kapacitetu, tipovima prostora, upload slika itd.
+        [AllowAnonymous] 
+        [HttpPost("login")]
+        public async Task<ActionResult<UserResponse>> Login(UserLoginRequest request, CancellationToken cancellationToken)
+        {
+            var user = await _userService.AuthenticateUser(request, cancellationToken);
+
+            if (user == null)
+                return Unauthorized("Invalid username or password.");
+
+            return Ok(user);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("admin-login")]
+        public async Task<ActionResult<UserResponse>> AdminLogin([FromBody] UserLoginRequest request, CancellationToken ct)
+        {
+            try
+            {
+                var user = await _userService.AuthenticateAdmin(request, ct);
+                return Ok(user);
+            }
+            catch (Exception ex)
+            {
+                return Unauthorized(ex.Message);
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] UserInsertRequest request, CancellationToken ct)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var response = await _userService.RegisterAsync(request, ct);
+                return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
+            }
+            catch (ArgumentException ex)
+            {
+                return Conflict(ex.Message);
+            }
+        }
+
 
         // TO-DO 
         // azurirati ga kao i sve kad dodje vrijeme

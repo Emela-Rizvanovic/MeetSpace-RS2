@@ -1,7 +1,8 @@
+using AutoMapper;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
 using MeetSpace.Services.Mapping;
-using AutoMapper;
+using MeetSpace.Services.Security;
 using MeetSpace.Services.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +27,8 @@ internal class Program
         builder.Services.AddScoped<IReportTypeService, ReportTypeService>();
         builder.Services.AddScoped<IRoleService, RoleService>();
         builder.Services.AddScoped<IUserService, UserService>();
+        builder.Services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
+
 
         // Registracija AutoMappera
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<SpaceProfile>());
