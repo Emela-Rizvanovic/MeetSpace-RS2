@@ -28,6 +28,7 @@ internal class Program
         builder.Services.AddScoped<IRoleService, RoleService>();
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
+        builder.Services.AddScoped<IBlobService, BlobService>();
 
 
         // Registracija AutoMappera

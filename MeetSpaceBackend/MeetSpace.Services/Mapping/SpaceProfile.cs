@@ -18,13 +18,17 @@ namespace MeetSpace.Services.Mapping
             CreateMap<Space, SpaceResponse>();
 
             // InsertRequest -> Entity
-            CreateMap<SpaceInsertRequest, Space>();
+            CreateMap<SpaceInsertRequest, Space>()
+                 .ForMember(dest => dest.Images, opt => opt.Ignore());
 
             // UpdateRequest -> Entity
             CreateMap<SpaceUpdateRequest, Space>()
                 // Ignoriramo Id i CreatedAt da se ne prepišu
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.Images, opt => opt.Ignore());
+
+            CreateMap<SpaceImage, SpaceImageResponse>();
         }
     }
 }

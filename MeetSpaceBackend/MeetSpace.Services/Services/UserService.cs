@@ -13,10 +13,13 @@ using System.Threading;
 public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User, UserInsertRequest, UserUpdateRequest>, IUserService
 {
     private readonly IPasswordHasher _passwordHasher;
-    public UserService(MeetSpaceDbContext context, IMapper mapper, IPasswordHasher passwordHasher)
+    private readonly IBlobService _blobService;
+
+    public UserService(MeetSpaceDbContext context, IMapper mapper, IPasswordHasher passwordHasher, IBlobService blobService)
         : base(context, mapper)
     {
         _passwordHasher = passwordHasher;
+        _blobService = blobService;
     }
     
     protected override IQueryable<User> ApplyFilter(IQueryable<User> query, UserSearchObject search)
@@ -71,6 +74,11 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
 
         await BeforeInsert(entity, request, cancellationToken);
 
+        if (request.ProfileImageUrl != null)
+        {
+            entity.ProfileImageUrl = await _blobService.UploadUserImageAsync(request.ProfileImageUrl);
+        }
+
         _context.Users.Add(entity);
         await _context.SaveChangesAsync(cancellationToken);
 
@@ -86,7 +94,45 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
 
         await BeforeUpdate(entity, request, cancellationToken);
 
-        _mapper.Map(request, entity);
+        if (!string.IsNullOrWhiteSpace(request.FirstName))
+            entity.FirstName = request.FirstName;
+
+        if (!string.IsNullOrWhiteSpace(request.LastName))
+            entity.LastName = request.LastName;
+
+        if (!string.IsNullOrWhiteSpace(request.Email))
+            entity.Email = request.Email;
+
+        if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
+            entity.PhoneNumber = request.PhoneNumber;
+
+        if (!string.IsNullOrWhiteSpace(request.Username))
+            entity.Username = request.Username;
+
+        if (request.RoleId.HasValue)
+            entity.RoleId = request.RoleId.Value;
+
+        if (request.IsActive.HasValue)
+            entity.IsActive = request.IsActive.Value;
+
+        if (!string.IsNullOrWhiteSpace(request.Password))
+            entity.PasswordHash = _passwordHasher.Hash(request.Password);
+
+        // Upload nove slike samo ako je zaista poslana (file != null && ima sadržaj)
+        if (request.ProfileImageUrl != null && request.ProfileImageUrl.Length > 0)
+        {
+            // Upload nove slike
+            var newUrl = await _blobService.UploadUserImageAsync(request.ProfileImageUrl);
+
+            // Brisanje stare slike da se ne zauzima storage
+            if (!string.IsNullOrEmpty(entity.ProfileImageUrl))
+                await _blobService.DeleteUserImageAsync(entity.ProfileImageUrl);
+
+            entity.ProfileImageUrl = newUrl;
+        }
+
+        entity.UpdatedAt = DateTime.UtcNow;
+
         await _context.SaveChangesAsync(cancellationToken);
 
         entity = await GetUserWithRoleAsync(id, cancellationToken);

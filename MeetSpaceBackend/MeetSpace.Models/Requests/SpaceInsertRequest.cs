@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,8 @@ namespace MeetSpace.Models.Requests
         public int Capacity { get; set; }
         public int FacilityId { get; set; }
         public int SpaceTypeId { get; set; }
+
+        public List<IFormFile>? Images { get; set; }
 
         // TO-DO
         // uploadati slika ili amenities - dodati kasnije.

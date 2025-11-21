@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,7 +19,7 @@ namespace MeetSpace.Models.Requests
         public string Password { get; set; } = string.Empty;
 
         public string? PhoneNumber { get; set; }
-        public string? ProfileImageUrl { get; set; }
+        public IFormFile? ProfileImageUrl { get; set; }
 
         public bool IsActive { get; set; } = true;
     }

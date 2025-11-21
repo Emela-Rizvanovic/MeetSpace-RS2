@@ -16,6 +16,8 @@ namespace MeetSpace.Models.Responses
         public int FacilityId { get; set; }
         public int SpaceTypeId { get; set; }
 
+        public List<SpaceImageResponse> Images { get; set; } = new();
+
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 

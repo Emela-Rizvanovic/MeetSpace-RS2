@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,12 @@ namespace MeetSpace.Models.Requests
         public int? Capacity { get; set; }
         public int? FacilityId { get; set; }
         public int? SpaceTypeId { get; set; }
+
+        // Dodavanje novih slika
+        public List<IFormFile>? NewImages { get; set; }
+
+        // Brisanje postojećih slika po ID-u
+        public List<int>? DeleteImageIds { get; set; }
 
         // UpdatedAt NE unosi user, to će servis automatski postaviti.
 
