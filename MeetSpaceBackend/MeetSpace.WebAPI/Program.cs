@@ -58,7 +58,7 @@ internal class Program
             app.UseSwaggerUI();
         }
 
-        app.UseHttpsRedirection();
+        //app.UseHttpsRedirection();
 
         // Za sada auth možemo ignorisati dok testiramo
         // app.UseAuthorization();
