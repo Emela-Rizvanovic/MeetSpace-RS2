@@ -48,10 +48,15 @@ namespace MeetSpace.WebAPI.Controllers
 
         [AllowAnonymous]
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] UserInsertRequest request, CancellationToken ct)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> Register([FromForm] UserInsertRequest request, CancellationToken ct)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage).ToList();
+                return BadRequest(errors);
+            }
 
             try
             {
@@ -63,6 +68,7 @@ namespace MeetSpace.WebAPI.Controllers
                 return Conflict(ex.Message);
             }
         }
+
 
         [HttpPost]
         [Consumes("multipart/form-data")]

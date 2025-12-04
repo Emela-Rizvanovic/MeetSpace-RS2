@@ -187,6 +187,7 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
 
     public async Task<UserResponse> RegisterAsync(UserInsertRequest request, CancellationToken ct)
     {
+        // provjera username i email
         bool usernameExists = await _context.Users.AnyAsync(u => u.Username == request.Username, ct);
         if (usernameExists)
             throw new ArgumentException("Username already exists.");
@@ -195,15 +196,9 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
         if (emailExists)
             throw new ArgumentException("Email already exists.");
 
-        var userEntity = _mapper.Map<User>(request);
-
-        userEntity.PasswordHash = _passwordHasher.Hash(request.Password);
-
-        _context.Users.Add(userEntity);
-        await _context.SaveChangesAsync(ct);
-
-        userEntity = await GetUserWithRoleAsync(userEntity.Id, ct);
-        return _mapper.Map<UserResponse>(userEntity);
+        // direktno koristi već postojeći CreateAsync
+        return await CreateAsync(request, ct);
     }
+
 
 }
