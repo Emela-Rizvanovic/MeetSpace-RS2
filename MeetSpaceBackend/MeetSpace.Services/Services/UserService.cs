@@ -1,12 +1,15 @@
 ﻿using AutoMapper;
 using MeetSpace.Models.Entities;
+using MeetSpace.Models.Messages;
 using MeetSpace.Models.Requests;
 using MeetSpace.Models.Responses;
 using MeetSpace.Models.SearchObjects;
 using MeetSpace.Services.BaseServices;
 using MeetSpace.Services.Database;
+using MeetSpace.Services.Database.Entities;
 using MeetSpace.Services.Interfaces;
 using MeetSpace.Services.Security;
+using MeetSpace.Services.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Threading;
 
@@ -14,14 +17,16 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
 {
     private readonly IPasswordHasher _passwordHasher;
     private readonly IBlobService _blobService;
+    private readonly IRabbitMQService _rabbitMQService;
 
-    public UserService(MeetSpaceDbContext context, IMapper mapper, IPasswordHasher passwordHasher, IBlobService blobService)
+    public UserService(MeetSpaceDbContext context, IMapper mapper, IPasswordHasher passwordHasher, IBlobService blobService, IRabbitMQService rabbitMQService)
         : base(context, mapper)
     {
         _passwordHasher = passwordHasher;
         _blobService = blobService;
+        _rabbitMQService = rabbitMQService;
     }
-    
+
     protected override IQueryable<User> ApplyFilter(IQueryable<User> query, UserSearchObject search)
     {
         if (!string.IsNullOrWhiteSpace(search.FirstName))
@@ -165,7 +170,7 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
         return _mapper.Map<UserResponse>(user);
     }
 
-    public async Task<UserResponse> AuthenticateAdmin(UserLoginRequest request, CancellationToken ct = default)
+    public async Task<UserResponse?> AuthenticateAdmin(UserLoginRequest request, CancellationToken ct = default)
     {
         var user = await _context.Users
             .Include(u => u.Role)
@@ -198,6 +203,119 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
 
         // direktno koristi već postojeći CreateAsync
         return await CreateAsync(request, ct);
+    }
+
+
+    public async Task<ForgotPasswordResponse> RequestPasswordResetAsync(ForgotPasswordRequest request, CancellationToken ct = default)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email, ct);
+        if (user == null)
+        {
+            // Don't reveal that email doesn't exist for security
+            return new ForgotPasswordResponse
+            {
+                Success = true,
+                Message = "If the email exists, a reset code has been sent."
+            };
+        }
+
+        // Deactivate any existing reset codes for this user
+        var existingResets = await _context.PasswordResets
+            .Where(pr => pr.UserId == user.Id && !pr.IsUsed && pr.ExpiresAt > DateTime.UtcNow)
+            .ToListAsync(ct);
+
+        foreach (var reset in existingResets)
+        {
+            reset.IsUsed = true;
+            reset.UsedAt = DateTime.UtcNow;
+        }
+
+        // Generate 6-digit reset code
+        var resetCode = GenerateResetCode();
+        var expiresAt = DateTime.UtcNow.AddMinutes(15); // 15 minutes expiry
+
+        var passwordReset = new PasswordReset
+        {
+            UserId = user.Id,
+            Email = user.Email,
+            ResetCode = resetCode,
+            ExpiresAt = expiresAt
+        };
+
+        _context.PasswordResets.Add(passwordReset);
+        await _context.SaveChangesAsync(ct);
+
+        // Publish message to RabbitMQ for email sending
+        var message = new PasswordResetRequested
+        {
+            UserId = user.Id,
+            UserName = $"{user.FirstName} {user.LastName}",
+            UserEmail = user.Email,
+            ResetCode = resetCode,
+            RequestedAt = DateTime.UtcNow,
+            ExpiresAt = expiresAt
+        };
+
+        // Assuming you have IRabbitMQService injected
+        await _rabbitMQService.PublishAsync(message, "meetspace.password-reset");
+
+        return new ForgotPasswordResponse
+        {
+            Success = true,
+            Message = "Reset code has been sent to your email."
+        };
+    }
+
+    public async Task<ForgotPasswordResponse> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken ct = default)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email, ct);
+        if (user == null)
+        {
+            return new ForgotPasswordResponse
+            {
+                Success = false,
+                Message = "Invalid reset code or email."
+            };
+        }
+
+        var passwordReset = await _context.PasswordResets
+            .FirstOrDefaultAsync(pr =>
+                pr.UserId == user.Id &&
+                pr.Email == request.Email &&
+                pr.ResetCode == request.ResetCode &&
+                !pr.IsUsed &&
+                pr.ExpiresAt > DateTime.UtcNow, ct);
+
+        if (passwordReset == null)
+        {
+            return new ForgotPasswordResponse
+            {
+                Success = false,
+                Message = "Invalid or expired reset code."
+            };
+        }
+
+        // Update password
+        user.PasswordHash = _passwordHasher.Hash(request.NewPassword);
+        user.UpdatedAt = DateTime.UtcNow;
+
+        // Mark reset code as used
+        passwordReset.IsUsed = true;
+        passwordReset.UsedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync(ct);
+
+        return new ForgotPasswordResponse
+        {
+            Success = true,
+            Message = "Password has been reset successfully."
+        };
+    }
+
+    private string GenerateResetCode()
+    {
+        var random = new Random();
+        return random.Next(100000, 999999).ToString(); // 6-digit code
     }
 
 

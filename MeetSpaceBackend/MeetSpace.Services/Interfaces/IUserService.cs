@@ -13,7 +13,9 @@ namespace MeetSpace.Services.Interfaces
     public interface IUserService : ICRUDService<UserResponse, UserSearchObject, UserInsertRequest, UserUpdateRequest>
     {
         Task<UserResponse?> AuthenticateUser(UserLoginRequest request, CancellationToken ct = default);
-        Task<UserResponse> AuthenticateAdmin(UserLoginRequest request, CancellationToken ct);
+        Task<UserResponse?> AuthenticateAdmin(UserLoginRequest request, CancellationToken ct);
         Task<UserResponse> RegisterAsync(UserInsertRequest request, CancellationToken ct);
+        Task<ForgotPasswordResponse> RequestPasswordResetAsync(ForgotPasswordRequest request, CancellationToken ct = default);
+        Task<ForgotPasswordResponse> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken ct = default);
     }
 }

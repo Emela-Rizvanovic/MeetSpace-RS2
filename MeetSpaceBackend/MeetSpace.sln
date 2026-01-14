@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeetSpace.Models", "MeetSpa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeetSpace.Services", "MeetSpace.Services\MeetSpace.Services.csproj", "{BE4E251E-8081-480A-8985-8C11FB4E7694}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeetSpace.Subscriber", "MeetSpace.Subscriber\MeetSpace.Subscriber.csproj", "{23036E81-A6B7-47B6-A57C-8727FA0B0758}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{BE4E251E-8081-480A-8985-8C11FB4E7694}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE4E251E-8081-480A-8985-8C11FB4E7694}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BE4E251E-8081-480A-8985-8C11FB4E7694}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23036E81-A6B7-47B6-A57C-8727FA0B0758}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23036E81-A6B7-47B6-A57C-8727FA0B0758}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23036E81-A6B7-47B6-A57C-8727FA0B0758}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23036E81-A6B7-47B6-A57C-8727FA0B0758}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

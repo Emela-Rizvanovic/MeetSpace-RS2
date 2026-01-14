@@ -29,6 +29,7 @@ internal class Program
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
         builder.Services.AddScoped<IBlobService, BlobService>();
+        builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
 
 
         // Registracija AutoMappera
