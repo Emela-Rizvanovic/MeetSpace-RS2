@@ -1,4 +1,5 @@
 ﻿using MeetSpace.Models.Entities;
+using MeetSpace.Services.Database.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MeetSpace.Services.Database
@@ -37,6 +38,8 @@ namespace MeetSpace.Services.Database
         public DbSet<ReportType> ReportTypes { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<RecommendationLog> RecommendationLogs { get; set; }
+        public DbSet<PasswordReset> PasswordResets { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
