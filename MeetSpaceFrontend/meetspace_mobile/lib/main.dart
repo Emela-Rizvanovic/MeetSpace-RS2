@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'pages/login_page.dart';
 import 'pages/home_page.dart';
+import 'pages/forgot_password_page.dart';
+import 'pages/reset_password_page.dart';
+
 
 void main() {
   runApp(
@@ -28,6 +31,8 @@ class MyApp extends StatelessWidget {
         '/login': (_) => const LoginPage(),
         '/register': (_) => const RegisterPage(),
         '/home': (_) => const HomePage(),
+        '/forgot-password': (_) => const ForgotPasswordPage(),
+        '/reset-password': (_) => const ResetPasswordPage(),
       },
     );
   }

@@ -160,7 +160,27 @@ class _LoginPageState extends State<LoginPage>
 
                         ),
 
+                        const SizedBox(height: 10),
+
+Align(
+  alignment: Alignment.centerRight,
+  child: GestureDetector(
+    onTap: () => Navigator.pushNamed(context, '/forgot-password'),
+    child: const Text(
+      "Forgot password?",
+      style: TextStyle(
+        fontFamily: 'Poppins',
+        color: Color.fromARGB(255, 165, 110, 9),
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  ),
+),
+
+
                         const SizedBox(height: 30),
+
+                        
 
                         /// LOGIN BUTTON
                         SizedBox(
