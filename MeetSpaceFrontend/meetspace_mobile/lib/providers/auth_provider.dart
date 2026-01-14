@@ -81,4 +81,67 @@ class AuthProvider with ChangeNotifier {
   }
 }
 
+Future<ForgotPasswordResponse> forgotPassword(String email) async {
+  final url = Uri.parse("$baseUrl/User/forgot-password");
+
+  final response = await http.post(
+    url,
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({'email': email}),
+  );
+
+  print("FORGOT URL → $url");
+  print("FORGOT STATUS → ${response.statusCode}");
+  print("FORGOT BODY → ${response.body}");
+
+  if (response.statusCode == 200) {
+    return ForgotPasswordResponse.fromJson(jsonDecode(response.body));
+  } else {
+    throw Exception("Forgot password failed (${response.statusCode})");
+  }
+}
+
+Future<ForgotPasswordResponse> resetPassword({
+  required String email,
+  required String code,
+  required String newPassword,
+}) async {
+  final url = Uri.parse("$baseUrl/User/reset-password");
+
+  final response = await http.post(
+    url,
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'email': email,
+      'resetCode': code,
+      'newPassword': newPassword,
+    }),
+  );
+
+  print("RESET URL → $url");
+  print("RESET STATUS → ${response.statusCode}");
+  print("RESET BODY → ${response.body}");
+
+  // backend vraća 200 kad je success, 400 kad nije success (kod tebe u kontroleru)
+  if (response.statusCode == 200 || response.statusCode == 400) {
+    return ForgotPasswordResponse.fromJson(jsonDecode(response.body));
+  } else {
+    throw Exception("Reset password failed (${response.statusCode})");
+  }
+}
+
+}
+
+class ForgotPasswordResponse {
+  final bool success;
+  final String message;
+
+  ForgotPasswordResponse({required this.success, required this.message});
+
+  factory ForgotPasswordResponse.fromJson(Map<String, dynamic> json) {
+    return ForgotPasswordResponse(
+      success: json['success'] == true,
+      message: (json['message'] ?? '').toString(),
+    );
+  }
 }
