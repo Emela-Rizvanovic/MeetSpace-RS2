@@ -6,6 +6,10 @@ import 'pages/login_page.dart';
 import 'pages/home_page.dart';
 import 'pages/forgot_password_page.dart';
 import 'pages/reset_password_page.dart';
+import 'pages/menu_page.dart';
+import 'pages/my_profile_page.dart';
+import 'pages/extra_services_page.dart';
+import 'pages/explore_spaces_page.dart';
 
 
 void main() {
@@ -33,6 +37,10 @@ class MyApp extends StatelessWidget {
         '/home': (_) => const HomePage(),
         '/forgot-password': (_) => const ForgotPasswordPage(),
         '/reset-password': (_) => const ResetPasswordPage(),
+        '/menu': (_) => const MenuPage(),
+        '/my-profile': (_) => const MyProfilePage(),
+        '/extra-services': (_) => const ExtraServicesPage(),
+        '/explore-spaces': (_) => const ExploreSpacesPage(),
       },
     );
   }

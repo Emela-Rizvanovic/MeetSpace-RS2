@@ -14,15 +14,17 @@ namespace MeetSpace.Models.Responses
         public decimal PricePerHour { get; set; }
         public int Capacity { get; set; }
         public int FacilityId { get; set; }
+        public string? FacilityName { get; set; }
+        public string? FacilityAddress { get; set; }
+
         public int SpaceTypeId { get; set; }
 
         public List<SpaceImageResponse> Images { get; set; } = new();
+        public List<AmenityResponse> Amenities { get; set; } = new();
 
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 
-        // Kasnije možemo ubaciti naziv Facility / SpaceType → npr. FacilityName = string?
-        // TO-DO isprovjeravati sve nakon azuriranja i dodataka
     }
 }
 

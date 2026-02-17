@@ -15,7 +15,19 @@ namespace MeetSpace.Services.Mapping
         public SpaceProfile()
         {
             // Entity -> Response
-            CreateMap<Space, SpaceResponse>();
+            CreateMap<Space, SpaceResponse>()
+    .ForMember(d => d.FacilityName,
+        opt => opt.MapFrom(s => s.Facility != null ? s.Facility.Name : null))
+    .ForMember(d => d.FacilityAddress,
+        opt => opt.MapFrom(s => s.Facility != null ? s.Facility.Address : null))
+    // ✅ NEW
+    .ForMember(d => d.Amenities,
+        opt => opt.MapFrom(s =>
+            s.SpaceAmenities
+             .Where(sa => sa.Amenity != null)
+             .Select(sa => sa.Amenity!)));
+
+
 
             // InsertRequest -> Entity
             CreateMap<SpaceInsertRequest, Space>()

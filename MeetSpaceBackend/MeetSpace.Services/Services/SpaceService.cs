@@ -8,51 +8,49 @@ using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MeetSpace.Services.Services
 {
-    public class SpaceService : BaseCRUDService<SpaceResponse, SpaceSearchObject, Space, SpaceInsertRequest, SpaceUpdateRequest>, ISpaceService
+    public class SpaceService
+        : BaseCRUDService<SpaceResponse, SpaceSearchObject, Space, SpaceInsertRequest, SpaceUpdateRequest>,
+          ISpaceService
     {
         private readonly IBlobService _blobService;
+
         public SpaceService(MeetSpaceDbContext context, IMapper mapper, IBlobService blobService)
             : base(context, mapper)
         {
             _blobService = blobService;
         }
 
-        // ApplyFilter za pretragu po poljima SpaceSearchObject
         protected override IQueryable<Space> ApplyFilter(IQueryable<Space> query, SpaceSearchObject search)
         {
             if (!string.IsNullOrWhiteSpace(search.Name))
-            {
                 query = query.Where(s => s.Name.Contains(search.Name));
-            }
 
             if (search.FacilityId.HasValue)
-            {
                 query = query.Where(s => s.FacilityId == search.FacilityId.Value);
-            }
 
             if (search.SpaceTypeId.HasValue)
-            {
                 query = query.Where(s => s.SpaceTypeId == search.SpaceTypeId.Value);
-            }
 
             return query;
         }
 
-        protected override async Task BeforeUpdate(Space entity, SpaceUpdateRequest request, CancellationToken cancellationToken = default)
+        protected override async Task BeforeUpdate(
+            Space entity,
+            SpaceUpdateRequest request,
+            CancellationToken cancellationToken = default
+        )
         {
             entity.UpdatedAt = DateTime.UtcNow;
             await base.BeforeUpdate(entity, request, cancellationToken);
         }
 
-        public override async Task<SpaceResponse> CreateAsync(SpaceInsertRequest request, CancellationToken cancellationToken = default)
+        public override async Task<SpaceResponse> CreateAsync(
+            SpaceInsertRequest request,
+            CancellationToken cancellationToken = default
+        )
         {
             var entity = _mapper.Map<Space>(request);
             entity.CreatedAt = DateTime.UtcNow;
@@ -60,7 +58,7 @@ namespace MeetSpace.Services.Services
             await _context.Spaces.AddAsync(entity, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
-            // Upload slika ako postoje
+            // ✅ 1) Upload images (existing logic)
             if (request.Images != null && request.Images.Any())
             {
                 foreach (var file in request.Images)
@@ -76,24 +74,57 @@ namespace MeetSpace.Services.Services
                     await _context.SpaceImages.AddAsync(img, cancellationToken);
                 }
 
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(cancellationToken);
             }
 
-            entity = await _context.Spaces.Include(s => s.Images).FirstAsync(s => s.Id == entity.Id);
+            // ✅ 2) Save amenities (NEW)
+            if (request.AmenityIds != null && request.AmenityIds.Any())
+            {
+                var distinctIds = request.AmenityIds.Distinct().ToList();
+
+                // (optional) validate IDs exist to avoid FK errors
+                var existingAmenityIds = await _context.Amenities
+                    .Where(a => distinctIds.Contains(a.Id))
+                    .Select(a => a.Id)
+                    .ToListAsync(cancellationToken);
+
+                foreach (var amenityId in existingAmenityIds)
+                {
+                    await _context.SpaceAmenities.AddAsync(new SpaceAmenity
+                    {
+                        SpaceId = entity.Id,
+                        AmenityId = amenityId
+                    }, cancellationToken);
+                }
+
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+
+            // ✅ Reload with all includes so response has Images + Facility + Amenities
+            entity = await _context.Spaces
+                .Include(s => s.Images)
+                .Include(s => s.Facility)
+                .Include(s => s.SpaceAmenities).ThenInclude(sa => sa.Amenity)
+                .FirstAsync(s => s.Id == entity.Id, cancellationToken);
 
             return _mapper.Map<SpaceResponse>(entity);
         }
 
-        public override async Task<SpaceResponse?> UpdateAsync(int id, SpaceUpdateRequest request, CancellationToken cancellationToken = default)
+        public override async Task<SpaceResponse?> UpdateAsync(
+            int id,
+            SpaceUpdateRequest request,
+            CancellationToken cancellationToken = default
+        )
         {
             var entity = await _context.Spaces
                 .Include(s => s.Images)
+                .Include(s => s.SpaceAmenities) // ✅ needed for replace
                 .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 
             if (entity == null)
                 return null;
 
-            // Update polja
+            // Update fields (existing logic)
             if (!string.IsNullOrWhiteSpace(request.Name))
                 entity.Name = request.Name;
 
@@ -114,7 +145,7 @@ namespace MeetSpace.Services.Services
 
             entity.UpdatedAt = DateTime.UtcNow;
 
-            // 1) Brisanje slika
+            // ✅ 1) Delete images (existing logic)
             if (request.DeleteImageIds != null && request.DeleteImageIds.Any())
             {
                 foreach (var idToDelete in request.DeleteImageIds)
@@ -128,7 +159,7 @@ namespace MeetSpace.Services.Services
                 }
             }
 
-            // 2) Dodavanje novih slika
+            // ✅ 2) Add new images (existing logic)
             if (request.NewImages != null && request.NewImages.Any())
             {
                 foreach (var file in request.NewImages)
@@ -141,13 +172,45 @@ namespace MeetSpace.Services.Services
                         ImageUrl = url
                     };
 
-                    await _context.SpaceImages.AddAsync(newImg);
+                    await _context.SpaceImages.AddAsync(newImg, cancellationToken);
                 }
             }
 
+            // ✅ 3) Replace amenities (NEW) — only if AmenityIds provided
+            // AMENITIES: diraj samo ako su poslani neki ID-evi
+            if (request.AmenityIds != null && request.AmenityIds.Count > 0)
+            {
+                var newIdsDistinct = request.AmenityIds.Distinct().ToList();
+
+                // (opcionalno) validacija da amenity postoji
+                var validIds = await _context.Amenities
+                    .Where(a => newIdsDistinct.Contains(a.Id))
+                    .Select(a => a.Id)
+                    .ToListAsync(cancellationToken);
+
+                // replace
+                _context.SpaceAmenities.RemoveRange(entity.SpaceAmenities);
+
+                foreach (var amenityId in validIds)
+                {
+                    entity.SpaceAmenities.Add(new SpaceAmenity
+                    {
+                        SpaceId = entity.Id,
+                        AmenityId = amenityId
+                    });
+                }
+            }
+
+
+
             await _context.SaveChangesAsync(cancellationToken);
 
-            entity = await _context.Spaces.Include(s => s.Images).FirstAsync(s => s.Id == id);
+            // ✅ Reload with all includes so response has Images + Facility + Amenities
+            entity = await _context.Spaces
+                .Include(s => s.Images)
+                .Include(s => s.Facility)
+                .Include(s => s.SpaceAmenities).ThenInclude(sa => sa.Amenity)
+                .FirstAsync(s => s.Id == id, cancellationToken);
 
             return _mapper.Map<SpaceResponse>(entity);
         }
@@ -156,28 +219,37 @@ namespace MeetSpace.Services.Services
         {
             var entity = await _context.Spaces
                 .Include(s => s.Images)
-                .FirstOrDefaultAsync(s => s.Id == id);
+                .Include(s => s.SpaceAmenities) // ✅ clean links too
+                .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 
             if (entity == null)
                 return false;
 
-            // Brisanje slika iz Azure Blob + baze
+            // delete images from blob + db
             foreach (var img in entity.Images)
             {
                 await _blobService.DeleteSpaceImageAsync(img.ImageUrl);
                 _context.SpaceImages.Remove(img);
             }
 
+            // remove amenities links
+            _context.SpaceAmenities.RemoveRange(entity.SpaceAmenities);
+
             _context.Spaces.Remove(entity);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             return true;
         }
 
-        public override async Task<PagedResult<SpaceResponse>> GetAsync(SpaceSearchObject search, CancellationToken cancellationToken = default)
+        public override async Task<PagedResult<SpaceResponse>> GetAsync(
+            SpaceSearchObject search,
+            CancellationToken cancellationToken = default
+        )
         {
             var query = _context.Spaces
-                .Include(s => s.Images) // dohvatanje slika
+                .Include(s => s.Images)
+                .Include(s => s.Facility)
+                .Include(s => s.SpaceAmenities).ThenInclude(sa => sa.Amenity)
                 .AsQueryable();
 
             query = ApplyFilter(query, search);
@@ -190,6 +262,7 @@ namespace MeetSpace.Services.Services
             {
                 if (search.Page.HasValue)
                     query = query.Skip(search.Page.Value * (search.PageSize ?? 20));
+
                 if (search.PageSize.HasValue)
                     query = query.Take(search.PageSize.Value);
             }
@@ -207,7 +280,9 @@ namespace MeetSpace.Services.Services
         public override async Task<SpaceResponse?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
             var entity = await _context.Spaces
-                .Include(s => s.Images) // <-- uključuje slike
+                .Include(s => s.Images)
+                .Include(s => s.Facility)
+                .Include(s => s.SpaceAmenities).ThenInclude(sa => sa.Amenity)
                 .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 
             return entity == null ? null : MapToResponse(entity);
@@ -244,10 +319,5 @@ namespace MeetSpace.Services.Services
                 .Select(i => _mapper.Map<SpaceImageResponse>(i))
                 .ToList();
         }
-
-
-
-        // TO-DO 
-        // dodati ako bude trebalo u buducnosti Task BeforeUpdate, BeforeInsert, DeleteAsync
     }
 }

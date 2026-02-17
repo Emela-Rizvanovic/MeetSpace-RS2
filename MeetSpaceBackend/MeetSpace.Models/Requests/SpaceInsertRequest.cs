@@ -17,9 +17,7 @@ namespace MeetSpace.Models.Requests
         public int SpaceTypeId { get; set; }
 
         public List<IFormFile>? Images { get; set; }
+        public List<int>? AmenityIds { get; set; }
 
-        // TO-DO
-        // uploadati slika ili amenities - dodati kasnije.
-        // Za sada minimalni valid CRUD.
     }
 }
