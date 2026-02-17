@@ -22,9 +22,7 @@ namespace MeetSpace.Models.Requests
         // Brisanje postojećih slika po ID-u
         public List<int>? DeleteImageIds { get; set; }
 
-        // UpdatedAt NE unosi user, to će servis automatski postaviti.
+        public List<int>? AmenityIds { get; set; }
 
-        // TO-DO
-        // azurirati po potrebi vezano za slike i amenities nakon sto se i insert azurira
     }
 }

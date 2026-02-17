@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'menu_page.dart';
+
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -61,17 +63,15 @@ class HomePage extends StatelessWidget {
                       // Menu dugme (desno)
                       GestureDetector(
                         onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Menu tapped')),
-                          );
-                        },
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => const MenuPage()),
+  );
+},
+
                         child: Container(
                           width: 46,
                           height: 46,
-                          /*decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(12),
-                          ),*/
                           padding: const EdgeInsets.all(8),
                           child: Image.asset(
                             'assets/icons/menu.png',

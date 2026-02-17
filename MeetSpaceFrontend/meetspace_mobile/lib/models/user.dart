@@ -20,6 +20,7 @@ class UserResponse {
   final String? firstName;
   final String? lastName;
   final String? profileImageUrl;
+  final String? phoneNumber;
 
   UserResponse({
     required this.id,
@@ -28,6 +29,7 @@ class UserResponse {
     this.firstName,
     this.lastName,
     this.profileImageUrl,
+    this.phoneNumber
   });
 
   factory UserResponse.fromJson(Map<String, dynamic> json) {
@@ -38,6 +40,7 @@ class UserResponse {
       firstName: json['firstName'],
       lastName: json['lastName'],
       profileImageUrl: json['profileImageUrl'],
+      phoneNumber: json['phoneNumber']
     );
   }
 }

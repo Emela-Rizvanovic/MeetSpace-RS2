@@ -30,6 +30,11 @@ internal class Program
         builder.Services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
         builder.Services.AddScoped<IBlobService, BlobService>();
         builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
+        builder.Services.AddScoped<IBookingService, BookingService>();
+        builder.Services.AddScoped<IBookingStatusService, BookingStatusService>();
+        builder.Services.AddScoped<IFavoriteService, FavoriteService>();
+
+
 
 
         // Registracija AutoMappera
@@ -41,6 +46,9 @@ internal class Program
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<ReportTypeProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<RoleProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<UserProfile>());
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<BookingProfile>());
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<BookingStatusProfile>());
+
 
 
         // Add controllers
