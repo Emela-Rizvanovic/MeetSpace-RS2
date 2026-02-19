@@ -324,6 +324,57 @@ Future<List<SpaceResponse>> getFavoriteSpaces() async {
   }
 }
 
+Future<void> updateProfile({
+  required String firstName,
+  required String lastName,
+  required String username,
+  required String email,
+  required String phone,
+  String? newPassword,
+  XFile? profileImage,
+}) async {
+  if (user == null) throw Exception("Not logged in");
+
+  final uri = Uri.parse("$baseUrl/User/${user!.id}");
+
+  var request = http.MultipartRequest('PUT', uri);
+
+  // TEXT FIELDS
+  request.fields['FirstName'] = firstName;
+  request.fields['LastName'] = lastName;
+  request.fields['Username'] = username;
+  request.fields['Email'] = email;
+  request.fields['PhoneNumber'] = phone;
+
+  // PASSWORD (only if entered)
+  if (newPassword != null && newPassword.trim().isNotEmpty) {
+    request.fields['Password'] = newPassword.trim();
+  }
+
+  // IMAGE (only if selected)
+  if (profileImage != null) {
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'ProfileImageUrl',
+        profileImage.path,
+        contentType: MediaType('image', 'jpeg'),
+      ),
+    );
+  }
+
+  var response = await request.send();
+  var responseString = await response.stream.bytesToString();
+
+  print("UPDATE PROFILE STATUS → ${response.statusCode}");
+  print("UPDATE PROFILE BODY → $responseString");
+
+  if (response.statusCode == 200) {
+    user = UserResponse.fromJson(jsonDecode(responseString));
+    notifyListeners();
+  } else {
+    throw Exception("Failed to update profile");
+  }
+}
 
 
 }

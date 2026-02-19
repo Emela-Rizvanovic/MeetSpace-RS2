@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../models/booking.dart';
 import '../providers/auth_provider.dart';
 import 'menu_page.dart';
+import 'edit_profile_page.dart';
+
 
 class MyProfilePage extends StatefulWidget {
   const MyProfilePage({super.key});
@@ -186,12 +188,15 @@ class _MyProfilePageState extends State<MyProfilePage> {
 
                     Center(
                       child: OutlinedButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text("Edit profile tapped")),
-                          );
-                        },
+                       onPressed: () {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const EditProfilePage(),
+    ),
+  );
+},
+
                         style: OutlinedButton.styleFrom(
                           foregroundColor: brandOrange,
                           side: const BorderSide(color: brandOrange, width: 1.4),
