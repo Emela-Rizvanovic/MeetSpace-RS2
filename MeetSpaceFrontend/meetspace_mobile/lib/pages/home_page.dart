@@ -1,55 +1,77 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
+import '../models/space.dart';
 import 'menu_page.dart';
+import 'space_details_page.dart';
 
-
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
-  // boje iz tvog dizajna
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   static const Color bgGrey = Color.fromARGB(255, 59, 59, 59);
   static const Color brandOrange = Color.fromARGB(255, 165, 110, 9);
+
+  List<SpaceResponse> _spaces = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSpaces();
+  }
+
+  Future<void> _loadSpaces() async {
+    final auth = context.read<AuthProvider>();
+    final data = await auth.getSpaces();
+    setState(() {
+      _spaces = data;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context).size;
 
     return Scaffold(
-      body: Stack(
+  body: GestureDetector(
+    onTap: () => FocusScope.of(context).unfocus(),
+    child: Stack(
         children: [
-          // 1) Pozadinska slika
-         Positioned.fill(
-          child: Image.asset(
-            'assets/images/background.png',
-            fit: BoxFit.cover,            // slika pokriva cijeli ekran
-            alignment: Alignment.centerRight, // desna strana slike
-            errorBuilder: (context, error, stackTrace) {
-              return Container(color: bgGrey);
-            },
+          /// BACKGROUND IMAGE
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/background.png',
+              fit: BoxFit.cover,
+              alignment: Alignment.centerRight,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(color: bgGrey);
+              },
+            ),
           ),
-        ),
 
-
-          // 2) Overlay
+          /// DARK OVERLAY
           Positioned.fill(
             child: Container(color: Colors.black.withOpacity(0.35)),
           ),
 
-          // 3) Sadržaj
+          /// CONTENT
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // ---------------------------------------------------------
-                  // **HEADER** (ISPRAVLJENO: MEETSPACE lijevo, menu desno)
-                  // ---------------------------------------------------------
+                  /// HEADER
                   Row(
                     children: [
-                      // LOGO TEKST (lijevo)
-                      Text(
+                      const Text(
                         'MEETSPACE',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Poppins',
                           color: Colors.black,
                           fontWeight: FontWeight.w300,
@@ -57,18 +79,15 @@ class HomePage extends StatelessWidget {
                           fontSize: 20,
                         ),
                       ),
-
                       const Spacer(),
-
-                      // Menu dugme (desno)
                       GestureDetector(
                         onTap: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(builder: (_) => const MenuPage()),
-  );
-},
-
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const MenuPage()),
+                          );
+                        },
                         child: Container(
                           width: 46,
                           height: 46,
@@ -77,24 +96,24 @@ class HomePage extends StatelessWidget {
                             'assets/icons/menu.png',
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) {
-                              return const Icon(Icons.menu, color: Colors.white);
+                              return const Icon(Icons.menu,
+                                  color: Colors.white);
                             },
                           ),
                         ),
                       ),
                     ],
                   ),
-                  // ---------------------------------------------------------
 
                   const SizedBox(height: 28),
 
-                  // WHITE SEARCH BOX / EXPLORE SPACES
+                  /// AUTOCOMPLETE SEARCH
                   Center(
                     child: Container(
                       width: double.infinity,
                       constraints: const BoxConstraints(maxWidth: 720),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 14),
+                          horizontal: 18, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
@@ -106,36 +125,123 @@ class HomePage extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Explore spaces',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                color: Colors.black87,
-                                fontWeight: FontWeight.w400,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: bgGrey,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child:
-                                const Icon(Icons.search, color: Colors.white),
-                          ),
-                        ],
+                      child: Autocomplete<SpaceResponse>(
+  displayStringForOption: (space) => space.name,
+
+  optionsBuilder: (TextEditingValue textEditingValue) {
+    if (_spaces.isEmpty) {
+      return const Iterable<SpaceResponse>.empty();
+    }
+
+    if (textEditingValue.text.isEmpty) {
+      return _spaces;
+    }
+
+    return _spaces.where((space) =>
+        space.name.toLowerCase().startsWith(
+              textEditingValue.text.toLowerCase(),
+            ));
+  },
+
+  onSelected: (SpaceResponse selection) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SpaceDetailsPage(space: selection),
+      ),
+    );
+  },
+
+  fieldViewBuilder:
+      (context, controller, focusNode, onFieldSubmitted) {
+    return TextField(
+      controller: controller,
+      focusNode: focusNode,
+      style: const TextStyle(
+        fontFamily: 'Poppins',
+        fontSize: 15,
+      ),
+      decoration: const InputDecoration(
+        hintText: 'Explore spaces',
+        border: InputBorder.none,
+      ),
+    );
+  },
+
+  optionsViewBuilder:
+      (context, onSelected, options) {
+
+    final optionList = options.toList();
+
+    return GestureDetector(
+      onTap: () {}, // da klik unutar ne zatvori
+      child: Align(
+        alignment: Alignment.topLeft,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            margin: const EdgeInsets.only(top: 8),
+            width: MediaQuery.of(context).size.width - 40,
+            constraints: BoxConstraints(
+              maxHeight: optionList.length * 55,
+            ),
+            decoration: BoxDecoration(
+              color: bgGrey,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 12,
+                ),
+              ],
+            ),
+            child: ListView.builder(
+              padding: EdgeInsets.zero,
+              shrinkWrap: true,
+              itemCount: optionList.length,
+              itemBuilder: (context, index) {
+                final space = optionList[index];
+
+                return InkWell(
+                  onTap: () => onSelected(space),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 18, vertical: 14),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: index == optionList.length - 1
+                              ? Colors.transparent
+                              : Colors.white12,
+                        ),
                       ),
+                    ),
+                    child: Text(
+                      space.name,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  },
+)
+
                     ),
                   ),
 
                   const Spacer(),
 
-                  // FOOTER / SLOGAN
+                  /// SLOGAN
                   Padding(
                     padding: const EdgeInsets.only(bottom: 24),
                     child: Column(
@@ -146,9 +252,9 @@ class HomePage extends StatelessWidget {
                           style: TextStyle(
                             fontFamily: 'Poppins',
                             color: Colors.white,
-                            fontWeight: FontWeight.w900,     // deblje
-                            letterSpacing: 1.2,              // malo šire
-                            fontSize: media.width * 0.10,    // veće
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.2,
+                            fontSize: media.width * 0.10,
                           ),
                         ),
                         Text(
@@ -191,6 +297,7 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
+  ),
     );
   }
 }

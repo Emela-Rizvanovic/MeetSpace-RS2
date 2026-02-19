@@ -10,7 +10,10 @@ import 'pages/menu_page.dart';
 import 'pages/my_profile_page.dart';
 import 'pages/extra_services_page.dart';
 import 'pages/explore_spaces_page.dart';
-
+import 'pages/about_us_page.dart';
+import 'pages/contact_page.dart';
+import 'pages/settings_page.dart';
+import 'pages/edit_profile_page.dart';
 
 void main() {
   runApp(
@@ -41,6 +44,10 @@ class MyApp extends StatelessWidget {
         '/my-profile': (_) => const MyProfilePage(),
         '/extra-services': (_) => const ExtraServicesPage(),
         '/explore-spaces': (_) => const ExploreSpacesPage(),
+        '/about-us': (_) => const AboutUsPage(),
+        '/contact': (_) => const ContactPage(),
+        '/settings': (_) => const SettingsPage(),
+        '/edit-profile': (_) => const EditProfilePage()
       },
     );
   }

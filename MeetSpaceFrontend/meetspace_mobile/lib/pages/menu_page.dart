@@ -34,25 +34,19 @@ class MenuPage extends StatelessWidget {
       _MenuItem(
         title: 'About us',
         onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('About us tapped')),
-          );
+         Navigator.pushNamed(context, '/about-us');
         },
       ),
       _MenuItem(
         title: 'Contact',
         onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Contact tapped')),
-          );
+           Navigator.pushNamed(context, '/contact');
         },
       ),
       _MenuItem(
         title: 'Settings',
         onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Settings tapped')),
-          );
+         Navigator.pushNamed(context, '/settings');
         },
       ),
     ];
