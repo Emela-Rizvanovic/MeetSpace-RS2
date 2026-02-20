@@ -26,6 +26,8 @@ namespace MeetSpace.Models.Requests
         [Required]
         public DateTime EndTime { get; set; }
 
+        public List<BookingAmenityInsertRequest>? Amenities { get; set; }
+
         // Servis će ovo izračunati (Space.PricePerHour * trajanje)
         //public decimal TotalPrice { get; set; }
     }

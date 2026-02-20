@@ -6,21 +6,25 @@ import '../models/space.dart';
 import 'menu_page.dart';
 import 'space_details_page.dart';
 
-
 class ExploreSpacesPage extends StatefulWidget {
   const ExploreSpacesPage({super.key});
 
   @override
-  State<ExploreSpacesPage> createState() => _ExploreSpacesPageState();
+  State<ExploreSpacesPage> createState() =>
+      _ExploreSpacesPageState();
 }
 
-class _ExploreSpacesPageState extends State<ExploreSpacesPage> {
-  static const Color bgGrey = Color.fromARGB(255, 59, 59, 59);
-  static const Color brandOrange = Color.fromARGB(255, 165, 110, 9);
+class _ExploreSpacesPageState
+    extends State<ExploreSpacesPage> {
+  static const Color bgGrey =
+      Color.fromARGB(255, 59, 59, 59);
+  static const Color brandOrange =
+      Color.fromARGB(255, 165, 110, 9);
 
   bool _showFavorites = false;
 
   Future<List<SpaceResponse>>? _future;
+  List<SpaceResponse> _spaces = [];
 
   @override
   void initState() {
@@ -30,240 +34,437 @@ class _ExploreSpacesPageState extends State<ExploreSpacesPage> {
 
   Future<List<SpaceResponse>> _loadSpaces() async {
     final auth = context.read<AuthProvider>();
-    return auth.getSpaces();
+    final data = await auth.getSpaces();
+    _spaces = data;
+    return data;
   }
 
   Future<List<SpaceResponse>> _loadFavorites() async {
-  final auth = context.read<AuthProvider>();
-  return auth.getFavoriteSpaces();
-}
-
+    final auth = context.read<AuthProvider>();
+    return auth.getFavoriteSpaces();
+  }
 
   @override
   Widget build(BuildContext context) {
- return Scaffold(
-  backgroundColor: bgGrey,
-  body: SafeArea(
-    child: FutureBuilder<List<SpaceResponse>>(
-      future: _future,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: brandOrange),
-          );
-        }
+    return Scaffold(
+      backgroundColor: bgGrey,
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
+          child: FutureBuilder<List<SpaceResponse>>(
+            future: _future,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState ==
+                  ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                      color: brandOrange),
+                );
+              }
 
-        if (snapshot.hasError) {
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
-            child: _ErrorBox(
-              message: snapshot.error.toString(),
-              onRetry: () {
-                setState(() {
-                  _future = _loadSpaces();
-                });
-              },
-            ),
-          );
-        }
+              if (snapshot.hasError) {
+                return Padding(
+                  padding:
+                      const EdgeInsets.fromLTRB(
+                          22, 18, 22, 18),
+                  child: _ErrorBox(
+                    message:
+                        snapshot.error.toString(),
+                    onRetry: () {
+                      setState(() {
+                        _future = _loadSpaces();
+                      });
+                    },
+                  ),
+                );
+              }
 
-        final spaces = snapshot.data ?? [];
+              final spaces = snapshot.data ?? [];
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _Header(
-                title: 'MEETSPACE',
-                onMenu: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const MenuPage()),
-                ),
-              ),
-              const SizedBox(height: 18),
-              const Text(
-                'Browse our\navailable spaces\nand book in\nminutes.',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 44,
-                  height: 1.08,
-                  fontWeight: FontWeight.w700,
-                  color: brandOrange,
-                ),
-              ),
-              const SizedBox(height: 16),
+              return SingleChildScrollView(
+                padding:
+                    const EdgeInsets.fromLTRB(
+                        22, 18, 22, 18),
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                  children: [
 
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 52,
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                    /// HEADER
+                    _Header(
+                      title: 'MEETSPACE',
+                      onMenu: () =>
+                          Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) =>
+                                const MenuPage()),
+                      ),
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    const Text(
+                      'Browse our\navailable spaces\nand book in\nminutes.',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 44,
+                        height: 1.08,
+                        fontWeight: FontWeight.w700,
+                        color: brandOrange,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    /// AUTOCOMPLETE SEARCH (IDENTICAL TO HOME)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets
+                          .symmetric(
+                          horizontal: 18,
+                          vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: const [
+                        borderRadius:
+                            BorderRadius.circular(
+                                14),
+                        boxShadow: [
                           BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 14,
-                            offset: Offset(0, 8),
+                            color: Colors.black
+                                .withOpacity(0.12),
+                            blurRadius: 12,
+                            offset:
+                                const Offset(0, 6),
                           ),
                         ],
                       ),
-                      child: Row(
-                        children: const [
-                          Icon(Icons.location_on_outlined,
-                              size: 22, color: brandOrange),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'Find a space',
+                      child:
+                          Autocomplete<SpaceResponse>(
+                        displayStringForOption:
+                            (space) => space.name,
+
+                        optionsBuilder:
+                            (TextEditingValue
+                                textEditingValue) {
+                          if (_spaces.isEmpty) {
+                            return const Iterable<
+                                SpaceResponse>.empty();
+                          }
+
+                          if (textEditingValue
+                              .text.isEmpty) {
+                            return _spaces;
+                          }
+
+                          return _spaces.where(
+                            (space) => space.name
+                                .toLowerCase()
+                                .startsWith(
+                                  textEditingValue
+                                      .text
+                                      .toLowerCase(),
+                                ),
+                          );
+                        },
+
+                        onSelected:
+                            (SpaceResponse
+                                selection) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  SpaceDetailsPage(
+                                      space:
+                                          selection),
+                            ),
+                          );
+                        },
+
+                        fieldViewBuilder:
+                            (context,
+                                controller,
+                                focusNode,
+                                onFieldSubmitted) {
+                          return TextField(
+                            controller: controller,
+                            focusNode: focusNode,
+                            style:
+                                const TextStyle(
+                              fontFamily:
+                                  'Poppins',
+                              fontSize: 15,
+                            ),
+                            decoration:
+                                const InputDecoration(
+                              hintText:
+                                  'Find a space',
+                              border:
+                                  InputBorder
+                                      .none,
+                            ),
+                          );
+                        },
+
+                        optionsViewBuilder:
+                            (context,
+                                onSelected,
+                                options) {
+                          final optionList =
+                              options.toList();
+
+                          return Align(
+                            alignment:
+                                Alignment
+                                    .topLeft,
+                            child: Material(
+                              color: Colors
+                                  .transparent,
+                              child: Container(
+                                margin:
+                                    const EdgeInsets
+                                            .only(
+                                        top: 8),
+                                width: MediaQuery.of(
+                                            context)
+                                        .size
+                                        .width -
+                                    44,
+                                constraints:
+                                    const BoxConstraints(
+                                        maxHeight:
+                                            250),
+                                decoration:
+                                    BoxDecoration(
+                                  color: bgGrey,
+                                  borderRadius:
+                                      BorderRadius
+                                          .circular(
+                                              14),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors
+                                          .black
+                                          .withOpacity(
+                                              0.3),
+                                      blurRadius:
+                                          12,
+                                    ),
+                                  ],
+                                ),
+                                child:
+                                    ListView.builder(
+                                  padding:
+                                      EdgeInsets
+                                          .zero,
+                                  shrinkWrap:
+                                      true,
+                                  itemCount:
+                                      optionList
+                                          .length,
+                                  itemBuilder:
+                                      (context,
+                                          index) {
+                                    final space =
+                                        optionList[
+                                            index];
+
+                                    return InkWell(
+                                      onTap: () =>
+                                          onSelected(
+                                              space),
+                                      child:
+                                          Container(
+                                        padding:
+                                            const EdgeInsets.symmetric(
+                                          horizontal:
+                                              18,
+                                          vertical:
+                                              14,
+                                        ),
+                                        decoration:
+                                            BoxDecoration(
+                                          border:
+                                              Border(
+                                            bottom:
+                                                BorderSide(
+                                              color: index ==
+                                                      optionList.length -
+                                                          1
+                                                  ? Colors
+                                                      .transparent
+                                                  : Colors
+                                                      .white12,
+                                            ),
+                                          ),
+                                        ),
+                                        child:
+                                            Text(
+                                          space.name,
+                                          style:
+                                              const TextStyle(
+                                            fontFamily:
+                                                'Poppins',
+                                            color:
+                                                Colors.white,
+                                            fontSize:
+                                                14,
+                                            fontWeight:
+                                                FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    /// FILTER BUTTONS
+                    Row(
+                      children: [
+                        SizedBox(
+                          height: 40,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _showFavorites =
+                                    false;
+                                _future =
+                                    _loadSpaces();
+                              });
+                            },
+                            style: ElevatedButton
+                                .styleFrom(
+                              backgroundColor:
+                                  !_showFavorites
+                                      ? brandOrange
+                                      : Colors
+                                          .white,
+                              foregroundColor:
+                                  !_showFavorites
+                                      ? Colors
+                                          .white
+                                      : Colors
+                                          .black87,
+                              shape:
+                                  RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius
+                                        .circular(
+                                            12),
+                              ),
+                            ),
+                            child: const Text(
+                              'See all',
                               style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF7A7A7A),
+                                fontFamily:
+                                    'Poppins',
+                                fontSize: 14,
+                                fontWeight:
+                                    FontWeight
+                                        .w600,
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  SizedBox(
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1F1F1F),
-                        foregroundColor: Colors.white,
-                        elevation: 10,
-                        shadowColor: Colors.black38,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 18),
-                      ),
-                      child: const Text(
-                        'Search',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
+                        const SizedBox(width: 12),
+                        SizedBox(
+                          height: 40,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _showFavorites =
+                                    true;
+                                _future =
+                                    _loadFavorites();
+                              });
+                            },
+                            style: ElevatedButton
+                                .styleFrom(
+                              backgroundColor:
+                                  _showFavorites
+                                      ? brandOrange
+                                      : Colors
+                                          .white,
+                              foregroundColor:
+                                  _showFavorites
+                                      ? Colors
+                                          .white
+                                      : Colors
+                                          .black87,
+                              shape:
+                                  RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius
+                                        .circular(
+                                            12),
+                              ),
+                            ),
+                            child: const Text(
+                              'See favorites',
+                              style: TextStyle(
+                                fontFamily:
+                                    'Poppins',
+                                fontSize: 14,
+                                fontWeight:
+                                    FontWeight
+                                        .w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    if (spaces.isEmpty)
+                      const _EmptyBox(
+                          text:
+                              "No spaces available.")
+                    else
+                      ...spaces.map(
+                        (s) => Padding(
+                          padding:
+                              const EdgeInsets.only(
+                                  bottom: 18),
+                          child: InkWell(
+                            borderRadius:
+                                BorderRadius
+                                    .circular(16),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      SpaceDetailsPage(
+                                          space:
+                                              s),
+                                ),
+                              );
+                            },
+                            child:
+                                _SpaceCard(
+                                    space: s),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-             Row(
-  children: [
-    SizedBox(
-      height: 40,
-      child: ElevatedButton(
-        onPressed: () {
-          setState(() {
-            _showFavorites = false;
-            _future = _loadSpaces();
-          });
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor:
-              !_showFavorites ? brandOrange : Colors.white,
-          foregroundColor:
-              !_showFavorites ? Colors.white : Colors.black87,
-          elevation: 10,
-          shadowColor: Colors.black26,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-        ),
-        child: const Text(
-          'See all',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ),
-    ),
-
-    const SizedBox(width: 12),
-
-    SizedBox(
-      height: 40,
-      child: ElevatedButton(
-        onPressed: () {
-          setState(() {
-            _showFavorites = true;
-            _future = _loadFavorites();
-          });
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor:
-              _showFavorites ? brandOrange : Colors.white,
-          foregroundColor:
-              _showFavorites ? Colors.white : Colors.black87,
-          elevation: 10,
-          shadowColor: Colors.black26,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-        ),
-        child: const Text(
-          'See favorites',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    ),
-  ],
-),
-
-
-
-              const SizedBox(height: 16),
-
-              if (spaces.isEmpty)
-                const _EmptyBox(text: "No spaces available.")
-              else
-                ...spaces.map(
-  (s) => Padding(
-    padding: const EdgeInsets.only(bottom: 18),
-    child: InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => SpaceDetailsPage(space: s),
-          ),
-        );
-      },
-      child: _SpaceCard(space: s),
-    ),
-  ),
-),
-
-            ],
-          ),
-        );
-      },
-    ),
-  ),
-);
-
+    );
   }
 }
 

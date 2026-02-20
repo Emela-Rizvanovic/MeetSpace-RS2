@@ -45,23 +45,61 @@ namespace MeetSpace.Services.Services
                 .Include(b => b.BookingStatus);
         }
 
-        protected override async Task BeforeInsert(Booking entity, BookingInsertRequest request, CancellationToken cancellationToken = default)
+        protected override async Task BeforeInsert(
+    Booking entity,
+    BookingInsertRequest request,
+    CancellationToken cancellationToken = default)
         {
             entity.CreatedAt = DateTime.UtcNow;
 
             if (request.EndTime <= request.StartTime)
                 throw new Exception("EndTime must be greater than StartTime.");
 
-            // Izračun cijene
-            var space = await _context.Spaces.FirstOrDefaultAsync(s => s.Id == request.SpaceId, cancellationToken);
+            // 1️⃣ Space
+            var space = await _context.Spaces
+                .FirstOrDefaultAsync(s => s.Id == request.SpaceId, cancellationToken);
+
             if (space == null)
                 throw new Exception("Space not found.");
 
+            // 2️⃣ Duration
             var hours = (decimal)(request.EndTime - request.StartTime).TotalHours;
+
             if (hours <= 0)
                 throw new Exception("Invalid booking duration.");
 
-            entity.TotalPrice = Math.Round(hours * space.PricePerHour, 2);
+            var basePrice = Math.Round(hours * space.PricePerHour, 2);
+
+            decimal amenitiesTotal = 0m;
+
+            // 3️⃣ Amenities (NEW LOGIC)
+            if (request.Amenities != null && request.Amenities.Any())
+            {
+                foreach (var item in request.Amenities)
+                {
+                    var amenity = await _context.Amenities
+                        .FirstOrDefaultAsync(a => a.Id == item.AmenityId, cancellationToken);
+
+                    if (amenity == null)
+                        throw new Exception($"Amenity {item.AmenityId} not found.");
+
+                    var quantity = item.Quantity <= 0 ? 1 : item.Quantity;
+
+                    var itemTotal = Math.Round(amenity.Price * quantity, 2);
+
+                    entity.BookingAmenities.Add(new BookingAmenity
+                    {
+                        AmenityId = amenity.Id,
+                        Quantity = quantity,
+                        Price = amenity.Price // snapshot price
+                    });
+
+                    amenitiesTotal += itemTotal;
+                }
+            }
+
+            // 4️⃣ Final total
+            entity.TotalPrice = Math.Round(basePrice + amenitiesTotal, 2);
 
             await base.BeforeInsert(entity, request, cancellationToken);
         }
@@ -151,6 +189,19 @@ namespace MeetSpace.Services.Services
                 .Include(b => b.BookingStatus)
                 .Where(b => b.UserId == userId)
                 .OrderByDescending(b => b.StartTime)
+                .ToListAsync(ct);
+
+            return list.Select(MapToResponse).ToList();
+        }
+
+        public async Task<List<BookingResponse>> GetBySpaceIdAsync(int spaceId, CancellationToken ct = default)
+        {
+            var list = await _context.Bookings
+                .Include(b => b.Space)
+                    .ThenInclude(s => s.Facility)
+                .Include(b => b.BookingStatus)
+                .Where(b => b.SpaceId == spaceId)
+                .OrderBy(b => b.StartTime)
                 .ToListAsync(ct);
 
             return list.Select(MapToResponse).ToList();

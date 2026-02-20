@@ -13,5 +13,6 @@ namespace MeetSpace.Services.Interfaces
     public interface IBookingService : ICRUDService<BookingResponse, BookingSearchObject, BookingInsertRequest, BookingUpdateRequest>
     {
         Task<List<BookingResponse>> GetByUserIdAsync(int userId, CancellationToken ct = default);
+        Task<List<BookingResponse>> GetBySpaceIdAsync(int spaceId, CancellationToken ct = default);
     }
 }

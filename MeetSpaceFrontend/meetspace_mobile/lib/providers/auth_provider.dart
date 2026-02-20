@@ -376,6 +376,71 @@ Future<void> updateProfile({
   }
 }
 
+Future<List<BookingResponse>> getBookingsForSpace(int spaceId) async {
+  final url = Uri.parse("$baseUrl/Booking/space/$spaceId");
+
+  final response = await http.get(url);
+
+  print("SPACE BOOKINGS URL → $url");
+  print("SPACE BOOKINGS STATUS → ${response.statusCode}");
+  print("SPACE BOOKINGS BODY → ${response.body}");
+
+  if (response.statusCode == 200) {
+    final decoded = jsonDecode(response.body);
+
+    if (decoded is List) {
+      return decoded
+          .map((e) => BookingResponse.fromJson(e))
+          .toList();
+    }
+
+    return [];
+  } else {
+    throw Exception("Failed to load space bookings");
+  }
+}
+
+Future<void> createBooking({
+  required int spaceId,
+  required DateTime startTime,
+  required DateTime endTime,
+  required List<Map<String, dynamic>> amenities,
+}) async {
+  if (user == null) {
+    throw Exception("Not logged in");
+  }
+
+  final url = Uri.parse("$baseUrl/Booking");
+
+  final body = {
+    "spaceId": spaceId,
+    "userId": user!.id,
+    "bookingStatusId": 1, // 1 = Pending (pretpostavka)
+    "startTime": startTime.toIso8601String(),
+    "endTime": endTime.toIso8601String(),
+    "amenities": amenities,
+  };
+
+  print("CREATE BOOKING URL → $url");
+  print("CREATE BOOKING BODY → $body");
+
+  final response = await http.post(
+    url,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: jsonEncode(body),
+  );
+
+  print("CREATE BOOKING STATUS → ${response.statusCode}");
+  print("CREATE BOOKING BODY → ${response.body}");
+
+  if (response.statusCode != 200 &&
+      response.statusCode != 201) {
+    throw Exception(
+        "Booking failed (${response.statusCode})");
+  }
+}
 
 }
 

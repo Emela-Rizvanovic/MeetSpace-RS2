@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/space.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
-
+import 'calendar_page.dart';
 
 class SpaceDetailsPage extends StatefulWidget {
   final SpaceResponse space;
@@ -243,110 +243,176 @@ else
         ),
       ),
 
-      // ✅ UPDATED: BOTTOM BAR (cijena kompakt, favorites se širi)
-      bottomNavigationBar: Container(
-        color: const Color(0xFF2E2E2E),
-        padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
-        child: Row(
-          children: [
-            // PRICE (compact "pill", no Expanded)
-            Container(
-              height: 48,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+     bottomNavigationBar: Container(
+  color: const Color(0xFF2E2E2E),
+  padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+  child: Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+
+      /// TOP ROW (price + favorite)
+      Row(
+        children: [
+
+          // PRICE
+          Container(
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: RichText(
+                text: TextSpan(
+                  style: const TextStyle(
+                      fontFamily: 'Poppins', fontSize: 16),
+                  children: [
+                    TextSpan(
+                      text: priceText,
+                      style: const TextStyle(
+                        color: brandOrange,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const TextSpan(
+                      text: ' / hour',
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: Center(
-                child: RichText(
-                  text: TextSpan(
-                    style: const TextStyle(fontFamily: 'Poppins', fontSize: 16),
-                    children: [
-                      TextSpan(
-                        text: priceText,
-                        style: const TextStyle(
-                          color: brandOrange,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const TextSpan(
-                        text: ' / hour',
-                        style: TextStyle(
-                          color: Colors.black87,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+            ),
+          ),
+
+          const SizedBox(width: 12),
+
+          // FAVORITES WITH HEART ICON
+          Expanded(
+            child: SizedBox(
+              height: 48,
+              child: OutlinedButton.icon(
+                icon: Icon(
+                  _isFavorite
+                      ? Icons.favorite
+                      : Icons.favorite_border,
+                  color: _isFavorite
+                      ? Colors.red
+                      : brandOrange,
+                ),
+                label: Text(
+                  _isFavorite
+                      ? 'Remove from favorites'
+                      : 'Add to favorites',
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+                onPressed: _loadingFavorite
+                    ? null
+                    : () async {
+                        final auth =
+                            context.read<AuthProvider>();
+
+                        try {
+                          if (_isFavorite) {
+                            await auth.removeFavorite(
+                                widget.space.id);
+                            setState(
+                                () => _isFavorite = false);
+
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                      'Removed from favorites')),
+                            );
+                          } else {
+                            await auth.addFavorite(
+                                widget.space.id);
+                            setState(
+                                () => _isFavorite = true);
+
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                      'Added to favorites')),
+                            );
+                          }
+                        } catch (e) {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(
+                            SnackBar(
+                                content:
+                                    Text('Error: $e')),
+                          );
+                        }
+                      },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _isFavorite
+                      ? Colors.red
+                      : brandOrange,
+                  backgroundColor: Colors.white,
+                  side: BorderSide(
+                    color: _isFavorite
+                        ? Colors.red
+                        : brandOrange,
+                    width: 1.4,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(12),
                   ),
                 ),
               ),
             ),
-
-            const SizedBox(width: 12),
-
-            // FAVORITES (main action fills rest)
-            Expanded(
-  child: SizedBox(
-    height: 48,
-    child: OutlinedButton(
-      onPressed: _loadingFavorite
-          ? null
-          : () async {
-              final auth = context.read<AuthProvider>();
-
-              try {
-                if (_isFavorite) {
-                  await auth.removeFavorite(widget.space.id);
-                  setState(() => _isFavorite = false);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Removed from favorites')),
-                  );
-                } else {
-                  await auth.addFavorite(widget.space.id);
-                  setState(() => _isFavorite = true);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Added to favorites')),
-                  );
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error: $e')),
-                );
-              }
-            },
-      style: OutlinedButton.styleFrom(
-        foregroundColor:
-            _isFavorite ? Colors.red : brandOrange,
-        backgroundColor: Colors.white,
-        side: BorderSide(
-          color: _isFavorite ? Colors.red : brandOrange,
-          width: 1.4,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+          ),
+        ],
       ),
-      child: Text(
-        _isFavorite
-            ? 'Remove from favorites'
-            : 'Add to favorites',
-        style: const TextStyle(
-          fontFamily: 'Poppins',
-          fontWeight: FontWeight.w600,
-          fontSize: 15,
-        ),
+
+      const SizedBox(height: 14),
+
+      /// SEE AVAILABLE DATES BUTTON
+      SizedBox(
+        width: double.infinity,
+        height: 52,
+        child: ElevatedButton(
+          onPressed: () {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => CalendarPage(
+        space: widget.space,
       ),
     ),
-  ),
-),
-
-          ],
+  );
+},
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          child: const Text(
+            'See available dates',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
         ),
       ),
+    ],
+  ),
+),
     );
   }
 }

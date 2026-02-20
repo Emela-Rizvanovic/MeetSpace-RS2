@@ -24,5 +24,12 @@ namespace MeetSpace.WebAPI.Controllers
             var result = await _bookingService.GetByUserIdAsync(userId, ct);
             return Ok(result);
         }
+
+        [HttpGet("space/{spaceId}")]
+        public async Task<ActionResult<List<BookingResponse>>> GetBySpace(int spaceId, CancellationToken ct)
+        {
+            var result = await _bookingService.GetBySpaceIdAsync(spaceId, ct);
+            return Ok(result);
+        }
     }
 }

@@ -47,7 +47,7 @@ class MyApp extends StatelessWidget {
         '/about-us': (_) => const AboutUsPage(),
         '/contact': (_) => const ContactPage(),
         '/settings': (_) => const SettingsPage(),
-        '/edit-profile': (_) => const EditProfilePage()
+        '/edit-profile': (_) => const EditProfilePage(),
       },
     );
   }
