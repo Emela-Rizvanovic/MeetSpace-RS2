@@ -15,6 +15,7 @@ dependencies:
   http: ^1.6.0
   image_picker: ^1.2.1
   http_parser: ^4.1.2
+  flutter_secure_storage: ^9.0.0
 
 dev_dependencies:
   flutter_test:
@@ -33,3 +34,4 @@ flutter:
       fonts:
         - asset: assets/fonts/Poppins-Light.ttf
         - asset: assets/fonts/Poppins-Regular.ttf
+

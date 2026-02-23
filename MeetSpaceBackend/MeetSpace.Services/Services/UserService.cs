@@ -148,6 +148,12 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
         return _mapper.Map<UserResponse>(entity);
     }
 
+    public async Task<User?> GetEntityByUsername(string username, CancellationToken ct)
+    {
+        return await _context.Users
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Username == username, ct);
+    }
     public async Task<UserResponse?> AuthenticateUser(UserLoginRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _context.Users

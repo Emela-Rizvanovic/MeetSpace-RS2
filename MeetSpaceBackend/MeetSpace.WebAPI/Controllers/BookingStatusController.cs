@@ -11,13 +11,12 @@ namespace MeetSpace.WebAPI.Controllers
     [ApiController]
     [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
-    public class RoleController : BaseCRUDController<RoleResponse, RoleSearchObject, RoleInsertRequest, RoleUpdateRequest>
+    public class BookingStatusController
+        : BaseCRUDController<BookingStatusResponse, BookingStatusSearchObject, BookingStatusInsertRequest, BookingStatusUpdateRequest>
     {
-        private readonly IRoleService _roleService;
-
-        public RoleController(IRoleService service) : base(service)
+        public BookingStatusController(IBookingStatusService service)
+            : base(service)
         {
-            _roleService = service;
         }
     }
 }
