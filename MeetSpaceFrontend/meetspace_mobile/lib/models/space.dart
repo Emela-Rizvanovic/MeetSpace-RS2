@@ -15,6 +15,8 @@ class SpaceResponse {
   final List<AmenityResponse> amenities;
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final double averageRating;
+  final int totalReviews;
 
   SpaceResponse({
     required this.id,
@@ -30,6 +32,8 @@ class SpaceResponse {
     required this.amenities,
     required this.createdAt,
     required this.updatedAt,
+    required this.averageRating,
+    required this.totalReviews,
   });
 
   factory SpaceResponse.fromJson(Map<String, dynamic> json) {
@@ -60,6 +64,8 @@ class SpaceResponse {
       updatedAt: json['updatedAt'] == null
           ? null
           : DateTime.parse(json['updatedAt'].toString()),
+      averageRating: (json['averageRating'] as num?)?.toDouble() ?? 0.0,
+      totalReviews: (json['totalReviews'] as num?)?.toInt() ?? 0,
     );
   }
 

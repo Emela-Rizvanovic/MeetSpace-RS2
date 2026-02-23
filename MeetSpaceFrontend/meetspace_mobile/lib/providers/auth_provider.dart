@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../models/booking.dart';
 import '../models/amenity.dart';
 import '../models/space.dart';
-
+import '../models/review.dart';
 
 class AuthProvider with ChangeNotifier {
   UserResponse? user;
@@ -441,6 +441,124 @@ Future<void> createBooking({
         "Booking failed (${response.statusCode})");
   }
 }
+
+Future<List<ReviewResponse>> getReviewsBySpace(int spaceId) async {
+  final uri = Uri.parse("$baseUrl/Review/space/$spaceId");
+
+  final response = await http.get(uri);
+
+  print("REVIEWS URL → $uri");
+  print("REVIEWS STATUS → ${response.statusCode}");
+  print("REVIEWS BODY → ${response.body}");
+
+  if (response.statusCode == 200) {
+    final decoded = jsonDecode(response.body);
+
+    if (decoded is List) {
+      return decoded
+          .map((e) => ReviewResponse.fromJson(e))
+          .toList();
+    }
+
+    return [];
+  } else {
+    throw Exception("Failed to load reviews");
+  }
+}
+
+Future<void> createReview({
+  required int spaceId,
+  required int rating,
+  String? comment,
+}) async {
+  if (user == null) throw Exception("Not logged in");
+
+  final url = Uri.parse("$baseUrl/Review");
+
+  final body = {
+    "spaceId": spaceId,
+    "userId": user!.id,
+    "rating": rating,
+    "comment": comment ?? "",
+  };
+
+  final response = await http.post(
+    url,
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode(body),
+  );
+
+  if (response.statusCode == 200 || response.statusCode == 201) {
+  return;
+} else {
+  throw Exception(response.body);
+}
+}
+
+
+Future<void> updateReview({
+  required int reviewId,
+  required int rating,
+  String? comment,
+}) async {
+  if (user == null) throw Exception("Not logged in");
+
+  final url = Uri.parse("$baseUrl/Review/$reviewId");
+
+  final body = {
+    "rating": rating,
+    "comment": comment ?? "",
+  };
+
+  final response = await http.put(
+    url,
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode(body),
+  );
+
+  print("UPDATE REVIEW STATUS → ${response.statusCode}");
+  print("UPDATE REVIEW BODY → ${response.body}");
+
+  if (response.statusCode == 200) {
+    return;
+  } else {
+    throw Exception(response.body);
+  }
+}
+
+
+Future<Map<String, dynamic>> getReviewSummary(int spaceId) async {
+  final url = Uri.parse("$baseUrl/Review/space/$spaceId/summary");
+
+  final response = await http.get(url);
+
+  print("SUMMARY STATUS → ${response.statusCode}");
+  print("SUMMARY BODY → ${response.body}");
+
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  } else {
+    throw Exception("Failed to load summary");
+  }
+}
+
+Future<void> deleteReview(int reviewId) async {
+  if (user == null) throw Exception("Not logged in");
+
+  final url = Uri.parse("$baseUrl/Review/$reviewId");
+
+  final response = await http.delete(url);
+
+  print("DELETE REVIEW STATUS → ${response.statusCode}");
+  print("DELETE REVIEW BODY → ${response.body}");
+
+  if (response.statusCode != 200 &&
+      response.statusCode != 204) {
+    throw Exception("Failed to delete review");
+  }
+}
+
+
 
 }
 

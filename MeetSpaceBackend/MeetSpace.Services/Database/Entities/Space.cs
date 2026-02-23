@@ -20,6 +20,7 @@ namespace MeetSpace.Models.Entities
         public ICollection<SpaceBlockedDate> BlockedDates { get; set; } = new HashSet<SpaceBlockedDate>();
         public ICollection<SpaceAmenity> SpaceAmenities { get; set; } = new HashSet<SpaceAmenity>();
         public ICollection<Booking> Bookings { get; set; } = new HashSet<Booking>();
+        public ICollection<Review> Reviews { get; set; } = new HashSet<Review>();
 
         // Audit polja
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

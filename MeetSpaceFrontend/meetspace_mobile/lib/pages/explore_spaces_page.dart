@@ -440,17 +440,21 @@ class _ExploreSpacesPageState
                             borderRadius:
                                 BorderRadius
                                     .circular(16),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      SpaceDetailsPage(
-                                          space:
-                                              s),
-                                ),
-                              );
-                            },
+                            onTap: () async {
+  await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) =>
+          SpaceDetailsPage(space: s),
+    ),
+  );
+
+  setState(() {
+    _future = _showFavorites
+        ? _loadFavorites()
+        : _loadSpaces();
+  });
+},
                             child:
                                 _SpaceCard(
                                     space: s),
@@ -532,7 +536,8 @@ final address = (space.facilityAddress ?? '').trim().isEmpty
     ? 'Address not available'
     : space.facilityAddress!.trim();
 
-
+final rating = space.averageRating;
+final reviewCount = space.totalReviews;
 
     return Container(
       decoration: BoxDecoration(
@@ -596,6 +601,41 @@ final address = (space.facilityAddress ?? '').trim().isEmpty
                       color: Colors.black87,
                     ),
                   ),
+                  const SizedBox(height: 6),
+
+Row(
+  children: [
+    const Icon(
+      Icons.star,
+      size: 18,
+      color: Color(0xFFFFB300),
+    ),
+    const SizedBox(width: 6),
+    Text(
+      reviewCount > 0
+          ? rating.toStringAsFixed(1)
+          : "New",
+      style: const TextStyle(
+        fontFamily: 'Poppins',
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: Colors.black87,
+      ),
+    ),
+    if (reviewCount > 0) ...[
+      const SizedBox(width: 6),
+      Text(
+        "($reviewCount)",
+        style: const TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 13,
+          fontWeight: FontWeight.w400,
+          color: Color(0xFF6D6D6D),
+        ),
+      ),
+    ],
+  ],
+),
                   const SizedBox(height: 10),
                   Text(
   address,

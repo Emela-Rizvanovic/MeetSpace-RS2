@@ -33,7 +33,7 @@ internal class Program
         builder.Services.AddScoped<IBookingService, BookingService>();
         builder.Services.AddScoped<IBookingStatusService, BookingStatusService>();
         builder.Services.AddScoped<IFavoriteService, FavoriteService>();
-
+        builder.Services.AddScoped<IReviewService, ReviewService>();
 
 
 
@@ -48,7 +48,7 @@ internal class Program
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<UserProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<BookingProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<BookingStatusProfile>());
-
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<ReviewProfile>());
 
 
         // Add controllers
@@ -73,6 +73,23 @@ internal class Program
         // app.UseAuthorization();
 
         app.MapControllers();
+
+        app.UseExceptionHandler(errorApp =>
+        {
+            errorApp.Run(async context =>
+            {
+                var exceptionHandlerPathFeature =
+                    context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+
+                var exception = exceptionHandlerPathFeature?.Error;
+
+                if (exception is ApplicationException)
+                {
+                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                    await context.Response.WriteAsync(exception.Message);
+                }
+            });
+        });
 
         app.Run();
     }

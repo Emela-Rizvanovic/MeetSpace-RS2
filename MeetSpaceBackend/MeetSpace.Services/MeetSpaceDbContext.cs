@@ -115,6 +115,20 @@ namespace MeetSpace.Services.Database
                 .HasForeignKey(p => p.PaymentStatusId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Review>()
+            .HasIndex(r => new { r.UserId, r.SpaceId })
+            .IsUnique();
+
+            modelBuilder.Entity<Review>()
+            .Property(r => r.Rating)
+            .IsRequired();
+
+            modelBuilder.Entity<Review>()
+            .ToTable(t =>
+            t.HasCheckConstraint(
+            "CK_Review_Rating",
+            "[Rating] >= 1 AND [Rating] <= 5"));
+
         }
 
         public override int SaveChanges()

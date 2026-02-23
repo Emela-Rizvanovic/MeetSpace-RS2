@@ -25,7 +25,14 @@ namespace MeetSpace.Services.Mapping
         opt => opt.MapFrom(s =>
             s.SpaceAmenities
              .Where(sa => sa.Amenity != null)
-             .Select(sa => sa.Amenity!)));
+             .Select(sa => sa.Amenity!)))
+    .ForMember(d => d.AverageRating,
+        opt => opt.MapFrom(s =>
+            s.Reviews.Any()
+                ? s.Reviews.Average(r => r.Rating)
+                : 0))
+    .ForMember(d => d.TotalReviews,
+        opt => opt.MapFrom(s => s.Reviews.Count)); ;
 
 
 

@@ -17,6 +17,9 @@ namespace MeetSpace.Models.Responses
         public string? FacilityName { get; set; }
         public string? FacilityAddress { get; set; }
 
+        public double AverageRating { get; set; }
+        public int TotalReviews { get; set; }
+
         public int SpaceTypeId { get; set; }
 
         public List<SpaceImageResponse> Images { get; set; } = new();
