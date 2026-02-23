@@ -3,11 +3,13 @@ using MeetSpace.Models.Responses;
 using MeetSpace.Models.SearchObjects;
 using MeetSpace.Services.Interfaces;
 using MeetSpace.WebAPI.BaseControllers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MeetSpace.WebAPI.Controllers
 {
     [ApiController]
+    [Authorize] 
     [Route("api/[controller]")]
     public class SpaceController : BaseCRUDController<SpaceResponse, SpaceSearchObject, SpaceInsertRequest, SpaceUpdateRequest>
     {
@@ -18,6 +20,21 @@ namespace MeetSpace.WebAPI.Controllers
             _spaceService = service;
         }
 
+        [AllowAnonymous]
+        [HttpGet]
+        public override Task<PagedResult<SpaceResponse>> Get([FromQuery] SpaceSearchObject search)
+        {
+            return base.Get(search);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("{id}")]
+        public override Task<SpaceResponse?> GetById(int id)
+        {
+            return base.GetById(id);
+        }
+
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [Consumes("multipart/form-data")]
         public override Task<SpaceResponse> Create([FromForm] SpaceInsertRequest request)
@@ -25,6 +42,7 @@ namespace MeetSpace.WebAPI.Controllers
             return base.Create(request);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         [Consumes("multipart/form-data")]
         public override Task<SpaceResponse?> Update(int id, [FromForm] SpaceUpdateRequest request)
@@ -32,6 +50,7 @@ namespace MeetSpace.WebAPI.Controllers
             return base.Update(id, request);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("{id}/images")]
         public async Task<IActionResult> AddImages(int id, [FromForm] List<IFormFile> images)
         {
@@ -39,12 +58,5 @@ namespace MeetSpace.WebAPI.Controllers
             return Ok(result);
         }
 
-
-        // Minimalni CRUD koristi BaseCRUDController
-        // Za sada nema dodatnih custom metoda
-        // Kada bude potrebno, možemo dodati npr. pretragu po datumu, kapacitetu, tipovima prostora, upload slika itd.
-
-        // TO-DO 
-        // azurirati ga kao i sve kad dodje vrijeme
-    }
+}
 }

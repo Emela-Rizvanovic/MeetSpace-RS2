@@ -6,6 +6,9 @@ using MeetSpace.Services.Security;
 using MeetSpace.Services.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 internal class Program
 {
@@ -28,13 +31,8 @@ internal class Program
         builder.Services.AddScoped<IRoleService, RoleService>();
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
+        builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
         builder.Services.AddScoped<IBlobService, BlobService>();
-        builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
-        builder.Services.AddScoped<IBookingService, BookingService>();
-        builder.Services.AddScoped<IBookingStatusService, BookingStatusService>();
-        builder.Services.AddScoped<IFavoriteService, FavoriteService>();
-        builder.Services.AddScoped<IReviewService, ReviewService>();
-
 
 
         // Registracija AutoMappera
@@ -46,9 +44,34 @@ internal class Program
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<ReportTypeProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<RoleProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<UserProfile>());
-        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<BookingProfile>());
-        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<BookingStatusProfile>());
-        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<ReviewProfile>());
+
+        // JWT konfiguracija
+        var jwtSettings = builder.Configuration.GetSection("Jwt");
+        var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
+
+        builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.RequireHttpsMetadata = false;
+            options.SaveToken = true;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtSettings["Issuer"],
+                ValidAudience = jwtSettings["Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ClockSkew = TimeSpan.Zero
+            };
+        });
+
+        builder.Services.AddAuthorization();
 
 
         // Add controllers
@@ -56,7 +79,35 @@ internal class Program
 
         // Swagger/OpenAPI
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        builder.Services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new() { Title = "MeetSpace API", Version = "v1" });
+
+            c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                Description = "Enter 'Bearer' [space] and then your token."
+            });
+
+            c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+        });
 
         var app = builder.Build();
 
@@ -69,11 +120,13 @@ internal class Program
 
         //app.UseHttpsRedirection();
 
-        // Za sada auth možemo ignorisati dok testiramo
-        // app.UseAuthorization();
+        app.UseAuthentication();
+        app.UseAuthorization();
 
         app.MapControllers();
 
+<<<<<<< Updated upstream
+=======
         app.UseExceptionHandler(errorApp =>
         {
             errorApp.Run(async context =>
@@ -88,9 +141,17 @@ internal class Program
                     context.Response.StatusCode = StatusCodes.Status400BadRequest;
                     await context.Response.WriteAsync(exception.Message);
                 }
+
+                if (exception is UnauthorizedAccessException)
+                {
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    await context.Response.WriteAsync(exception.Message);
+                    return;
+                }
             });
         });
 
+>>>>>>> Stashed changes
         app.Run();
     }
 }

@@ -62,6 +62,8 @@ namespace MeetSpace.Services.Services
                     .ThenInclude(s => s.SpaceAmenities)
                 .Include(f => f.Space)
                     .ThenInclude(s => s.Facility)
+                .Include(f => f.Space)
+                    .ThenInclude(s => s.Reviews)   
                 .Select(f => new SpaceResponse
                 {
                     Id = f.Space.Id,
@@ -75,6 +77,12 @@ namespace MeetSpace.Services.Services
                     SpaceTypeId = f.Space.SpaceTypeId,
                     CreatedAt = f.Space.CreatedAt,
                     UpdatedAt = f.Space.UpdatedAt,
+
+                    AverageRating = f.Space.Reviews.Any()
+                        ? f.Space.Reviews.Average(r => r.Rating)
+                        : 0,
+
+                    TotalReviews = f.Space.Reviews.Count(),
 
                     Images = f.Space.Images
                         .Select(img => new SpaceImageResponse
@@ -92,7 +100,6 @@ namespace MeetSpace.Services.Services
                 })
                 .ToListAsync();
         }
-
     }
 
 }

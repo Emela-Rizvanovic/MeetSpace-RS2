@@ -3,19 +3,50 @@ using MeetSpace.Models.Responses;
 using MeetSpace.Models.SearchObjects;
 using MeetSpace.Services.Interfaces;
 using MeetSpace.WebAPI.BaseControllers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MeetSpace.WebAPI.Controllers
 {
     [ApiController]
+    [Authorize] 
     [Route("api/[controller]")]
-    public class AmenityController : BaseCRUDController<AmenityResponse, AmenitySearchObject, AmenityInsertRequest, AmenityUpdateRequest>
+    public class AmenityController
+    : BaseCRUDController<AmenityResponse, AmenitySearchObject, AmenityInsertRequest, AmenityUpdateRequest>
     {
         private readonly IAmenityService _amenityService;
 
         public AmenityController(IAmenityService service) : base(service)
         {
             _amenityService = service;
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        public override Task<PagedResult<AmenityResponse>> Get([FromQuery] AmenitySearchObject search)
+        {
+            return base.Get(search);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("{id}")]
+        public override Task<AmenityResponse?> GetById(int id)
+        {
+            return base.GetById(id);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        public override Task<AmenityResponse> Create(AmenityInsertRequest request)
+        {
+            return base.Create(request);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}")]
+        public override Task<AmenityResponse?> Update(int id, AmenityUpdateRequest request)
+        {
+            return base.Update(id, request);
         }
     }
 }

@@ -15,7 +15,6 @@ class _SettingsPageState extends State<SettingsPage> {
   static const Color brandOrange = Color.fromARGB(255, 165, 110, 9);
 
   bool _notificationsEnabled = true;
-  String _selectedLanguage = "English";
 
   @override
   Widget build(BuildContext context) {
@@ -126,41 +125,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                           ),
 
-                          const Divider(color: Colors.white12, height: 1),
-
-                          ListTile(
-                            title: const Text(
-                              "Language",
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                color: Colors.white,
-                              ),
-                            ),
-                            trailing: DropdownButton<String>(
-                              dropdownColor: const Color(0xFF2E2E2E),
-                              value: _selectedLanguage,
-                              underline: const SizedBox(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontFamily: 'Poppins',
-                              ),
-                              items: const [
-                                DropdownMenuItem(
-                                  value: "English",
-                                  child: Text("English"),
-                                ),
-                                DropdownMenuItem(
-                                  value: "Bosnian",
-                                  child: Text("Bosnian"),
-                                ),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedLanguage = value!;
-                                });
-                              },
-                            ),
-                          ),
+                    
                         ],
                       ),
                     ),
