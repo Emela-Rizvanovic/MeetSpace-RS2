@@ -136,11 +136,6 @@ namespace MeetSpace.WebAPI.Controllers
             return await base.Update(id, request);
         }
 
-
-<<<<<<< Updated upstream
-        // TO-DO 
-        // azurirati ga kao i sve kad dodje vrijeme
-=======
         [AllowAnonymous]
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken ct)
@@ -208,6 +203,6 @@ namespace MeetSpace.WebAPI.Controllers
 
             return Ok(user);
         }
->>>>>>> Stashed changes
+
     }
 }

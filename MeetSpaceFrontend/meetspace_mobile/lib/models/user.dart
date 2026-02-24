@@ -20,11 +20,9 @@ class UserResponse {
   final String? firstName;
   final String? lastName;
   final String? profileImageUrl;
-<<<<<<< Updated upstream
-=======
+
   final String? phoneNumber;
    final String roleName;
->>>>>>> Stashed changes
 
   UserResponse({
     required this.id,
@@ -33,11 +31,10 @@ class UserResponse {
     this.firstName,
     this.lastName,
     this.profileImageUrl,
-<<<<<<< Updated upstream
-=======
+
     this.phoneNumber,
     required this.roleName,
->>>>>>> Stashed changes
+
   });
 
   factory UserResponse.fromJson(Map<String, dynamic> json) {
@@ -48,11 +45,10 @@ class UserResponse {
       firstName: json['firstName'],
       lastName: json['lastName'],
       profileImageUrl: json['profileImageUrl'],
-<<<<<<< Updated upstream
-=======
+
       phoneNumber: json['phoneNumber'],
       roleName: json['roleName'],
->>>>>>> Stashed changes
+
     );
   }
 

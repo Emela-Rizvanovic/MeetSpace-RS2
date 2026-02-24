@@ -33,6 +33,11 @@ internal class Program
         builder.Services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
         builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
         builder.Services.AddScoped<IBlobService, BlobService>();
+        builder.Services.AddScoped<IRabbitMQService, RabbitMQService>();
+        builder.Services.AddScoped<IFavoriteService, FavoriteService>();
+        builder.Services.AddScoped<IReviewService, ReviewService>();
+        builder.Services.AddScoped<IBookingService, BookingService>();
+        builder.Services.AddScoped<IBookingStatusService, BookingStatusService>();
 
 
         // Registracija AutoMappera
@@ -44,6 +49,8 @@ internal class Program
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<ReportTypeProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<RoleProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<UserProfile>());
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<BookingProfile>());
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<ReviewProfile>());
 
         // JWT konfiguracija
         var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -125,8 +132,6 @@ internal class Program
 
         app.MapControllers();
 
-<<<<<<< Updated upstream
-=======
         app.UseExceptionHandler(errorApp =>
         {
             errorApp.Run(async context =>
@@ -151,7 +156,6 @@ internal class Program
             });
         });
 
->>>>>>> Stashed changes
         app.Run();
     }
 }

@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../models/user.dart';
 import 'package:image_picker/image_picker.dart';
-<<<<<<< Updated upstream
-=======
 import '../models/booking.dart';
 import '../models/amenity.dart';
 import '../models/space.dart';
@@ -18,7 +16,6 @@ import '../services/favorite_service.dart';
 import '../services/space_service.dart';
 import '../services/amenity_service.dart';
 import '../services/user_service.dart';
->>>>>>> Stashed changes
 
 class AuthProvider with ChangeNotifier {
   UserResponse? user;
@@ -139,8 +136,6 @@ Future<void> register({
   notifyListeners();
 }
 
-<<<<<<< Updated upstream
-=======
 Future<ForgotPasswordResponse> forgotPassword(String email) async {
   final result = await userService.forgotPassword(email);
 
@@ -353,5 +348,4 @@ class ForgotPasswordResponse {
       message: (json['message'] ?? '').toString(),
     );
   }
->>>>>>> Stashed changes
 }
