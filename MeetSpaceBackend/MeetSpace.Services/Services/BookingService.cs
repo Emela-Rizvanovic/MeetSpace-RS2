@@ -139,7 +139,20 @@ namespace MeetSpace.Services.Services
             _context.Bookings.Add(entity);
             await _context.SaveChangesAsync(cancellationToken);
 
-            // ✅ reload sa include-ovima da mapper dobije Space/Facility/Status
+            // update RecommendationLog ako je prostor bio preporučen
+
+            var log = await _context.RecommendationLogs
+                .Where(r => r.UserId == entity.UserId && r.SpaceId == entity.SpaceId)
+                .OrderByDescending(r => r.RecommendedAt)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (log != null)
+            {
+                log.Booked = true;
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+
+            // reload sa include-ovima da mapper dobije Space/Facility/Status
             var loaded = await _context.Bookings
                 .Include(b => b.Space).ThenInclude(s => s.Facility)
                 .Include(b => b.BookingStatus)

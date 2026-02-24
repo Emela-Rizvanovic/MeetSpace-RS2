@@ -6,6 +6,10 @@ import '../models/space.dart';
 import 'menu_page.dart';
 import 'space_details_page.dart';
 
+enum ExploreMode { recommended, all, favorites }
+
+ExploreMode _mode = ExploreMode.recommended;
+
 class ExploreSpacesPage extends StatefulWidget {
   const ExploreSpacesPage({super.key});
 
@@ -21,7 +25,7 @@ class _ExploreSpacesPageState
   static const Color brandOrange =
       Color.fromARGB(255, 165, 110, 9);
 
-  bool _showFavorites = false;
+  //bool _showFavorites = false;
 
   Future<List<SpaceResponse>>? _future;
   List<SpaceResponse> _spaces = [];
@@ -29,7 +33,7 @@ class _ExploreSpacesPageState
   @override
   void initState() {
     super.initState();
-    _future = _loadSpaces();
+    _future = _loadRecommended();
   }
 
   Future<List<SpaceResponse>> _loadSpaces() async {
@@ -43,6 +47,40 @@ class _ExploreSpacesPageState
     final auth = context.read<AuthProvider>();
     return auth.getFavoriteSpaces();
   }
+  
+  Future<List<SpaceResponse>> _loadRecommended() async {
+  final auth = context.read<AuthProvider>();
+  return auth.recommendationService.getRecommendedSpaces();
+}
+
+Widget _buildFilterButton({
+  required String text,
+  required bool active,
+  required VoidCallback onTap,
+}) {
+  return SizedBox(
+    height: 40,
+    child: ElevatedButton(
+      onPressed: onTap,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: active ? brandOrange : Colors.white,
+        foregroundColor: active ? Colors.white : Colors.black87,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -328,101 +366,56 @@ class _ExploreSpacesPageState
                     const SizedBox(height: 12),
 
                     /// FILTER BUTTONS
-                    Row(
-                      children: [
-                        SizedBox(
-                          height: 40,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                _showFavorites =
-                                    false;
-                                _future =
-                                    _loadSpaces();
-                              });
-                            },
-                            style: ElevatedButton
-                                .styleFrom(
-                              backgroundColor:
-                                  !_showFavorites
-                                      ? brandOrange
-                                      : Colors
-                                          .white,
-                              foregroundColor:
-                                  !_showFavorites
-                                      ? Colors
-                                          .white
-                                      : Colors
-                                          .black87,
-                              shape:
-                                  RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius
-                                        .circular(
-                                            12),
-                              ),
-                            ),
-                            child: const Text(
-                              'See all',
-                              style: TextStyle(
-                                fontFamily:
-                                    'Poppins',
-                                fontSize: 14,
-                                fontWeight:
-                                    FontWeight
-                                        .w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        SizedBox(
-                          height: 40,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                _showFavorites =
-                                    true;
-                                _future =
-                                    _loadFavorites();
-                              });
-                            },
-                            style: ElevatedButton
-                                .styleFrom(
-                              backgroundColor:
-                                  _showFavorites
-                                      ? brandOrange
-                                      : Colors
-                                          .white,
-                              foregroundColor:
-                                  _showFavorites
-                                      ? Colors
-                                          .white
-                                      : Colors
-                                          .black87,
-                              shape:
-                                  RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius
-                                        .circular(
-                                            12),
-                              ),
-                            ),
-                            child: const Text(
-                              'See favorites',
-                              style: TextStyle(
-                                fontFamily:
-                                    'Poppins',
-                                fontSize: 14,
-                                fontWeight:
-                                    FontWeight
-                                        .w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                 Row(
+  children: [
+
+    /// RECOMMENDED
+    Expanded(
+      child: _buildFilterButton(
+        text: "Recommended",
+        active: _mode == ExploreMode.recommended,
+        onTap: () {
+          setState(() {
+            _mode = ExploreMode.recommended;
+            _future = _loadRecommended();
+          });
+        },
+      ),
+    ),
+
+    const SizedBox(width: 8),
+
+    /// SEE ALL
+    Expanded(
+      child: _buildFilterButton(
+        text: "See all",
+        active: _mode == ExploreMode.all,
+        onTap: () {
+          setState(() {
+            _mode = ExploreMode.all;
+            _future = _loadSpaces();
+          });
+        },
+      ),
+    ),
+
+    const SizedBox(width: 8),
+
+    /// FAVORITES
+    Expanded(
+      child: _buildFilterButton(
+        text: "Favorites",
+        active: _mode == ExploreMode.favorites,
+        onTap: () {
+          setState(() {
+            _mode = ExploreMode.favorites;
+            _future = _loadFavorites();
+          });
+        },
+      ),
+    ),
+  ],
+),
 
                     const SizedBox(height: 16),
 
@@ -441,18 +434,35 @@ class _ExploreSpacesPageState
                                 BorderRadius
                                     .circular(16),
                             onTap: () async {
+  final auth = context.read<AuthProvider>();
+
+  if (_mode == ExploreMode.recommended) {
+    try {
+      await auth.recommendationService.markClicked(s.id);
+    } catch (e) {
+      debugPrint("Click tracking failed: $e");
+    }
+  }
+
   await Navigator.push(
     context,
     MaterialPageRoute(
-      builder: (_) =>
-          SpaceDetailsPage(space: s),
+      builder: (_) => SpaceDetailsPage(space: s),
     ),
   );
 
   setState(() {
-    _future = _showFavorites
-        ? _loadFavorites()
-        : _loadSpaces();
+    switch (_mode) {
+      case ExploreMode.recommended:
+        _future = _loadRecommended();
+        break;
+      case ExploreMode.all:
+        _future = _loadSpaces();
+        break;
+      case ExploreMode.favorites:
+        _future = _loadFavorites();
+        break;
+    }
   });
 },
                             child:
