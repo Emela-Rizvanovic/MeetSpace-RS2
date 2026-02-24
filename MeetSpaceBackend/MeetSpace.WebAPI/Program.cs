@@ -38,6 +38,7 @@ internal class Program
         builder.Services.AddScoped<IReviewService, ReviewService>();
         builder.Services.AddScoped<IBookingService, BookingService>();
         builder.Services.AddScoped<IBookingStatusService, BookingStatusService>();
+        builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 
 
         // Registracija AutoMappera
