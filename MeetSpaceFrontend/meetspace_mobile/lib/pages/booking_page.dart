@@ -140,7 +140,6 @@ class _BookingPageState extends State<BookingPage> {
       MaterialPageRoute(
         builder: (_) => PaymentPage(
           space: widget.space,
-          selectedDate: widget.selectedDate,
           startTime: start,
           endTime: end,
           selectedAmenities: _selectedAmenities,

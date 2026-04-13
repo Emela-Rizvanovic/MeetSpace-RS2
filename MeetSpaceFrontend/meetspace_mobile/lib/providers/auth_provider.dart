@@ -17,6 +17,7 @@ import '../services/space_service.dart';
 import '../services/amenity_service.dart';
 import '../services/user_service.dart';
 import '../services/recommendation_service.dart';
+import '../services/payment_service.dart';
 
 class AuthProvider with ChangeNotifier {
   UserResponse? user;
@@ -58,6 +59,9 @@ UserService get userService =>
 
 RecommendationService get recommendationService =>
     RecommendationService(api);
+
+PaymentService get paymentService =>
+    PaymentService(api);
 
 final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 

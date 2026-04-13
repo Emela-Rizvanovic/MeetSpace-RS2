@@ -15,6 +15,7 @@ internal class Program
     private static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
         // DbContext
         builder.Services.AddDbContext<MeetSpaceDbContext>(options =>

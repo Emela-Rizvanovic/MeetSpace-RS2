@@ -3,6 +3,9 @@
         android:label="meetspace_mobile"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <meta-data
+    android:name="com.stripe.android.publishable_key"
+    android:value="pk_test_51R5meHR9NYFfZVzXMEoPGifu3MmL3YikWaErXwfPgBMZHuSpytfodAe0YUMkcmwarmsboT2lMDfAb34WEWFovWt400IHjNPTo7"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
