@@ -14,8 +14,14 @@ import 'pages/about_us_page.dart';
 import 'pages/contact_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/edit_profile_page.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  Stripe.publishableKey = "pk_test_51R5meHR9NYFfZVzXMEoPGifu3MmL3YikWaErXwfPgBMZHuSpytfodAe0YUMkcmwarmsboT2lMDfAb34WEWFovWt400IHjNPTo7";
+  await Stripe.instance.applySettings();
+
   runApp(
     MultiProvider(
       providers: [
