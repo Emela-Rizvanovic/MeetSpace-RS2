@@ -18,6 +18,9 @@ dependencies:
   flutter_secure_storage: ^9.0.0
   flutter_stripe: ^10.1.1
   flutter_svg: ^2.0.10 
+  url_launcher: ^6.2.5
+  webview_flutter: ^4.0.0
+  collection: ^1.18.0
 
 dev_dependencies:
   flutter_test:

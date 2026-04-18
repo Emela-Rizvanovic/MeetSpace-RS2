@@ -5,7 +5,7 @@
         public int Id { get; set; }
         public int BookingId { get; set; }
         public int UserId { get; set; }
-        public int PaymentIntentId { get; set; }
+        public int? PaymentIntentId { get; set; }
         public int PaymentMethodId { get; set; }
         public int PaymentStatusId { get; set; }
         public decimal Amount { get; set; }

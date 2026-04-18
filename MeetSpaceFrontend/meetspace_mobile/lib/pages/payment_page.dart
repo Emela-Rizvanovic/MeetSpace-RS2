@@ -3,6 +3,8 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/space.dart';
+import 'paypal_webview.dart';
+import 'package:collection/collection.dart';
 
 class PaymentPage extends StatefulWidget {
   final SpaceResponse space;
@@ -31,6 +33,9 @@ class _PaymentPageState extends State<PaymentPage> {
   bool _agree = false;
   bool _loading = false;
 
+  String _method = "card"; 
+
+  // ---------------- STRIPE ----------------
   Future<void> _pay() async {
     if (!_agree) {
       _snack("Accept terms");
@@ -47,10 +52,23 @@ class _PaymentPageState extends State<PaymentPage> {
     try {
       final auth = context.read<AuthProvider>();
 
-      final hours =
-          widget.endTime.difference(widget.startTime).inHours;
+    final hours =
+    widget.endTime.difference(widget.startTime).inHours;
 
-      final amount = hours * widget.space.pricePerHour;
+double amount = hours * widget.space.pricePerHour;
+
+// ADD AMENITIES
+for (var entry in widget.selectedAmenities.entries) {
+  if (entry.value == true) {
+    final amenity = widget.space.amenities
+        .where((a) => a.id == entry.key)
+        .firstOrNull;
+
+    if (amenity != null) {
+      amount += amenity.price;
+    }
+  }
+}
 
       final intent =
           await auth.paymentService.createPaymentIntent(amount);
@@ -99,6 +117,68 @@ class _PaymentPageState extends State<PaymentPage> {
     setState(() => _loading = false);
   }
 
+  // ---------------- PAYPAL ----------------
+Future<void> _payWithPaypal() async {
+  setState(() => _loading = true);
+
+  try {
+    final auth = context.read<AuthProvider>();
+
+   final hours =
+    widget.endTime.difference(widget.startTime).inHours;
+
+double amount = hours * widget.space.pricePerHour;
+
+// ADD AMENITIES
+for (var entry in widget.selectedAmenities.entries) {
+  if (entry.value == true) {
+    final amenity = widget.space.amenities
+        .where((a) => a.id == entry.key)
+        .firstOrNull;
+
+    if (amenity != null) {
+      amount += amenity.price;
+    }
+  }
+}
+
+    final data =
+        await auth.paymentService.createPaypalOrder(amount);
+
+    if (!mounted) return;
+
+    final amenities = widget.selectedAmenities.entries
+    .where((e) => e.value)
+    .map((e) => {
+          "amenityId": e.key,
+          "quantity": 1,
+        })
+    .toList();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+       builder: (_) => PayPalWebView(
+  url: data["url"],
+  orderId: data["orderId"],
+  spaceId: widget.space.id,
+  startTime: widget.startTime,
+  endTime: widget.endTime,
+  amenities: amenities,
+),
+      ),
+    );
+
+  } catch (e) {
+    if (!mounted) return;
+    _snack("PayPal failed");
+    print(e);
+  }
+
+  if (!mounted) return;
+  setState(() => _loading = false);
+}
+
   void _snack(String msg) {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(msg)));
@@ -119,6 +199,44 @@ class _PaymentPageState extends State<PaymentPage> {
             borderSide: BorderSide.none,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _icon(String path) {
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Image.asset(path, height: 18),
+    );
+  }
+
+  Widget _button(String text, VoidCallback onPressed) {
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: ElevatedButton(
+        onPressed: _loading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _method == "paypal"
+              ? const Color(0xFF2E4DF6)
+              : Colors.black,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        child: _loading
+            ? const CircularProgressIndicator(color: Colors.white)
+            : Text(
+                text,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
       ),
     );
   }
@@ -145,151 +263,119 @@ class _PaymentPageState extends State<PaymentPage> {
 
               const SizedBox(height: 20),
 
-              Row(
-  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  children: [
-    Row(
-      children: const [
-        Icon(Icons.radio_button_checked, color: Colors.blue),
-        SizedBox(width: 8),
-        Text("Credit/Debit Card",
-            style: TextStyle(color: Colors.white)),
-      ],
-    ),
-
-    Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Image.asset(
-  "assets/icons/Mastercard.png",
-  height: 18,
-),
-        ),
-        const SizedBox(width: 6),
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(6),
-          ),
-        child: Image.asset(
-  "assets/icons/Visa.png",
-  height: 18,
-),
-        ),
-      ],
-    )
-  ],
-),
-
-              const SizedBox(height: 15),
-
-              _input("Cardholder name", _nameController),
-
-              // 🔥 STILIZOVANI CARD FIELD (kao prototip)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE9E9E9),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: CardField(
-                  onCardChanged: (card) => _card = card,
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 14,
-                  ),
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
-
-              Row(
-                children: [
-                  Checkbox(
-                    value: _agree,
-                    activeColor: Colors.orange,
-                    onChanged: (v) =>
-                        setState(() => _agree = v ?? false),
-                  ),
-                  const Expanded(
-                    child: Text(
-                      "I agree to the Terms and conditions",
-                      style: TextStyle(color: Colors.white70),
+              // ---------------- CARD TOGGLE ----------------
+              GestureDetector(
+                onTap: () => setState(() => _method = "card"),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          _method == "card"
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_off,
+                          color: Colors.blue,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text("Credit/Debit Card",
+                            style: TextStyle(color: Colors.white)),
+                      ],
                     ),
-                  )
-                ],
+                    Row(
+                      children: [
+                        _icon("assets/icons/mastercard.png"),
+                        const SizedBox(width: 6),
+                        _icon("assets/icons/visa.png"),
+                      ],
+                    )
+                  ],
+                ),
               ),
 
               const SizedBox(height: 20),
 
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _loading ? null : _pay,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: _loading
-                      ? const CircularProgressIndicator(
-                          color: Colors.white)
-                      : const Text(
-                          "Pay",
-                          style: TextStyle(
-                            color: Colors.white, // 🔥 FIXED
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
+              // ---------------- PAYPAL TOGGLE ----------------
+              GestureDetector(
+                onTap: () => setState(() => _method = "paypal"),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          _method == "paypal"
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_off,
+                          color: Colors.blue,
                         ),
+                        const SizedBox(width: 8),
+                        const Text("PayPal",
+                            style: TextStyle(color: Colors.white)),
+                      ],
+                    ),
+                    _icon("assets/icons/paypal.png"),
+                  ],
                 ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
 
-             Row(
-  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  children: [
-    Row(
-      children: const [
-        Icon(Icons.radio_button_off, color: Colors.white70),
-        SizedBox(width: 8),
-        Text("PayPal",
-            style: TextStyle(color: Colors.white)),
-      ],
-    ),
+              // ---------------- CARD UI ----------------
+              if (_method == "card") ...[
+                _input("Cardholder name", _nameController),
 
-    Container(
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Image.asset(
-  "assets/icons/PayPal.png",
-  height: 18,
-),
-    ),
-  ],
-),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE9E9E9),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: CardField(
+                    onCardChanged: (card) => _card = card,
+                    style: const TextStyle(color: Colors.black),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
 
-              const Padding(
-                padding: EdgeInsets.only(left: 28, top: 6),
-                child: Text(
+                Row(
+                  children: [
+                    Checkbox(
+                      value: _agree,
+                      activeColor: Colors.orange,
+                      onChanged: (v) =>
+                          setState(() => _agree = v ?? false),
+                    ),
+                    const Expanded(
+                      child: Text(
+                        "I agree to the Terms and conditions",
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                    )
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                _button("Pay", _pay),
+              ],
+
+              // ---------------- PAYPAL UI ----------------
+              if (_method == "paypal") ...[
+                const SizedBox(height: 10),
+
+                const Text(
                   "You will be redirected to PayPal website to complete your order securely.",
                   style: TextStyle(color: Colors.white70),
                 ),
-              ),
+
+                const SizedBox(height: 20),
+
+                _button("Continue with PayPal", _payWithPaypal),
+              ],
 
               const SizedBox(height: 50),
 
