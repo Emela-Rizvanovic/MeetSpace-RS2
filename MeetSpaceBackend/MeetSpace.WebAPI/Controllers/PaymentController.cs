@@ -85,20 +85,16 @@ namespace MeetSpace.WebAPI.Controllers
 
             paymentIntent.IsCompleted = true;
 
-            // GET SPACE
             var space = await _context.Spaces
                 .FirstOrDefaultAsync(x => x.Id == request.SpaceId);
 
             if (space == null)
                 return BadRequest("Space not found");
 
-            // CALCULATE HOURS
             var hours = (request.EndTime - request.StartTime).TotalHours;
 
-            // BASE PRICE
             decimal total = space.PricePerHour * (decimal)hours;
 
-            // ADD AMENITIES
             foreach (var a in request.Amenities)
             {
                 var amenity = await _context.Amenities
@@ -110,7 +106,6 @@ namespace MeetSpace.WebAPI.Controllers
                 }
             }
 
-            // CREATE BOOKING
             var booking = new Booking
             {
                 SpaceId = request.SpaceId,
@@ -124,7 +119,6 @@ namespace MeetSpace.WebAPI.Controllers
             _context.Bookings.Add(booking);
             await _context.SaveChangesAsync(); 
 
-            // CREATE BOOKING AMENITIES
             foreach (var a in request.Amenities)
             {
                 var bookingAmenity = new BookingAmenity
@@ -137,7 +131,6 @@ namespace MeetSpace.WebAPI.Controllers
                 _context.BookingAmenities.Add(bookingAmenity);
             }
 
-            // CREATE PAYMENT
             var payment = new Payment
             {
                 BookingId = booking.Id,
