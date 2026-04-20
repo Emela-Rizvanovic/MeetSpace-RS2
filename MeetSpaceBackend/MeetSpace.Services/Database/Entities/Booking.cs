@@ -9,6 +9,9 @@
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public decimal TotalPrice { get; set; }
+        public string? RejectionReason { get; set; }
+        public int PaymentStatusId { get; set; }
+        public PaymentStatus PaymentStatus { get; set; }
 
         // Navigacija
         public Space? Space { get; set; }

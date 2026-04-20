@@ -135,5 +135,47 @@ namespace MeetSpace.WebAPI.Controllers
             var result = await _bookingService.GetBySpaceIdAsync(spaceId, ct);
             return Ok(result);
         }
+
+        [HttpPut("{id}/approve")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Approve(int id)
+        {
+            var booking = await _bookingService.GetByIdAsync(id);
+
+            if (booking == null)
+                return NotFound();
+
+            var request = new BookingUpdateRequest
+            {
+                BookingStatusId = 2 // Approved
+            };
+
+            await _bookingService.ApproveAsync(id);
+
+            return Ok();
+        }
+
+        [HttpPut("{id}/reject")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Reject(int id, [FromBody] RejectRequest reason)
+        {
+            var booking = await _bookingService.GetByIdAsync(id);
+
+            if (booking == null)
+                return NotFound();
+
+            await _bookingService.RejectAsync(id, reason.Reason);
+
+            return Ok();
+        }
+
+        [HttpGet("check-conflict")]
+        public async Task<IActionResult> CheckConflict(int spaceId, DateTime start, DateTime end, int? ignoreId)
+        {
+            var result = await _bookingService.HasConflict(spaceId, start, end, ignoreId);
+            return Ok(new { hasConflict = result });
+        }
+
+
     }
 }

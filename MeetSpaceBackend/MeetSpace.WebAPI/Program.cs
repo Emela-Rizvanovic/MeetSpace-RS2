@@ -118,6 +118,8 @@ internal class Program
     });
         });
 
+        builder.Services.AddHttpContextAccessor();
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline
