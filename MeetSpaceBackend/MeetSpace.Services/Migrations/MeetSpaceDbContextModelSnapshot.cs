@@ -90,6 +90,14 @@ namespace MeetSpace.Services.Migrations
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("PaymentStatusId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("SpaceId")
                         .HasColumnType("int");
 
@@ -109,6 +117,8 @@ namespace MeetSpace.Services.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BookingStatusId");
+
+                    b.HasIndex("PaymentStatusId");
 
                     b.HasIndex("SpaceId");
 
@@ -145,6 +155,39 @@ namespace MeetSpace.Services.Migrations
                     b.HasIndex("BookingId");
 
                     b.ToTable("BookingAmenities");
+                });
+
+            modelBuilder.Entity("MeetSpace.Models.Entities.BookingAuditLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("AdminId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BookingId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdminId");
+
+                    b.HasIndex("BookingId");
+
+                    b.ToTable("BookingAuditLogs");
                 });
 
             modelBuilder.Entity("MeetSpace.Models.Entities.BookingStatus", b =>
@@ -867,6 +910,12 @@ namespace MeetSpace.Services.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("MeetSpace.Models.Entities.PaymentStatus", "PaymentStatus")
+                        .WithMany()
+                        .HasForeignKey("PaymentStatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("MeetSpace.Models.Entities.Space", "Space")
                         .WithMany("Bookings")
                         .HasForeignKey("SpaceId")
@@ -880,6 +929,8 @@ namespace MeetSpace.Services.Migrations
                         .IsRequired();
 
                     b.Navigation("BookingStatus");
+
+                    b.Navigation("PaymentStatus");
 
                     b.Navigation("Space");
 
@@ -901,6 +952,25 @@ namespace MeetSpace.Services.Migrations
                         .IsRequired();
 
                     b.Navigation("Amenity");
+
+                    b.Navigation("Booking");
+                });
+
+            modelBuilder.Entity("MeetSpace.Models.Entities.BookingAuditLog", b =>
+                {
+                    b.HasOne("MeetSpace.Models.Entities.User", "Admin")
+                        .WithMany()
+                        .HasForeignKey("AdminId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("MeetSpace.Models.Entities.Booking", "Booking")
+                        .WithMany()
+                        .HasForeignKey("BookingId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Admin");
 
                     b.Navigation("Booking");
                 });

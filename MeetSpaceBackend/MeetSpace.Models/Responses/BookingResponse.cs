@@ -16,7 +16,17 @@ namespace MeetSpace.Models.Responses
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public decimal TotalPrice { get; set; }
+        public string? Username { get; set; }
+        public string? SpaceImageUrl { get; set; }
+        public string? UserFullName { get; set; }
+        public string? UserEmail { get; set; }
+        public string? UserPhone { get; set; }
+        public string? RejectionReason { get; set; }
+        public string? PaymentStatusName { get; set; }
 
+        public string? LastAction { get; set; }
+        public string? LastAdminName { get; set; }
+        public DateTime? LastActionAt { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 

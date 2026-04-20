@@ -171,6 +171,7 @@ public class PayPalController : ControllerBase
             StartTime = request.StartTime,
             EndTime = request.EndTime,
             BookingStatusId = 1, // Pending
+            PaymentStatusId = 2, //Completed
             TotalPrice = total
         };
 

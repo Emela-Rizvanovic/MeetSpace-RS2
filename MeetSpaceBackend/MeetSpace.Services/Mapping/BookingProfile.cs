@@ -20,7 +20,26 @@ namespace MeetSpace.Services.Mapping
                 .ForMember(d => d.StatusName, opt => opt.MapFrom(s => s.BookingStatus != null ? s.BookingStatus.Name : null))
                 .ForMember(d => d.FacilityAddress, opt => opt.MapFrom(s =>
                     s.Space != null && s.Space.Facility != null ? s.Space.Facility.Address : null
-                ));
+                )).ForMember(d => d.Username, opt => opt.MapFrom(s =>
+    s.User != null ? s.User.Username : null
+))
+                .ForMember(d => d.SpaceImageUrl, opt => opt.MapFrom(s =>
+    s.Space != null && s.Space.Images != null && s.Space.Images.Any()
+        ? s.Space.Images.First().ImageUrl
+        : null
+))
+                .ForMember(dest => dest.UserFullName,
+    opt => opt.MapFrom(src => src.User.FirstName + " " + src.User.LastName))
+
+.ForMember(dest => dest.UserEmail,
+    opt => opt.MapFrom(src => src.User.Email))
+
+.ForMember(dest => dest.UserPhone,
+    opt => opt.MapFrom(src => src.User.PhoneNumber))
+.ForMember(dest => dest.RejectionReason,
+    opt => opt.MapFrom(src => src.RejectionReason))
+.ForMember(dest => dest.PaymentStatusName,
+    opt => opt.MapFrom(src => src.PaymentStatus.Name));
 
             // InsertRequest -> Entity
             CreateMap<BookingInsertRequest, Booking>()

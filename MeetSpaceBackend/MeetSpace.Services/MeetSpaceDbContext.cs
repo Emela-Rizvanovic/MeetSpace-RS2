@@ -39,7 +39,7 @@ namespace MeetSpace.Services.Database
         public DbSet<Review> Reviews { get; set; }
         public DbSet<RecommendationLog> RecommendationLogs { get; set; }
         public DbSet<PasswordReset> PasswordResets { get; set; }
-
+        public DbSet<BookingAuditLog> BookingAuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -114,6 +114,28 @@ namespace MeetSpace.Services.Database
                 .WithMany(ps => ps.Payments)
                 .HasForeignKey(p => p.PaymentStatusId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Booking>()
+    .HasOne(b => b.PaymentStatus)
+    .WithMany()
+    .HasForeignKey(b => b.PaymentStatusId)
+    .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Booking>()
+    .Property(b => b.PaymentStatusId)
+    .HasDefaultValue(1);
+
+            modelBuilder.Entity<BookingAuditLog>()
+    .HasOne(x => x.Admin)
+    .WithMany()
+    .HasForeignKey(x => x.AdminId)
+    .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<BookingAuditLog>()
+    .HasOne(x => x.Booking)
+    .WithMany()
+    .HasForeignKey(x => x.BookingId)
+    .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Review>()
             .HasIndex(r => new { r.UserId, r.SpaceId })

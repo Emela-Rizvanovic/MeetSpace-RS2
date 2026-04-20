@@ -12,14 +12,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 
 namespace MeetSpace.Services.Services
 {
     public class BookingService : BaseCRUDService<BookingResponse, BookingSearchObject, Booking, BookingInsertRequest, BookingUpdateRequest>, IBookingService
     {
-        public BookingService(MeetSpaceDbContext context, IMapper mapper)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        public BookingService(MeetSpaceDbContext context, IMapper mapper, IHttpContextAccessor httpContextAccessor)
             : base(context, mapper)
         {
+            _httpContextAccessor = httpContextAccessor;
         }
 
         protected override IQueryable<Booking> ApplyFilter(IQueryable<Booking> query, BookingSearchObject search)
@@ -42,7 +46,11 @@ namespace MeetSpace.Services.Services
             return query
                 .Include(b => b.Space)
                     .ThenInclude(s => s.Facility)
-                .Include(b => b.BookingStatus);
+                .Include(b => b.Space)
+        .ThenInclude(s => s.Images)
+                .Include(b => b.BookingStatus)
+                .Include(b => b.User)
+                .Include(b => b.PaymentStatus);
         }
 
         protected override async Task BeforeInsert(
@@ -54,6 +62,17 @@ namespace MeetSpace.Services.Services
 
             if (request.EndTime <= request.StartTime)
                 throw new Exception("EndTime must be greater than StartTime.");
+
+            var hasConflict = await _context.Bookings
+    .AnyAsync(b =>
+        b.SpaceId == request.SpaceId &&
+        b.BookingStatusId != 3 && // ignore rejected
+        request.StartTime < b.EndTime &&
+        request.EndTime > b.StartTime
+    );
+
+            if (hasConflict)
+                throw new Exception("Time slot already booked.");
 
             // 1️⃣ Space
             var space = await _context.Spaces
@@ -100,6 +119,8 @@ namespace MeetSpace.Services.Services
 
             // 4️⃣ Final total
             entity.TotalPrice = Math.Round(basePrice + amenitiesTotal, 2);
+
+            entity.PaymentStatusId = 1; // Pending
 
             await base.BeforeInsert(entity, request, cancellationToken);
         }
@@ -155,10 +176,14 @@ namespace MeetSpace.Services.Services
             // reload sa include-ovima da mapper dobije Space/Facility/Status
             var loaded = await _context.Bookings
                 .Include(b => b.Space).ThenInclude(s => s.Facility)
+                .Include(b => b.Space)
+        .ThenInclude(s => s.Images)
                 .Include(b => b.BookingStatus)
+                .Include(b => b.User)
+                .Include(b => b.PaymentStatus)
                 .FirstAsync(b => b.Id == entity.Id, cancellationToken);
 
-            return MapToResponse(loaded);
+            return MapWithAudit(loaded);
         }
 
 
@@ -166,10 +191,14 @@ namespace MeetSpace.Services.Services
         {
             var entity = await _context.Bookings
                 .Include(b => b.Space).ThenInclude(s => s.Facility)
+                .Include(b => b.Space)
+        .ThenInclude(s => s.Images)
                 .Include(b => b.BookingStatus)
+                .Include(b => b.User)
+                .Include(b => b.PaymentStatus)
                 .FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
 
-            return entity == null ? null : MapToResponse(entity);
+            return entity == null ? null : MapWithAudit(entity);
         }
 
         public override async Task<BookingResponse?> UpdateAsync(int id, BookingUpdateRequest request, CancellationToken cancellationToken = default)
@@ -188,10 +217,14 @@ namespace MeetSpace.Services.Services
             // ✅ reload sa include-ovima radi response-a
             var loaded = await _context.Bookings
                 .Include(b => b.Space).ThenInclude(s => s.Facility)
+                .Include(b => b.Space)
+        .ThenInclude(s => s.Images)
                 .Include(b => b.BookingStatus)
+                .Include(b => b.User)
+                .Include(b => b.PaymentStatus)
                 .FirstAsync(b => b.Id == id, cancellationToken);
 
-            return MapToResponse(loaded);
+            return MapWithAudit(loaded);
         }
 
 
@@ -199,12 +232,16 @@ namespace MeetSpace.Services.Services
         {
             var list = await _context.Bookings
                 .Include(b => b.Space).ThenInclude(s => s.Facility)
+                .Include(b => b.Space)
+        .ThenInclude(s => s.Images)
                 .Include(b => b.BookingStatus)
+                .Include(b => b.User)
                 .Where(b => b.UserId == userId)
+                .Include(b => b.PaymentStatus)
                 .OrderByDescending(b => b.StartTime)
                 .ToListAsync(ct);
 
-            return list.Select(MapToResponse).ToList();
+            return list.Select(MapWithAudit).ToList();
         }
 
         public async Task<List<BookingResponse>> GetBySpaceIdAsync(int spaceId, CancellationToken ct = default)
@@ -212,12 +249,121 @@ namespace MeetSpace.Services.Services
             var list = await _context.Bookings
                 .Include(b => b.Space)
                     .ThenInclude(s => s.Facility)
+                    .Include(b => b.Space)
+        .ThenInclude(s => s.Images)
                 .Include(b => b.BookingStatus)
+                .Include(b => b.User)
                 .Where(b => b.SpaceId == spaceId)
+                .Include(b => b.PaymentStatus)
                 .OrderBy(b => b.StartTime)
                 .ToListAsync(ct);
 
-            return list.Select(MapToResponse).ToList();
+            return list.Select(MapWithAudit).ToList();
+        }
+
+        public async Task ApproveAsync(int id, CancellationToken ct = default)
+        {
+            var entity = await _context.Bookings
+                .FirstOrDefaultAsync(b => b.Id == id, ct);
+
+            if (entity == null)
+                throw new Exception("Booking not found");
+
+            entity.BookingStatusId = 2; // Approved
+
+            var userId = int.Parse(
+                _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value
+            );
+
+            _context.BookingAuditLogs.Add(new BookingAuditLog
+            {
+                BookingId = entity.Id,
+                AdminId = userId,
+                Action = "Approved",
+                CreatedAt = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync(ct);
+        }
+
+        public async Task RejectAsync(int id, string reason, CancellationToken ct = default)
+        {
+            var entity = await _context.Bookings
+                .FirstOrDefaultAsync(b => b.Id == id, ct);
+
+            if (entity == null)
+                throw new Exception("Booking not found");
+
+            entity.BookingStatusId = 3;
+            entity.RejectionReason = reason;
+
+            var userId = int.Parse(
+                _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value
+            );
+
+            _context.BookingAuditLogs.Add(new BookingAuditLog
+            {
+                BookingId = entity.Id,
+                AdminId = userId,
+                Action = "Rejected",
+                Comment = reason,
+                CreatedAt = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync(ct);
+        }
+
+        public async Task<bool> HasConflict(int spaceId, DateTime start, DateTime end, int? ignoreId = null)
+        {
+            return await _context.Bookings
+                .AnyAsync(b =>
+                    b.SpaceId == spaceId &&
+                    b.BookingStatusId != 3 &&
+                    (ignoreId == null || b.Id != ignoreId) &&
+                    start < b.EndTime &&
+                    end > b.StartTime
+                );
+        }
+
+        private BookingResponse MapWithAudit(Booking entity)
+        {
+            var response = _mapper.Map<BookingResponse>(entity);
+
+            var lastLog = _context.BookingAuditLogs
+                .Where(x => x.BookingId == entity.Id)
+                .OrderByDescending(x => x.CreatedAt)
+                .Include(x => x.Admin)
+                .FirstOrDefault();
+
+            response.LastAction = lastLog?.Action;
+            response.LastAdminName = lastLog?.Admin?.Username;
+            response.LastActionAt = lastLog?.CreatedAt;
+
+            return response;
+        }
+
+        public override async Task<PagedResult<BookingResponse>> GetAsync(
+    BookingSearchObject search,
+    CancellationToken cancellationToken = default)
+        {
+            var query = _context.Bookings.AsQueryable();
+
+            query = ApplyFilter(query, search);
+
+            var list = await query
+                .Include(b => b.Space).ThenInclude(s => s.Facility)
+                .Include(b => b.Space).ThenInclude(s => s.Images)
+                .Include(b => b.BookingStatus)
+                .Include(b => b.User)
+                .Include(b => b.PaymentStatus)
+                .OrderByDescending(b => b.StartTime)
+                .ToListAsync(cancellationToken);
+
+            var result = new PagedResult<BookingResponse>();
+            result.Items = list.Select(MapWithAudit).ToList();
+            result.TotalCount = list.Count;
+
+            return result;
         }
     }
 }
