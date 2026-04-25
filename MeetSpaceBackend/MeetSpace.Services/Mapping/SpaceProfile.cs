@@ -32,7 +32,9 @@ namespace MeetSpace.Services.Mapping
                 ? s.Reviews.Average(r => r.Rating)
                 : 0))
     .ForMember(d => d.TotalReviews,
-        opt => opt.MapFrom(s => s.Reviews.Count)); ;
+        opt => opt.MapFrom(s => s.Reviews.Count))
+    .ForMember(d => d.SpaceTypeName,
+    opt => opt.MapFrom(s => s.SpaceType != null ? s.SpaceType.Name : null)); ;
 
 
 

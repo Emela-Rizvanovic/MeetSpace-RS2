@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'dart:io';
 
 class ApiService {
   final String baseUrl;
@@ -59,4 +60,88 @@ class ApiService {
       headers: _headers(),
     );
   }
+
+Future<http.Response> multipartPost(
+  String endpoint, {
+  required Map<String, String> fields,
+  required List<File> files,
+  required String fileFieldName,
+  Map<String, List<int>>? listFields, // 👈 NOVO
+}) async {
+  final uri = Uri.parse('$baseUrl/$endpoint');
+
+  final request = http.MultipartRequest('POST', uri);
+
+  if (token != null) {
+    request.headers['Authorization'] = 'Bearer $token';
+  }
+
+  /// fields
+  request.fields.addAll(fields);
+
+  /// LIST FIELDS (npr AmenityIds)
+if (listFields != null) {
+  listFields.forEach((key, values) {
+    for (int i = 0; i < values.length; i++) {
+      request.fields["$key[$i]"] = values[i].toString();
+    }
+  });
+}
+
+  /// files
+  for (var file in files) {
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        fileFieldName,
+        file.path,
+      ),
+    );
+  }
+
+  final streamed = await request.send();
+  return await http.Response.fromStream(streamed);
+}
+
+
+Future<http.Response> multipartPut(
+  String url, {
+  required Map<String, String> fields,
+  List<File>? files,
+  String fileFieldName = "NewImages",
+  Map<String, List<int>>? listFields,
+}) async {
+  final uri = Uri.parse("$baseUrl/$url");
+
+  final request = http.MultipartRequest("PUT", uri);
+
+  /// ❗ SAMO AUTH HEADER (bez Content-Type)
+  if (token != null) {
+    request.headers['Authorization'] = 'Bearer $token';
+  }
+
+  /// fields
+  request.fields.addAll(fields);
+
+  /// LIST FIELDS (ISTO KAO POST!)
+  if (listFields != null) {
+    listFields.forEach((key, values) {
+      for (int i = 0; i < values.length; i++) {
+        request.fields["$key[$i]"] = values[i].toString();
+      }
+    });
+  }
+
+  /// FILES
+  if (files != null) {
+    for (var file in files) {
+      request.files.add(
+        await http.MultipartFile.fromPath(fileFieldName, file.path),
+      );
+    }
+  }
+
+  final streamed = await request.send();
+  return await http.Response.fromStream(streamed);
+}
+
 }

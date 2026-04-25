@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'bookings_page.dart';
+import 'locations_page.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -60,12 +61,20 @@ class DashboardPage extends StatelessWidget {
     ),
   ),
 
-  const DashboardCard(
+GestureDetector(
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const LocationsPage()),
+    );
+  },
+  child: const DashboardCard(
     title: "Available locations",
     description:
         "Browse and manage all co-working spaces and meeting venues currently open for booking.",
     iconPath: "assets/icons/hut.png",
   ),
+),
 
   const DashboardCard(
     title: "Modern amenities",

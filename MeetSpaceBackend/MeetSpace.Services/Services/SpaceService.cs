@@ -106,6 +106,7 @@ namespace MeetSpace.Services.Services
                 .Include(s => s.Facility)
                 .Include(s => s.SpaceAmenities).ThenInclude(sa => sa.Amenity)
                 .Include(s => s.Reviews)
+                .Include(s => s.SpaceType)
                 .FirstAsync(s => s.Id == entity.Id, cancellationToken);
 
             return _mapper.Map<SpaceResponse>(entity);
@@ -121,6 +122,7 @@ namespace MeetSpace.Services.Services
                 .Include(s => s.Images)
                 .Include(s => s.SpaceAmenities) // ✅ needed for replace
                 .Include(s => s.Reviews)
+                .Include(s => s.SpaceType)
                 .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 
             if (entity == null)
@@ -213,6 +215,7 @@ namespace MeetSpace.Services.Services
                 .Include(s => s.Facility)
                 .Include(s => s.SpaceAmenities).ThenInclude(sa => sa.Amenity)
                 .Include(s => s.Reviews)
+                .Include(s => s.SpaceType)
                 .FirstAsync(s => s.Id == id, cancellationToken);
 
             return _mapper.Map<SpaceResponse>(entity);
@@ -224,6 +227,7 @@ namespace MeetSpace.Services.Services
                 .Include(s => s.Images)
                 .Include(s => s.SpaceAmenities) // ✅ clean links too
                 .Include(s => s.Reviews)
+                .Include(s => s.SpaceType)
                 .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 
             if (entity == null)
@@ -255,6 +259,7 @@ namespace MeetSpace.Services.Services
                 .Include(s => s.Facility)
                 .Include(s => s.SpaceAmenities).ThenInclude(sa => sa.Amenity)
                 .Include(s => s.Reviews)
+                .Include(s => s.SpaceType)
                 .AsQueryable();
 
             query = ApplyFilter(query, search);
@@ -289,6 +294,7 @@ namespace MeetSpace.Services.Services
                 .Include(s => s.Facility)
                 .Include(s => s.SpaceAmenities).ThenInclude(sa => sa.Amenity)
                 .Include(s => s.Reviews)
+                .Include(s => s.SpaceType)
                 .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 
             return entity == null ? null : MapToResponse(entity);
