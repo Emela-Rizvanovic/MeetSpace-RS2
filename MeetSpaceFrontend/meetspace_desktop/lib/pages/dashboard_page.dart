@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'bookings_page.dart';
 import 'locations_page.dart';
+import 'amenities_page.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -76,12 +77,22 @@ GestureDetector(
   ),
 ),
 
-  const DashboardCard(
+  GestureDetector(
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const AmenitiesPage(),
+      ),
+    );
+  },
+  child: const DashboardCard(
     title: "Modern amenities",
     description:
         "Take a quick overview of additional services and equipment available to enhance user experience.",
     iconPath: "assets/icons/wand.png",
   ),
+),
 
   const DashboardCard(
     title: "Revenue history",
