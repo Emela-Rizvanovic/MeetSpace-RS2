@@ -45,4 +45,13 @@ class AmenityService {
 
     throw Exception("Failed to load amenities");
   }
+
+  Future<void> deleteAmenity(int id) async {
+  final response = await api.delete("Amenity/$id");
+
+  if (response.statusCode != 200 &&
+      response.statusCode != 204) {
+    throw Exception("Failed to delete amenity");
+  }
+}
 }
