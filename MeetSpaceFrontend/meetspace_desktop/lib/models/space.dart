@@ -11,6 +11,7 @@ class SpaceResponse {
   final String? facilityName;
   final String? facilityAddress;
   final int spaceTypeId;
+  final String? spaceTypeName;
   final List<SpaceImageResponse> images;
   final List<AmenityResponse> amenities;
   final DateTime createdAt;
@@ -28,6 +29,7 @@ class SpaceResponse {
     required this.facilityName,
     required this.facilityAddress,
     required this.spaceTypeId,
+    required this.spaceTypeName,
     required this.images,
     required this.amenities,
     required this.createdAt,
@@ -50,6 +52,7 @@ class SpaceResponse {
       facilityName: json['facilityName']?.toString(),
       facilityAddress: json['facilityAddress']?.toString(),
       spaceTypeId: (json['spaceTypeId'] as num).toInt(),
+      spaceTypeName: json['spaceTypeName']?.toString(),
       images: imgs is List
           ? imgs
               .map((e) => SpaceImageResponse.fromJson(e as Map<String, dynamic>))

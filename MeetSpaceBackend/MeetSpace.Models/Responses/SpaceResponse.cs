@@ -21,6 +21,7 @@ namespace MeetSpace.Models.Responses
         public int TotalReviews { get; set; }
 
         public int SpaceTypeId { get; set; }
+        public string? SpaceTypeName { get; set; }
 
         public List<SpaceImageResponse> Images { get; set; } = new();
         public List<AmenityResponse> Amenities { get; set; } = new();
