@@ -15,6 +15,9 @@ dependencies:
   url_launcher: ^6.2.5
   collection: ^1.18.0
   file_picker: ^8.0.0
+  pdf: ^3.10.7
+  path_provider: ^2.1.2
+  open_file: ^3.3.2
 
 dev_dependencies:
   flutter_test:
@@ -26,3 +29,5 @@ flutter:
 
   assets:
     - assets/icons/
+    - assets/fonts/Roboto-Regular.ttf
+    - assets/fonts/Roboto-Bold.ttf

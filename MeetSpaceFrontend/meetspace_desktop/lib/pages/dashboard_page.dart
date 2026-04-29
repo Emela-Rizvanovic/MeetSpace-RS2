@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'bookings_page.dart';
 import 'locations_page.dart';
 import 'amenities_page.dart';
+import 'revenue_page.dart';
+import 'users_page.dart';
+import 'reviews_page.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -94,26 +97,52 @@ GestureDetector(
   ),
 ),
 
-  const DashboardCard(
+  GestureDetector(
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const RevenuePage(),
+      ),
+    );
+  },
+  child: const DashboardCard(
     title: "Revenue history",
     description:
         "Track overall earnings from all bookings and additional services in one place.",
     iconPath: "assets/icons/tag.png",
   ),
+),
 
-  const DashboardCard(
-    title: "Active users",
+  GestureDetector(
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const UsersPage()),
+    );
+  },
+  child: const DashboardCard(
+    title: "Users",
     description:
         "Keep track of user activity and platform engagement.",
     iconPath: "assets/icons/globe.png",
   ),
+),
 
-  const DashboardCard(
+ GestureDetector(
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ReviewsPage()),
+    );
+  },
+  child: const DashboardCard(
     title: "User reviews",
     description:
         "Access and monitor all reviews to improve service quality.",
     iconPath: "assets/icons/like.png",
   ),
+),
 ],
               ),
             ),

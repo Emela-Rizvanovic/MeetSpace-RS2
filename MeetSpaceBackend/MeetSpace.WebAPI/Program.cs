@@ -34,7 +34,7 @@ internal class Program
         builder.Services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
         builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
         builder.Services.AddScoped<IBlobService, BlobService>();
-        builder.Services.AddScoped<IRabbitMQService, RabbitMQService>();
+        builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
         builder.Services.AddScoped<IFavoriteService, FavoriteService>();
         builder.Services.AddScoped<IReviewService, ReviewService>();
         builder.Services.AddScoped<IBookingService, BookingService>();
@@ -67,6 +67,7 @@ internal class Program
         {
             options.RequireHttpsMetadata = false;
             options.SaveToken = true;
+            options.Configuration = new Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdConnectConfiguration();
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
@@ -130,6 +131,7 @@ internal class Program
         }
 
         //app.UseHttpsRedirection();
+
 
         app.UseAuthentication();
         app.UseAuthorization();

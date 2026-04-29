@@ -24,6 +24,10 @@ class UserResponse {
   final String? phoneNumber;
    final String roleName;
 
+   final bool isActive;
+final DateTime? createdAt;
+final DateTime? updatedAt;
+
   UserResponse({
     required this.id,
     required this.username,
@@ -34,6 +38,10 @@ class UserResponse {
 
     this.phoneNumber,
     required this.roleName,
+
+    this.createdAt,
+    required this.isActive,
+    this.updatedAt
 
   });
 
@@ -49,6 +57,14 @@ class UserResponse {
       phoneNumber: json['phoneNumber'],
       roleName: json['roleName'],
 
+      isActive: json['isActive'] ?? false,
+createdAt: json['createdAt'] != null
+    ? DateTime.parse(json['createdAt'])
+    : null,
+updatedAt: json['updatedAt'] != null
+    ? DateTime.parse(json['updatedAt'])
+    : null,
+
     );
   }
 
@@ -63,6 +79,29 @@ class UserResponse {
     'phoneNumber': phoneNumber,
     'profileImageUrl': profileImageUrl,
   };
+}
+
+
+UserResponse copyWith({
+  String? firstName,
+  String? lastName,
+  String? email,
+  String? roleName,
+  bool? isActive,
+}) {
+  return UserResponse(
+    id: id,
+    firstName: firstName ?? this.firstName,
+    lastName: lastName ?? this.lastName,
+    username: username,
+    email: email ?? this.email,
+    phoneNumber: phoneNumber,
+    roleName: roleName ?? this.roleName,
+    isActive: isActive ?? this.isActive,
+    profileImageUrl: profileImageUrl,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+  );
 }
 }
 

@@ -204,5 +204,13 @@ namespace MeetSpace.WebAPI.Controllers
             return Ok(user);
         }
 
+        [AllowAnonymous]
+        [HttpGet("test")]
+        public IActionResult Test()
+        {
+            return Ok(new { message = "hello", time = DateTime.UtcNow });
+        }
+
     }
+
 }

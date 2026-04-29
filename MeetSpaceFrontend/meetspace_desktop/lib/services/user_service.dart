@@ -134,4 +134,98 @@ class UserService {
 
     throw Exception("Reset password failed");
   }
+
+  Future<List<UserResponse>> getUsers({
+  String? firstName,
+  String? lastName,
+  String? email,
+  int? roleId,
+  bool? isActive,
+}) async {
+  final query = <String, String>{};
+
+  if (firstName != null && firstName.trim().isNotEmpty) {
+    query['FirstName'] = firstName.trim();
+  }
+
+  if (lastName != null && lastName.trim().isNotEmpty) {
+    query['LastName'] = lastName.trim();
+  }
+
+  if (email != null && email.trim().isNotEmpty) {
+    query['Email'] = email.trim();
+  }
+
+  if (roleId != null) {
+    query['RoleId'] = roleId.toString();
+  }
+
+  if (isActive != null) {
+    query['IsActive'] = isActive.toString();
+  }
+
+  final response = await api.get(
+    "User",
+    queryParameters: query.isEmpty ? null : query,
+  );
+
+  if (response.statusCode == 200) {
+    final decoded = jsonDecode(response.body);
+
+    if (decoded is Map<String, dynamic>) {
+      final items = decoded['items'];
+
+      if (items is List) {
+        return items.map((e) => UserResponse.fromJson(e)).toList();
+      }
+    }
+
+    return [];
+  }
+
+  throw Exception("Failed to load users");
+}
+
+Future<UserResponse> updateUserAdmin({
+  required int userId,
+  required String firstName,
+  required String lastName,
+  required String username,
+  required String email,
+  required String phone,
+  required bool isActive,
+  int? roleId,
+}) async {
+  final fields = {
+    "FirstName": firstName,
+    "LastName": lastName,
+    "Username": username,
+    "Email": email,
+    "PhoneNumber": phone,
+    "IsActive": isActive.toString(),
+  };
+
+  if (roleId != null) {
+    fields["RoleId"] = roleId.toString();
+  }
+
+  final response = await api.multipartPut(
+    "User/$userId",
+    fields: fields,
+  );
+
+  if (response.statusCode == 200) {
+    return UserResponse.fromJson(jsonDecode(response.body));
+  }
+
+  throw Exception("Failed to update user");
+}
+
+Future<void> deleteUser(int id) async {
+  final response = await api.delete("User/$id");
+
+  if (response.statusCode != 200) {
+    throw Exception("Failed to delete user");
+  }
+}
 }

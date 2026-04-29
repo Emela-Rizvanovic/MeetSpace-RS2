@@ -3,6 +3,7 @@ class ReviewResponse {
   final int userId;
   final String? userName;
   final int spaceId;
+  final String? spaceName;
   final int rating;
   final String? comment;
   final DateTime createdAt;
@@ -13,6 +14,7 @@ class ReviewResponse {
     required this.userId,
     required this.userName,
     required this.spaceId,
+    required this.spaceName,
     required this.rating,
     required this.comment,
     required this.createdAt,
@@ -25,6 +27,7 @@ class ReviewResponse {
       userId: (json['userId'] as num).toInt(),
       userName: json['userName']?.toString(),
       spaceId: (json['spaceId'] as num).toInt(),
+      spaceName: json['spaceName'],
       rating: (json['rating'] as num).toInt(),
       comment: json['comment']?.toString(),
       createdAt: DateTime.parse(json['createdAt'].toString()),

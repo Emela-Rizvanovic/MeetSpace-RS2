@@ -123,5 +123,22 @@ Future<bool> checkConflict({
   throw Exception("Conflict check failed");
 }
 
+Future<List<BookingResponse>> getBookingsByUser(int userId) async {
+  final response = await api.get("Booking/user/$userId");
+
+  if (response.statusCode == 200) {
+    final decoded = jsonDecode(response.body);
+
+    if (decoded is List) {
+      return decoded
+          .map((e) => BookingResponse.fromJson(e))
+          .toList();
+    }
+
+    return [];
+  }
+
+  throw Exception("Failed to load user bookings");
+}
 
 }

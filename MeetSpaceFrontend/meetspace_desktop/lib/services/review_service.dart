@@ -77,4 +77,20 @@ throw Exception(message);
       throw Exception("Failed to delete review");
     }
   }
+
+  Future<List<ReviewResponse>> getAllReviews() async {
+  final response = await api.get("Review");
+
+  if (response.statusCode == 200) {
+    final decoded = jsonDecode(response.body);
+
+    if (decoded is Map && decoded.containsKey("items")) {
+      return (decoded["items"] as List)
+          .map((e) => ReviewResponse.fromJson(e))
+          .toList();
+    }
+  }
+
+  throw Exception("Failed to load reviews");
+}
 }

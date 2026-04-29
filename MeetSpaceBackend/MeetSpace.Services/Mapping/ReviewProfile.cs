@@ -29,7 +29,9 @@ namespace MeetSpace.Services.Mapping
 
             CreateMap<Review, ReviewResponse>()
     .ForMember(d => d.UserName,
-        opt => opt.MapFrom(s => s.User != null ? s.User.FirstName + " " + s.User.LastName : null));
+        opt => opt.MapFrom(s => s.User != null ? s.User.FirstName + " " + s.User.LastName : null))
+    .ForMember(dest => dest.SpaceName,
+        opt => opt.MapFrom(src => src.Space.Name));
         }
     }
 }
