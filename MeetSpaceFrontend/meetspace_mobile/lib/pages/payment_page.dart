@@ -5,6 +5,7 @@ import '../providers/auth_provider.dart';
 import '../models/space.dart';
 import 'paypal_webview.dart';
 import 'package:collection/collection.dart';
+import 'booking_confirmation_page.dart';
 
 class PaymentPage extends StatefulWidget {
   final SpaceResponse space;
@@ -103,10 +104,20 @@ for (var entry in widget.selectedAmenities.entries) {
         amenities: amenities,
       );
 
-      if (!mounted) return;
+     if (!mounted) return;
 
-      _snack("Payment successful (Pending approval)");
-      Navigator.popUntil(context, (r) => r.isFirst);
+Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(
+    builder: (_) => BookingConfirmationPage(
+      space: widget.space,
+      startTime: widget.startTime,
+      endTime: widget.endTime,
+      totalPrice: amount,
+      guests: widget.space.capacity,
+    ),
+  ),
+);
     } catch (e) {
       if (!mounted) return;
       _snack("Payment failed");
@@ -158,13 +169,15 @@ for (var entry in widget.selectedAmenities.entries) {
     Navigator.push(
       context,
       MaterialPageRoute(
-       builder: (_) => PayPalWebView(
+      builder: (_) => PayPalWebView(
   url: data["url"],
   orderId: data["orderId"],
   spaceId: widget.space.id,
   startTime: widget.startTime,
   endTime: widget.endTime,
   amenities: amenities,
+  space: widget.space,
+  totalPrice: amount,
 ),
       ),
     );

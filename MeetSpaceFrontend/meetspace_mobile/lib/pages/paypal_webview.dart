@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../models/space.dart';
+import 'booking_confirmation_page.dart';
 
 class PayPalWebView extends StatefulWidget {
   final String url;
@@ -10,6 +12,8 @@ class PayPalWebView extends StatefulWidget {
 final DateTime startTime;
 final DateTime endTime;
 final List<Map<String, dynamic>> amenities;
+final SpaceResponse space;
+final double totalPrice;
 
   const PayPalWebView({
       super.key,
@@ -19,6 +23,8 @@ final List<Map<String, dynamic>> amenities;
   required this.startTime,
   required this.endTime,
   required this.amenities,
+  required this.space,
+required this.totalPrice,
   });
 
   @override
@@ -55,11 +61,18 @@ class _PayPalWebViewState extends State<PayPalWebView> {
 
     if (!mounted) return NavigationDecision.prevent;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Payment successful")),
-    );
-
-    Navigator.popUntil(context, (r) => r.isFirst);
+    Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(
+    builder: (_) => BookingConfirmationPage(
+      space: widget.space,
+      startTime: widget.startTime,
+      endTime: widget.endTime,
+      totalPrice: widget.totalPrice,
+      guests: widget.space.capacity,
+    ),
+  ),
+);
 
     return NavigationDecision.prevent;
   }
