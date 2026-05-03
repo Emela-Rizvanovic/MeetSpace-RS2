@@ -8,8 +8,6 @@ import 'space_details_page.dart';
 
 enum ExploreMode { recommended, all, favorites }
 
-ExploreMode _mode = ExploreMode.recommended;
-
 class ExploreSpacesPage extends StatefulWidget {
   const ExploreSpacesPage({super.key});
 
@@ -24,24 +22,52 @@ class _ExploreSpacesPageState
       Color.fromARGB(255, 59, 59, 59);
   static const Color brandOrange =
       Color.fromARGB(255, 165, 110, 9);
+      ExploreMode _mode = ExploreMode.recommended;
 
   //bool _showFavorites = false;
 
+  int _page = 0;
+final int _pageSize = 5;
+int _totalPages = 1;
+
   Future<List<SpaceResponse>>? _future;
   List<SpaceResponse> _spaces = [];
+  List<SpaceResponse> _allSpaces = [];
 
   @override
   void initState() {
     super.initState();
     _future = _loadRecommended();
+    _loadAllSpacesForSearch();
   }
 
-  Future<List<SpaceResponse>> _loadSpaces() async {
-    final auth = context.read<AuthProvider>();
-    final data = await auth.getSpaces();
-    _spaces = data;
-    return data;
+  Future<void> _loadAllSpacesForSearch() async {
+  final auth = context.read<AuthProvider>();
+  final data = await auth.getSpaces(); 
+  setState(() {
+    _allSpaces = data;
+  });
+}
+
+Future<List<SpaceResponse>> _loadSpaces() async {
+  final auth = context.read<AuthProvider>();
+  
+  if (_mode == ExploreMode.all) {
+  final result = await auth.spaceService.getPaged(
+  page: _page,
+  pageSize: _pageSize,
+);
+
+_spaces = result.items;
+_totalPages = result.totalPages;
+
+return _spaces;
   }
+  
+  final data = await auth.getSpaces();
+  _spaces = data;
+  return data;
+}
 
   Future<List<SpaceResponse>> _loadFavorites() async {
     final auth = context.read<AuthProvider>();
@@ -185,17 +211,17 @@ Widget _buildFilterButton({
                         optionsBuilder:
                             (TextEditingValue
                                 textEditingValue) {
-                          if (_spaces.isEmpty) {
+                          if (_allSpaces.isEmpty) {
                             return const Iterable<
                                 SpaceResponse>.empty();
                           }
 
                           if (textEditingValue
                               .text.isEmpty) {
-                            return _spaces;
+                            return _allSpaces;
                           }
 
-                          return _spaces.where(
+                          return _allSpaces.where(
                             (space) => space.name
                                 .toLowerCase()
                                 .startsWith(
@@ -391,11 +417,12 @@ Widget _buildFilterButton({
         text: "See all",
         active: _mode == ExploreMode.all,
         onTap: () {
-          setState(() {
-            _mode = ExploreMode.all;
-            _future = _loadSpaces();
-          });
-        },
+  setState(() {
+    _mode = ExploreMode.all;
+    _page = 0;  // 👈 resetuj
+    _future = _loadSpaces();
+  });
+},
       ),
     ),
 
@@ -433,6 +460,7 @@ Widget _buildFilterButton({
                             borderRadius:
                                 BorderRadius
                                     .circular(16),
+                                    
                             onTap: () async {
   final auth = context.read<AuthProvider>();
 
@@ -471,6 +499,10 @@ Widget _buildFilterButton({
                           ),
                         ),
                       ),
+                       if (_mode == ExploreMode.all) ...[
+                      const SizedBox(height: 8),
+                      _buildPagination(),
+                    ],
                   ],
                 ),
               );
@@ -480,7 +512,78 @@ Widget _buildFilterButton({
       ),
     );
   }
+
+  Widget _buildPagination() {
+  return Center(
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: _page > 0
+                ? () {
+                    setState(() => _page--);
+                    _future = _loadSpaces();
+                  }
+                : null,
+            child: Icon(
+              Icons.chevron_left,
+              color: _page > 0 ? Colors.white : Colors.white24,
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          for (int i = 0; i < _totalPages; i++)
+            GestureDetector(
+              onTap: () {
+                setState(() => _page = i);
+                _future = _loadSpaces();
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _page == i ? brandOrange : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  "${i + 1}",
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: _page == i ? Colors.white : Colors.white70,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+
+          const SizedBox(width: 8),
+
+          GestureDetector(
+            onTap: _page < _totalPages - 1
+                ? () {
+                    setState(() => _page++);
+                    _future = _loadSpaces();
+                  }
+                : null,
+            child: Icon(
+              Icons.chevron_right,
+              color: _page < _totalPages - 1 ? Colors.white : Colors.white24,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
+}
+
 
 class _Header extends StatelessWidget {
   final String title;
