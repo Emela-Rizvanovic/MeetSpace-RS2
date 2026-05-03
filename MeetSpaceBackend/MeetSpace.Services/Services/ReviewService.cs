@@ -21,6 +21,19 @@ namespace MeetSpace.Services.Services
 
         protected override IQueryable<Review> ApplyFilter(IQueryable<Review> query, ReviewSearchObject search)
         {
+            query = query
+    .Include(r => r.User)
+    .Include(r => r.Space);
+
+            if (!string.IsNullOrWhiteSpace(search.Name))
+            {
+                query = query.Where(r =>
+                    r.User.FirstName.Contains(search.Name) ||
+                    r.User.LastName.Contains(search.Name) ||
+                    r.Space.Name.Contains(search.Name)
+                );
+            }
+
             if (search.SpaceId.HasValue)
                 query = query.Where(r => r.SpaceId == search.SpaceId.Value);
 

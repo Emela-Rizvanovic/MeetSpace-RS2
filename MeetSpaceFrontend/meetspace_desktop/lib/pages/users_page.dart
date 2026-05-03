@@ -16,11 +16,15 @@ class _UsersPageState extends State<UsersPage> {
   static const brandOrange = Color.fromARGB(255, 165, 110, 9);
  
   List<UserResponse> _users = [];
-  List<UserResponse> _filtered = [];
  
   bool _isLoading = true;
  
   String _search = "";
+  int _page = 0;
+final int _pageSize = 6;
+int _totalPages = 1;
+
+String _sort = "Name ↑";
  
   @override
   void initState() {
@@ -28,42 +32,52 @@ class _UsersPageState extends State<UsersPage> {
     _loadUsers();
   }
  
- Future<void> _loadUsers() async {
-  
+Future<void> _loadUsers() async {
   try {
     final auth = context.read<AuthProvider>();
-    
-    final data = await auth.userService.getUsers();
+
+    final sort = _getSortParams();
+
+    final result = await auth.userService.getPaged(
+      page: _page,
+      pageSize: _pageSize,
+      search: _search.isNotEmpty ? _search : null,
+      sortBy: sort["sortBy"],
+      desc: sort["desc"],
+    );
 
     setState(() {
-      _users = data;
-      _applyFilters();
+      _users = result.items;
+      _totalPages = result.totalPages;
       _isLoading = false;
     });
-    
   } catch (e) {
     debugPrint(e.toString());
   }
 }
- 
-  void _applyFilters() {
-    List<UserResponse> temp = [..._users];
- 
-    if (_search.isNotEmpty) {
-      final query = _search.toLowerCase();
- 
-      temp = temp.where((u) {
-        final fullName =
-            "${u.firstName ?? ""} ${u.lastName ?? ""}".toLowerCase();
- 
-        return fullName.contains(query) ||
-            u.username.toLowerCase().contains(query) ||
-            u.email.toLowerCase().contains(query);
-      }).toList();
-    }
- 
-    _filtered = temp;
+
+
+  Map<String, dynamic> _getSortParams() {
+  String? sortBy;
+  bool desc = false;
+
+  switch (_sort) {
+    case "Name ↑":
+      sortBy = "FirstName";
+      desc = false;
+      break;
+
+    case "Name ↓":
+      sortBy = "FirstName";
+      desc = true;
+      break;
   }
+
+  return {
+    "sortBy": sortBy,
+    "desc": desc,
+  };
+}
  
   @override
   Widget build(BuildContext context) {
@@ -75,25 +89,57 @@ class _UsersPageState extends State<UsersPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /// TITLE
-            const Text(
-              "Users",
-              style: TextStyle(
-                color: brandOrange,
-                fontSize: 34,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
- 
-            const SizedBox(height: 20),
+      Row(
+  children: [
+    const Text(
+      "Users",
+      style: TextStyle(
+        color: brandOrange,
+        fontSize: 34,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+
+    const Spacer(),
+
+    /// SORT (gore desno)
+    Container(
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: DropdownButton<String>(
+        value: _sort,
+        underline: const SizedBox(),
+        items: const [
+          DropdownMenuItem(value: "Name ↑", child: Text("Name ↑")),
+          DropdownMenuItem(value: "Name ↓", child: Text("Name ↓")),
+        ],
+        onChanged: (value) {
+          setState(() {
+            _sort = value!;
+            _page = 0;
+          });
+          _loadUsers();
+        },
+      ),
+    ),
+  ],
+),
+
+const SizedBox(height: 20),
  
             /// SEARCH
             TextField(
               onChanged: (value) {
-                setState(() {
-                  _search = value;
-                  _applyFilters();
-                });
-              },
+  setState(() {
+    _search = value;
+    _page = 0;
+  });
+  _loadUsers();
+},
               decoration: InputDecoration(
                 hintText: "Quick search",
                 prefixIcon: const Icon(Icons.search),
@@ -109,81 +155,168 @@ class _UsersPageState extends State<UsersPage> {
             const SizedBox(height: 30),
  
             /// GRID
-            Expanded(
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(color: brandOrange),
-                    )
-                  : GridView.builder(
-                    
-                      itemCount: _filtered.length,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        crossAxisSpacing: 20,
-                        mainAxisSpacing: 20,
-                        childAspectRatio: 1.05,
-                      ),
-                      itemBuilder: (context, index) {
-                        final user = _filtered[index];
- 
-                     return _UserCard(
-  user: user,
-  onResult: (result) async {
-    if (result == "updated") {
-      await _loadUsers();
+Expanded(
+  child: _isLoading
+      ? const Center(
+          child: CircularProgressIndicator(color: brandOrange),
+        )
+      : SingleChildScrollView(
+          child: Column(
+            children: [
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _users.length,
+                gridDelegate:
+                    const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 20,
+                  mainAxisSpacing: 20,
+                  childAspectRatio: 1.05,
+                ),
+                itemBuilder: (context, index) {
+                  final user = _users[index];
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("User updated successfully"),
-          backgroundColor: Colors.orange,
+                  return _UserCard(
+                    user: user,
+                    onResult: (result) async {
+                      if (result == "updated") {
+                        await _loadUsers();
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("User updated successfully"),
+                            backgroundColor: Colors.orange,
+                          ),
+                        );
+                      }
+
+                      if (result == "deleted") {
+                        await _loadUsers();
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("User deleted successfully"),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+
+                      if (result == "activated") {
+                        await _loadUsers();
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("User activated"),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      }
+
+                      if (result == "deactivated") {
+                        await _loadUsers();
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("User deactivated"),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                  );
+                },
+              ),
+
+              const SizedBox(height: 12),
+
+              _buildPagination(),
+            ],
+          ),
         ),
-      );
-    }
-
-    if (result == "deleted") {
-      await _loadUsers();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("User deleted successfully"),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-
-    if (result == "activated") {
-  await _loadUsers();
-
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text("User activated"),
-      backgroundColor: Colors.green,
-    ),
-  );
-}
-
-if (result == "deactivated") {
-  await _loadUsers();
-
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text("User deactivated"),
-      backgroundColor: Colors.red,
-    ),
-  );
-}
-  },
-);
-                      },
-                    ),
-            ),
+),
           ],
         ),
       ),
     );
   }
+
+    Widget _buildPagination() {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    decoration: BoxDecoration(
+      color: Colors.black.withOpacity(0.2),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        /// PREV
+        GestureDetector(
+          onTap: _page > 0
+              ? () {
+                  setState(() => _page--);
+                  _loadUsers();
+                }
+              : null,
+          child: Icon(
+            Icons.chevron_left,
+            color: _page > 0 ? Colors.white : Colors.white24,
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        /// PAGE NUMBERS
+        for (int i = 0; i < _totalPages; i++)
+          GestureDetector(
+            onTap: () {
+              setState(() => _page = i);
+              _loadUsers();
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: _page == i
+                    ? const Color(0xFFA56E09)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                "${i + 1}",
+                style: TextStyle(
+                  fontSize: 13,
+                  color: _page == i ? Colors.white : Colors.white70,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+
+        const SizedBox(width: 8),
+
+        /// NEXT
+        GestureDetector(
+          onTap: _page < _totalPages - 1
+              ? () {
+                  setState(() => _page++);
+                  _loadUsers();
+                }
+              : null,
+          child: Icon(
+            Icons.chevron_right,
+            color: _page < _totalPages - 1
+                ? Colors.white
+                : Colors.white24,
+          ),
+        ),
+      ],
+    ),
+  );
 }
+}
+
  
 class _UserCard extends StatelessWidget {
   final UserResponse user;

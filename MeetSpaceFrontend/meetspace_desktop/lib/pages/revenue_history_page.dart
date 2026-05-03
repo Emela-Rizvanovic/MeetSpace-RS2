@@ -20,7 +20,6 @@ class _RevenueHistoryPageState extends State<RevenueHistoryPage> {
   static const brandOrange = Color.fromARGB(255, 165, 110, 9);
 
   List<RevenueResponse> _data = [];
-  List<RevenueResponse> _filtered = [];
 
   bool _loading = true;
 
@@ -30,6 +29,10 @@ class _RevenueHistoryPageState extends State<RevenueHistoryPage> {
   DateTime? _fromDate;
   DateTime? _toDate;
 
+  int _page = 0;
+final int _pageSize = 5;
+int _totalPages = 1;
+
   @override
   void initState() {
     super.initState();
@@ -37,59 +40,59 @@ class _RevenueHistoryPageState extends State<RevenueHistoryPage> {
   }
 
   Future<void> _load() async {
-    final auth = context.read<AuthProvider>();
-    final service = RevenueService(auth.api);
+  final auth = context.read<AuthProvider>();
+  final service = RevenueService(auth.api);
 
-    final all = await service.getAll();
+final sort = _getSortParams();
 
-    setState(() {
-      _data = all;
-      _applyFilters();
-      _loading = false;
-    });
+final result = await service.getPaged(
+  page: _page,
+  pageSize: _pageSize,
+  search: _search.isNotEmpty ? _search : null,
+  sortBy: sort["sortBy"],
+  desc: sort["desc"],
+  from: _fromDate,
+  to: _toDate,
+);
+
+  setState(() {
+    _data = result.items;
+    _totalPages = result.totalPages;
+    _loading = false;
+  });
+}
+
+ Map<String, dynamic> _getSortParams() {
+  String? sortBy;
+  bool desc = false;
+
+  switch (_sort) {
+    case "Date ↓":
+      sortBy = "PaymentDate"; // 🔥 FIX
+      desc = true;
+      break;
+
+    case "Date ↑":
+      sortBy = "PaymentDate";
+      desc = false;
+      break;
+
+    case "Amount ↓":
+      sortBy = "Amount";
+      desc = true;
+      break;
+
+    case "Amount ↑":
+      sortBy = "Amount";
+      desc = false;
+      break;
   }
 
-  void _applyFilters() {
-    List<RevenueResponse> temp = [..._data];
-
-    /// SEARCH
-    if (_search.isNotEmpty) {
-      final query = _search.toLowerCase();
-
-      temp = temp.where((r) {
-        return r.user.toLowerCase().contains(query) ||
-            r.location.toLowerCase().contains(query) ||
-            r.paymentMethod.toLowerCase().contains(query);
-      }).toList();
-    }
-
-    /// DATE FILTER
-    if (_fromDate != null) {
-      temp = temp.where((r) => !r.date.isBefore(_fromDate!)).toList();
-    }
-
-    if (_toDate != null) {
-      temp = temp.where((r) => !r.date.isAfter(_toDate!)).toList();
-    }
-
-    /// SORT
-    switch (_sort) {
-      case "Date ↓":
-        temp.sort((a, b) => b.date.compareTo(a.date));
-        break;
-      case "Date ↑":
-        temp.sort((a, b) => a.date.compareTo(b.date));
-        break;
-      case "Amount ↓":
-        temp.sort((a, b) => b.amount.compareTo(a.amount));
-        break;
-      case "Amount ↑":
-        temp.sort((a, b) => a.amount.compareTo(b.amount));
-        break;
-    }
-
-    _filtered = temp;
-  }
+  return {
+    "sortBy": sortBy,
+    "desc": desc,
+  };
+}
 
   Future<void> _pickDate(bool isFrom) async {
     final picked = await showDatePicker(
@@ -100,21 +103,23 @@ class _RevenueHistoryPageState extends State<RevenueHistoryPage> {
     );
 
     if (picked != null) {
-      setState(() {
-        if (isFrom) {
-          _fromDate = picked;
-        } else {
-          _toDate = picked;
-        }
-        _applyFilters();
-      });
+     setState(() {
+  if (isFrom) {
+    _fromDate = picked;
+  } else {
+    _toDate = picked;
+  }
+  _page = 0;
+});
+
+_load();
     }
   }
 
 Future<void> _generatePdf() async {
   try {
     final pdf = await PdfHelper.generateRevenuePdf(
-      _filtered,
+      _data,
       from: _fromDate,
       to: _toDate,
     );
@@ -181,11 +186,13 @@ _dateButton("To", _toDate, () => _pickDate(false)),
                       DropdownMenuItem(value: "Amount ↑", child: Text("Amount ↑")),
                     ],
                     onChanged: (value) {
-                      setState(() {
-                        _sort = value!;
-                        _applyFilters();
-                      });
-                    },
+  setState(() {
+    _sort = value!;
+    _page = 0;
+  });
+
+  _load();
+},
                   ),
                 ),
               ],
@@ -196,13 +203,16 @@ _dateButton("To", _toDate, () => _pickDate(false)),
             /// SEARCH
             TextField(
               onChanged: (value) {
-                setState(() {
-                  _search = value;
-                  _applyFilters();
-                });
-              },
+  setState(() {
+    _search = value;
+    _page = 0;
+  });
+  print("SEARCH SENT: $_search");
+
+  _load();
+},
               decoration: InputDecoration(
-                hintText: "Search transactions",
+                hintText: "Search transactions by space name",
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
                 fillColor: Colors.white,
@@ -216,32 +226,44 @@ _dateButton("To", _toDate, () => _pickDate(false)),
             const SizedBox(height: 30),
 
             /// LIST
-            Expanded(
-              child: _loading
-                  ? const Center(
-                      child: CircularProgressIndicator(color: brandOrange),
-                    )
-                  : Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: ListView.builder(
-                        itemCount: _filtered.length,
-                        itemBuilder: (context, index) {
-                          final r = _filtered[index];
+        Expanded(
+  child: _loading
+      ? const Center(
+          child: CircularProgressIndicator(color: brandOrange),
+        )
+      : SingleChildScrollView(
+          child: Column(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _data.length,
+                  itemBuilder: (context, index) {
+                    final r = _data[index];
 
-                          return ListTile(
-                            leading: const Icon(Icons.payments),
-                            title: Text("BAM ${r.amount.toStringAsFixed(0)}"),
-                            subtitle: Text(
-                                "${r.user} • ${r.location}\n${_formatDate(r.date)}"),
-                            trailing: Text(r.paymentMethod),
-                          );
-                        },
-                      ),
-                    ),
-            ),
+                    return ListTile(
+                      leading: const Icon(Icons.payments),
+                      title: Text("BAM ${r.amount.toStringAsFixed(0)}"),
+                      subtitle: Text(
+                          "${r.user} • ${r.location}\n${_formatDate(r.date)}"),
+                      trailing: Text(r.paymentMethod),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              _buildPagination(),
+            ],
+          ),
+        ),
+),
             const SizedBox(height: 20),
 
 /// 🔥 PDF BUTTON (BOTTOM)
@@ -293,6 +315,79 @@ Align(
           ),
         ],
       ),
+    ),
+  );
+}
+
+  Widget _buildPagination() {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    decoration: BoxDecoration(
+      color: Colors.black.withOpacity(0.2),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: _page > 0
+              ? () {
+                  setState(() => _page--);
+                  _load();
+                }
+              : null,
+          child: Icon(
+            Icons.chevron_left,
+            color: _page > 0 ? Colors.white : Colors.white24,
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        for (int i = 0; i < _totalPages; i++)
+          GestureDetector(
+            onTap: () {
+              setState(() => _page = i);
+              _load();
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: _page == i
+                    ? const Color(0xFFA56E09)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                "${i + 1}",
+                style: TextStyle(
+                  fontSize: 13,
+                  color: _page == i ? Colors.white : Colors.white70,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+
+        const SizedBox(width: 8),
+
+        GestureDetector(
+          onTap: _page < _totalPages - 1
+              ? () {
+                  setState(() => _page++);
+                  _load();
+                }
+              : null,
+          child: Icon(
+            Icons.chevron_right,
+            color: _page < _totalPages - 1
+                ? Colors.white
+                : Colors.white24,
+          ),
+        ),
+      ],
     ),
   );
 }

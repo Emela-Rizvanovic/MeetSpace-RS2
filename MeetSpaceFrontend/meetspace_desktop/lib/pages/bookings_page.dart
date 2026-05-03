@@ -11,21 +11,23 @@ class BookingsPage extends StatefulWidget {
 }
 
 class _BookingsPageState extends State<BookingsPage> {
-  late Future<List<BookingResponse>> bookingsFuture;
+  int _page = 0;
+final int _pageSize = 6;
 
-  @override
-  void initState() {
-    super.initState();
-    bookingsFuture =
-        context.read<AuthProvider>().bookingService.getAll();
-  }
+int _totalPages = 1;
+bool _isLoading = false;
 
-  void refresh() {
-    setState(() {
-      bookingsFuture =
-          context.read<AuthProvider>().bookingService.getAll();
-    });
-  }
+List<BookingResponse> _bookings = [];
+
+ @override
+void initState() {
+  super.initState();
+  _loadBookings();
+}
+
+ void refresh() {
+  _loadBookings();
+}
 
   @override
   Widget build(BuildContext context) {
@@ -49,59 +51,148 @@ class _BookingsPageState extends State<BookingsPage> {
               "Upcoming bookings and reminders",
               style: TextStyle(
                 color: Color(0xFFA56E09),
-                fontSize: 36,
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 30),
-
-            Expanded(
-              child: FutureBuilder<List<BookingResponse>>(
-                future: bookingsFuture,
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  //final now = DateTime.now();
-
-                  final bookings = snapshot.data!
-                      //.where((b) => b.endTime.isAfter(now))
-                      .toList();
-
-                  if (bookings.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        "No upcoming bookings",
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    );
-                  }
-
-                  return GridView.builder(
-                    itemCount: bookings.length,
+            SizedBox(height: 20),
+Expanded(
+  child: _isLoading
+      ? const Center(child: CircularProgressIndicator())
+      : _bookings.isEmpty
+          ? const Center(
+              child: Text(
+                "No upcoming bookings",
+                style: TextStyle(color: Colors.white),
+              ),
+            )
+          : SingleChildScrollView(
+              child: Column(
+                children: [
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _bookings.length,
                     gridDelegate:
-                        const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 600,
-                      crossAxisSpacing: 30,
-                      mainAxisSpacing: 30,
-                      childAspectRatio: 1,
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 25,
+                      mainAxisSpacing: 25,
+                      childAspectRatio: 0.85,
                     ),
                     itemBuilder: (context, index) {
                       return BookingCard(
-                        booking: bookings[index],
+                        booking: _bookings[index],
                         onRefresh: refresh,
                       );
                     },
-                  );
-                },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _buildPagination(),
+                ],
               ),
             ),
+),
           ],
         ),
       ),
     );
   }
+
+  Future<void> _loadBookings() async {
+  setState(() => _isLoading = true);
+
+  final result = await context
+      .read<AuthProvider>()
+      .bookingService
+      .getPaged(
+        page: _page,
+        pageSize: _pageSize,
+      );
+
+  setState(() {
+    _bookings = result.items;
+    _totalPages = result.totalPages;
+    _isLoading = false;
+  });
+}
+
+Widget _buildPagination() {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    decoration: BoxDecoration(
+      color: Colors.black.withOpacity(0.2),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        /// PREV
+        GestureDetector(
+          onTap: _page > 0
+              ? () {
+                  setState(() => _page--);
+                  _loadBookings();
+                }
+              : null,
+          child: Icon(
+            Icons.chevron_left,
+            color: _page > 0 ? Colors.white : Colors.white24,
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        /// PAGE NUMBERS
+        for (int i = 0; i < _totalPages; i++)
+          GestureDetector(
+            onTap: () {
+              setState(() => _page = i);
+              _loadBookings();
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: _page == i
+                    ? const Color(0xFFA56E09)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                "${i + 1}",
+                style: TextStyle(
+                  fontSize: 13,
+                  color: _page == i ? Colors.white : Colors.white70,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+
+        const SizedBox(width: 8),
+
+        /// NEXT
+        GestureDetector(
+          onTap: _page < _totalPages - 1
+              ? () {
+                  setState(() => _page++);
+                  _loadBookings();
+                }
+              : null,
+          child: Icon(
+            Icons.chevron_right,
+            color: _page < _totalPages - 1
+                ? Colors.white
+                : Colors.white24,
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }
 
 
@@ -138,7 +229,7 @@ class _BookingCardState extends State<BookingCard> {
           duration: const Duration(milliseconds: 200),
           transform: Matrix4.identity()
             ..scale(_hover ? 1.02 : 1.0),
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(22),
@@ -157,7 +248,7 @@ class _BookingCardState extends State<BookingCard> {
               Text(
                 booking.spaceName ?? "Space",
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -251,6 +342,8 @@ class _BookingCardState extends State<BookingCard> {
   setState(() {
     hasConflict = result;
   });
+
+  
 }
 
   /// 🔥 MODAL FIX (NO OVERFLOW)
@@ -646,8 +739,6 @@ Future<void> _openDetails(BuildContext context) async {
     );
   }
 
-  
-
   Widget _mainButton({
     required String text,
     required Color color,
@@ -695,4 +786,5 @@ Future<void> _openDetails(BuildContext context) async {
 
   String _formatTime(DateTime dt) =>
       "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+
 }

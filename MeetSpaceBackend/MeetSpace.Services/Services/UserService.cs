@@ -29,6 +29,15 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
 
     protected override IQueryable<User> ApplyFilter(IQueryable<User> query, UserSearchObject search)
     {
+        if (!string.IsNullOrWhiteSpace(search.Name))
+        {
+            query = query.Where(u =>
+                u.FirstName.Contains(search.Name) ||
+                u.LastName.Contains(search.Name) ||
+                u.Username.Contains(search.Name)
+            );
+        }
+
         if (!string.IsNullOrWhiteSpace(search.FirstName))
             query = query.Where(u => u.FirstName.Contains(search.FirstName));
 

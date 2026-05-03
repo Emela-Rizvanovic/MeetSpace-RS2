@@ -2,6 +2,7 @@ import 'dart:convert';
 import '../models/space.dart';
 import 'api_service.dart';
 import 'dart:io';
+import '../models/paged_result.dart';
 
 class SpaceService {
   final ApiService api;
@@ -65,6 +66,40 @@ class SpaceService {
     throw Exception("Failed to load spaces");
   }
 
+
+Future<PagedResult<SpaceResponse>> getPaged({
+  required int page,
+  required int pageSize,
+  String? name,
+  int? facilityId,
+  int? spaceTypeId,
+  String? sortBy,
+bool desc = false,
+}) async {
+  final query = <String, String>{
+    "page": page.toString(),
+    "pageSize": pageSize.toString(),
+  };
+
+  if (name != null && name.isNotEmpty) query["Name"] = name;
+  if (facilityId != null) query["FacilityId"] = facilityId.toString();
+  if (spaceTypeId != null) query["SpaceTypeId"] = spaceTypeId.toString();
+  if (sortBy != null) query["SortBy"] = sortBy;
+query["Desc"] = desc.toString();
+
+  final response = await api.get("Space", queryParameters: query);
+
+  if (response.statusCode == 200) {
+    final decoded = jsonDecode(response.body);
+
+    return PagedResult<SpaceResponse>.fromJson(
+      decoded,
+      (e) => SpaceResponse.fromJson(e),
+    );
+  }
+
+  throw Exception("Failed to load paged spaces");
+}
 
 Future<void> createSpace({
   required String name,

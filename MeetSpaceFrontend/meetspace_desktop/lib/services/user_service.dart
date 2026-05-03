@@ -4,6 +4,7 @@ import 'package:http_parser/http_parser.dart';
 import 'dart:io';
 import '../models/user.dart';
 import 'api_service.dart';
+import '../models/paged_result.dart';
 
 class UserService {
   final ApiService api;
@@ -184,6 +185,47 @@ class UserService {
   }
 
   throw Exception("Failed to load users");
+}
+
+Future<PagedResult<UserResponse>> getPaged({
+  required int page,
+  required int pageSize,
+  String? search,
+  String? sortBy,
+  bool? desc,
+}) async {
+  final query = <String, String>{
+    "page": page.toString(),
+    "pageSize": pageSize.toString(),
+  };
+
+  if (search != null && search.isNotEmpty) {
+  query["Name"] = search;  
+}
+
+  if (sortBy != null) {
+    query["SortBy"] = sortBy;
+  }
+
+  if (desc != null) {
+    query["Desc"] = desc.toString();
+  }
+
+  final response = await api.get(
+    "User",
+    queryParameters: query,
+  );
+
+  if (response.statusCode == 200) {
+    final decoded = jsonDecode(response.body);
+
+    return PagedResult<UserResponse>.fromJson(
+      decoded,
+      (e) => UserResponse.fromJson(e),
+    );
+  }
+
+  throw Exception("Failed to load paged users");
 }
 
 Future<UserResponse> updateUserAdmin({

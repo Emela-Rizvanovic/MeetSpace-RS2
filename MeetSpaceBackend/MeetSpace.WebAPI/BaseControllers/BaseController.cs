@@ -20,7 +20,15 @@ namespace MeetSpace.WebAPI.BaseControllers
         [HttpGet("")]
         public virtual async Task<Models.Responses.PagedResult<T>> Get([FromQuery] TSearch? search = null)
         {
-            return await _service.GetAsync(search ?? new TSearch());
+            //return await _service.GetAsync(search ?? new TSearch());
+            try
+            {
+                return await _service.GetAsync(search ?? new TSearch());
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
 
         [HttpGet("{id}")]

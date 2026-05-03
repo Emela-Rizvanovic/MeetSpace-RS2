@@ -17,13 +17,16 @@ class _ReviewsPageState extends State<ReviewsPage> {
   static const brandOrange = Color(0xFFA56E09);
 
   List<ReviewResponse> _reviews = [];
-  List<ReviewResponse> _filtered = [];
 
   bool _loading = true;
   String _search = "";
 
-  int? _selectedRating; // null = svi
+  //int? _selectedRating; 
 String _sort = "Newest";
+
+int _page = 0;
+final int _pageSize = 5;
+int _totalPages = 1;
 
   @override
   void initState() {
@@ -31,51 +34,53 @@ String _sort = "Newest";
     _load();
   }
 
-  Future<void> _load() async {
-    try {
-      final auth = context.read<AuthProvider>();
-      final service = ReviewService(auth.api);
+ Future<void> _load() async {
+  try {
+    final auth = context.read<AuthProvider>();
+    final service = ReviewService(auth.api);
 
-      final data = await service.getAllReviews();
+    final sort = _getSortParams();
 
-      setState(() {
-        _reviews = data;
-        _applyFilters();
-        _loading = false;
-      });
-    } catch (e) {
-      debugPrint(e.toString());
-    }
+    final result = await service.getPaged(
+      page: _page,
+      pageSize: _pageSize,
+      search: _search.isNotEmpty ? _search : null,
+      /*rating: _selectedRating,*/
+      sortBy: sort["sortBy"],
+      desc: sort["desc"],
+    );
+
+    setState(() {
+     _reviews = result.items;
+      _totalPages = result.totalPages;
+      _loading = false;
+    });
+  } catch (e) {
+    debugPrint(e.toString());
   }
-
-  void _applyFilters() {
-  var temp = [..._reviews];
-
-  /// SEARCH
-  if (_search.isNotEmpty) {
-    final q = _search.toLowerCase();
-
-    temp = temp.where((r) {
-      return (r.spaceName ?? "").toLowerCase().contains(q) ||
-          (r.userName ?? "").toLowerCase().contains(q) ||
-          (r.comment ?? "").toLowerCase().contains(q);
-    }).toList();
-  }
-
-  /// ⭐ FILTER
-  if (_selectedRating != null) {
-    temp = temp.where((r) => r.rating == _selectedRating).toList();
-  }
-
-  /// 📅 SORT
-  if (_sort == "Newest") {
-    temp.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-  } else {
-    temp.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-  }
-
-  _filtered = temp;
 }
+
+Map<String, dynamic> _getSortParams() {
+  String? sortBy;
+  bool desc = false;
+
+  switch (_sort) {
+    case "Newest":
+      sortBy = "CreatedAt";
+      desc = true;
+      break;
+    case "Oldest":
+      sortBy = "CreatedAt";
+      desc = false;
+      break;
+  }
+
+  return {
+    "sortBy": sortBy,
+    "desc": desc,
+  };
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -87,43 +92,22 @@ String _sort = "Newest";
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /// TITLE
-            const Text(
-              "User reviews",
-              style: TextStyle(
-                color: brandOrange,
-                fontSize: 34,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            /// SEARCH
-            TextField(
-              onChanged: (v) {
-                setState(() {
-                  _search = v;
-                  _applyFilters();
-                });
-              },
-              decoration: InputDecoration(
-                hintText: "Search reviews...",
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-Row(
+           Row(
   children: [
-    /// ⭐ RATING FILTER
-    Container(
+    const Text(
+      "User reviews",
+      style: TextStyle(
+        color: brandOrange,
+        fontSize: 34,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+
+    const Spacer(),
+
+    /// ⭐ RATING
+    /*Container(
+      height: 52,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -139,29 +123,25 @@ Row(
             final value = 5 - i;
             return DropdownMenuItem(
               value: value,
-              child: Row(
-                children: [
-                  Text("$value"),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.star, size: 16, color: Colors.orange),
-                ],
-              ),
+              child: Text("$value ★"),
             );
           })
         ],
         onChanged: (v) {
           setState(() {
             _selectedRating = v;
-            _applyFilters();
+            _page = 0;
           });
+          _load(); // 🔥 BITNO
         },
       ),
     ),
 
-    const SizedBox(width: 16),
+    const SizedBox(width: 12),*/
 
-    /// 📅 SORT
+    /// SORT
     Container(
+      height: 52,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -177,8 +157,9 @@ Row(
         onChanged: (v) {
           setState(() {
             _sort = v!;
-            _applyFilters();
+            _page = 0;
           });
+          _load(); // 🔥 BITNO
         },
       ),
     ),
@@ -186,34 +167,139 @@ Row(
 ),
 const SizedBox(height: 20),
 
-            /// LIST
-            Expanded(
-              child: _loading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: brandOrange,
-                      ),
-                    )
-                  : _filtered.isEmpty
-                      ? const Center(
-                          child: Text(
-                            "No reviews found",
-                            style: TextStyle(color: Colors.white54),
-                          ),
-                        )
-                      : ListView.builder(
-                          itemCount: _filtered.length,
-                          itemBuilder: (context, index) {
-                            final r = _filtered[index];
-                            return _reviewCard(r);
-                          },
-                        ),
+            /// SEARCH
+            TextField(
+          onChanged: (v) {
+  setState(() {
+    _search = v;
+    _page = 0;  
+  });
+  _load();  
+},
+              decoration: InputDecoration(
+                hintText: "Search reviews by user name or space name",
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+              ),
             ),
+
+            const SizedBox(height: 20),
+
+            /// LIST
+          Expanded(
+  child: _loading
+      ? const Center(
+          child: CircularProgressIndicator(color: brandOrange),
+        )
+      : _reviews.isEmpty
+          ? const Center(
+              child: Text(
+                "No reviews found",
+                style: TextStyle(color: Colors.white54),
+              ),
+            )
+          : SingleChildScrollView(
+              child: Column(
+                children: [
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _reviews.length,
+                    itemBuilder: (context, index) {
+                      return _reviewCard(_reviews[index]);
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _buildPagination(),
+                ],
+              ),
+            ),
+),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildPagination() {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    decoration: BoxDecoration(
+      color: Colors.black.withOpacity(0.2),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: _page > 0
+              ? () {
+                  setState(() => _page--);
+                  _load();
+                }
+              : null,
+          child: Icon(
+            Icons.chevron_left,
+            color: _page > 0 ? Colors.white : Colors.white24,
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        for (int i = 0; i < _totalPages; i++)
+          GestureDetector(
+            onTap: () {
+              setState(() => _page = i);
+              _load();
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: _page == i
+                    ? const Color(0xFFA56E09)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                "${i + 1}",
+                style: TextStyle(
+                  fontSize: 13,
+                  color: _page == i ? Colors.white : Colors.white70,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+
+        const SizedBox(width: 8),
+
+        GestureDetector(
+          onTap: _page < _totalPages - 1
+              ? () {
+                  setState(() => _page++);
+                  _load();
+                }
+              : null,
+          child: Icon(
+            Icons.chevron_right,
+            color: _page < _totalPages - 1
+                ? Colors.white
+                : Colors.white24,
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _reviewCard(ReviewResponse r) {
     return Container(
@@ -251,7 +337,7 @@ const SizedBox(height: 20),
                 const SizedBox(height: 6),
 
                 /// STARS
-                Row(
+                /*Row(
                   children: List.generate(
                     5,
                     (i) => Icon(
@@ -262,7 +348,7 @@ const SizedBox(height: 20),
                   ),
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(height: 8),*/
 
                 /// COMMENT
                 Text(

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import '../models/revenue.dart';
 import 'api_service.dart';
+import '../models/paged_result.dart';
 
 class RevenueService {
   final ApiService api;
@@ -40,6 +41,55 @@ class RevenueService {
 
     throw Exception("Failed to load revenue history");
   }
+
+  Future<PagedResult<RevenueResponse>> getPaged({
+  required int page,
+  required int pageSize,
+  String? search,
+  DateTime? from,
+  DateTime? to,
+  String? sortBy,
+  bool desc = false,
+}) async {
+  final query = <String, String>{
+    "page": page.toString(),
+    "pageSize": pageSize.toString(),
+  };
+
+ if (search != null && search.trim().isNotEmpty) {
+  query["Name"] = search.trim();  
+} 
+
+  if (from != null) {
+    query["FromDate"] = from.toIso8601String();
+  }
+
+  if (to != null) {
+    query["ToDate"] = to.toIso8601String();
+  }
+
+  if (sortBy != null) {
+    query["SortBy"] = sortBy;
+    query["Desc"] = desc.toString();
+  }
+
+  final response = await api.get(
+    "Revenue",
+    queryParameters: query,
+  );
+
+print(query);
+  if (response.statusCode == 200) {
+    final decoded = jsonDecode(response.body);
+
+    return PagedResult<RevenueResponse>.fromJson(
+      decoded,
+      (e) => RevenueResponse.fromJson(e),
+    );
+  }
+
+  throw Exception("Failed to load paged revenue");
+}
 
   /// 🔹 TOTAL REVENUE
   Future<double> getTotal() async {

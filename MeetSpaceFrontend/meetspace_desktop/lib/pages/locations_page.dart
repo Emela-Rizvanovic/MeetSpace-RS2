@@ -17,12 +17,16 @@ class _LocationsPageState extends State<LocationsPage> {
   static const brandOrange = Color.fromARGB(255, 165, 110, 9);
 
   List<SpaceResponse> _spaces = [];
-  List<SpaceResponse> _filtered = [];
 
   bool _isLoading = true;
 
   String _search = "";
   String _sort = "Price ↑";
+
+  int _page = 0;
+final int _pageSize = 6;
+
+int _totalPages = 1;
 
   @override
   void initState() {
@@ -30,55 +34,58 @@ class _LocationsPageState extends State<LocationsPage> {
     _loadSpaces();
   }
 
-  Future<void> _loadSpaces() async {
-    try {
-      final auth = context.read<AuthProvider>();
-      final data = await auth.getSpaces();
+ Future<void> _loadSpaces() async {
+  try {
+    final auth = context.read<AuthProvider>();
 
-      setState(() {
-        _spaces = data;
-        _applyFilters();
-        _isLoading = false;
-      });
-    } catch (e) {
-      debugPrint(e.toString());
-    }
+    final sort = _getSortParams();
+
+final result = await auth.spaceService.getPaged(
+  page: _page,
+  pageSize: _pageSize,
+  name: _search.isNotEmpty ? _search : null,
+  sortBy: sort["sortBy"],
+  desc: sort["desc"],
+);
+
+    setState(() {
+      _spaces = result.items;
+      _totalPages = result.totalPages;
+      _isLoading = false;
+    });
+  } catch (e) {
+    debugPrint(e.toString());
   }
-
-  void _applyFilters() {
-    List<SpaceResponse> temp = [..._spaces];
-
-    /// SEARCH
-   if (_search.isNotEmpty) {
-  final query = _search.toLowerCase();
-
-  temp = temp.where((s) {
-    final nameWords = s.name.toLowerCase().split(' ');
-    final facilityWords = (s.facilityName ?? '').toLowerCase().split(' ');
-
-    return nameWords.any((w) => w.startsWith(query)) ||
-        facilityWords.any((w) => w.startsWith(query));
-  }).toList();
 }
 
-    /// SORT
-    switch (_sort) {
-      case "Price ↑":
-        temp.sort((a, b) => a.pricePerHour.compareTo(b.pricePerHour));
-        break;
-      case "Price ↓":
-        temp.sort((a, b) => b.pricePerHour.compareTo(a.pricePerHour));
-        break;
-      case "Capacity":
-        temp.sort((a, b) => b.capacity.compareTo(a.capacity));
-        break;
-      case "Rating":
-        temp.sort((a, b) => b.averageRating.compareTo(a.averageRating));
-        break;
-    }
+  Map<String, dynamic> _getSortParams() {
+  String? sortBy;
+  bool desc = false;
 
-    _filtered = temp;
+  switch (_sort) {
+    case "Price ↑":
+      sortBy = "PricePerHour";
+      desc = false;
+      break;
+    case "Price ↓":
+      sortBy = "PricePerHour";
+      desc = true;
+      break;
+    case "Capacity ↑":
+      sortBy = "Capacity";
+      desc = false;
+      break;
+    case "Capacity ↓":
+      sortBy = "Capacity";
+      desc = true;
+      break;
   }
+
+  return {
+    "sortBy": sortBy,
+    "desc": desc,
+  };
+}
 
   @override
   Widget build(BuildContext context) {
@@ -159,14 +166,15 @@ onPressed: () async {
     items: const [
       DropdownMenuItem(value: "Price ↑", child: Text("Price ↑")),
       DropdownMenuItem(value: "Price ↓", child: Text("Price ↓")),
-      DropdownMenuItem(value: "Capacity", child: Text("Capacity")),
-      DropdownMenuItem(value: "Rating", child: Text("Rating")),
+      DropdownMenuItem(value: "Capacity ↑", child: Text("Capacity ↑")),
+      DropdownMenuItem(value: "Capacity ↓", child: Text("Capacity ↓")),
     ],
     onChanged: (value) {
       setState(() {
         _sort = value!;
-        _applyFilters();
+        _page = 0;
       });
+      _loadSpaces();
     },
   ),
 ),
@@ -179,12 +187,13 @@ onPressed: () async {
 
             /// SEARCH BAR
             TextField(
-              onChanged: (value) {
-                setState(() {
-                  _search = value;
-                  _applyFilters();
-                });
-              },
+             onChanged: (value) {
+  setState(() {
+    _search = value;
+    _page = 0; 
+  });
+  _loadSpaces();
+},
               decoration: InputDecoration(
                 hintText: "Quick search",
                 prefixIcon: const Icon(Icons.search),
@@ -201,25 +210,30 @@ onPressed: () async {
             const SizedBox(height: 30),
 
             /// GRID
-            Expanded(
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(color: brandOrange),
-                    )
-                  : GridView.builder(
-                      itemCount: _filtered.length,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        crossAxisSpacing: 25,
-                        mainAxisSpacing: 25,
-                        childAspectRatio: 1.05,
-                      ),
-                      itemBuilder: (context, index) {
-                        final s = _filtered[index];
+           Expanded(
+  child: _isLoading
+      ? const Center(
+          child: CircularProgressIndicator(color: brandOrange),
+        )
+      : SingleChildScrollView(
+          child: Column(
+            children: [
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _spaces.length,
+                gridDelegate:
+                    const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 25,
+                  mainAxisSpacing: 25,
+                  childAspectRatio: 1.05,
+                ),
+                itemBuilder: (context, index) {
+                  final s = _spaces[index];
 
-                        return GestureDetector(
-                      onTap: () async {
+                  return GestureDetector(
+                    onTap: () async {
   final result = await Navigator.push(
     context,
     MaterialPageRoute(
@@ -249,16 +263,99 @@ onPressed: () async {
     );
   }
 },
-                          child: _AdminSpaceCard(space: s),
-                        );
-                      },
-                    ),
+                    child: _AdminSpaceCard(space: s),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 12),
+
+              _buildPagination(),
+              ],
             ),
-          ],
+),
+),
+],
+),
+),
+);
+}
+  
+
+  Widget _buildPagination() {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    decoration: BoxDecoration(
+      color: Colors.black.withOpacity(0.2),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        /// PREV
+        GestureDetector(
+          onTap: _page > 0
+              ? () {
+                  setState(() => _page--);
+                  _loadSpaces();
+                }
+              : null,
+          child: Icon(
+            Icons.chevron_left,
+            color: _page > 0 ? Colors.white : Colors.white24,
+          ),
         ),
-      ),
-    );
-  }
+
+        const SizedBox(width: 8),
+
+        /// PAGE NUMBERS
+        for (int i = 0; i < _totalPages; i++)
+          GestureDetector(
+            onTap: () {
+              setState(() => _page = i);
+              _loadSpaces();
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: _page == i
+                    ? const Color(0xFFA56E09)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                "${i + 1}",
+                style: TextStyle(
+                  fontSize: 13,
+                  color: _page == i ? Colors.white : Colors.white70,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+
+        const SizedBox(width: 8),
+
+        /// NEXT
+        GestureDetector(
+          onTap: _page < _totalPages - 1
+              ? () {
+                  setState(() => _page++);
+                  _loadSpaces();
+                }
+              : null,
+          child: Icon(
+            Icons.chevron_right,
+            color: _page < _totalPages - 1
+                ? Colors.white
+                : Colors.white24,
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }
 
 class _AdminSpaceCard extends StatelessWidget {

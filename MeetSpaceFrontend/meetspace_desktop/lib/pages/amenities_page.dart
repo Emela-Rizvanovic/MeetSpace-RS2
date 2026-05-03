@@ -16,12 +16,16 @@ class _AmenitiesPageState extends State<AmenitiesPage> {
   static const brandOrange = Color.fromARGB(255, 165, 110, 9);
 
   List<AmenityResponse> _amenities = [];
-  List<AmenityResponse> _filtered = [];
 
   bool _isLoading = true;
 
   String _search = "";
   String _sort = "Name ↑";
+
+  int _page = 0;
+final int _pageSize = 10; 
+
+int _totalPages = 1;
 
   @override
   void initState() {
@@ -30,51 +34,57 @@ class _AmenitiesPageState extends State<AmenitiesPage> {
   }
 
   Future<void> _loadAmenities() async {
-    try {
-      final auth = context.read<AuthProvider>();
-      final data = await auth.getAmenities();
+  try {
+    final auth = context.read<AuthProvider>();
 
-      setState(() {
-        _amenities = data;
-        _applyFilters();
-        _isLoading = false;
-      });
-    } catch (e) {
-      debugPrint(e.toString());
-    }
+    final sort = _getSortParams();
+
+final result = await auth.amenityService.getPaged(
+  page: _page,
+  pageSize: _pageSize,
+  name: _search.isNotEmpty ? _search : null,
+  sortBy: sort["sortBy"],
+  desc: sort["desc"],
+);
+
+    setState(() {
+      _amenities = result.items;
+      _totalPages = result.totalPages;
+      _isLoading = false;
+    });
+  } catch (e) {
+    debugPrint(e.toString());
+  }
+}
+
+  Map<String, dynamic> _getSortParams() {
+  String? sortBy;
+  bool desc = false;
+
+  switch (_sort) {
+    case "Name ↑":
+      sortBy = "Name";
+      desc = false;
+      break;
+    case "Name ↓":
+      sortBy = "Name";
+      desc = true;
+      break;
+    case "Price ↑":
+      sortBy = "Price";
+      desc = false;
+      break;
+    case "Price ↓":
+      sortBy = "Price";
+      desc = true;
+      break;
   }
 
-  void _applyFilters() {
-    List<AmenityResponse> temp = [..._amenities];
-
-    /// SEARCH
-    if (_search.isNotEmpty) {
-      final query = _search.toLowerCase();
-
-      temp = temp.where((a) {
-        final words = a.name.toLowerCase().split(' ');
-        return words.any((w) => w.startsWith(query));
-      }).toList();
-    }
-
-    /// SORT
-    switch (_sort) {
-      case "Name ↑":
-        temp.sort((a, b) => a.name.compareTo(b.name));
-        break;
-      case "Name ↓":
-        temp.sort((a, b) => b.name.compareTo(a.name));
-        break;
-      case "Price ↑":
-        temp.sort((a, b) => a.price.compareTo(b.price));
-        break;
-      case "Price ↓":
-        temp.sort((a, b) => b.price.compareTo(a.price));
-        break;
-    }
-
-    _filtered = temp;
-  }
+  return {
+    "sortBy": sortBy,
+    "desc": desc,
+  };
+}
 
 Future<void> _deleteAmenity(AmenityResponse amenity) async {
   final confirmed = await showDialog<bool>(
@@ -287,12 +297,14 @@ Future<void> _deleteAmenity(AmenityResponse amenity) async {
                           DropdownMenuItem(value: "Price ↑", child: Text("Price ↑")),
                           DropdownMenuItem(value: "Price ↓", child: Text("Price ↓")),
                         ],
-                        onChanged: (value) {
-                          setState(() {
-                            _sort = value!;
-                            _applyFilters();
-                          });
-                        },
+                       onChanged: (value) {
+  setState(() {
+    _sort = value!;
+    _page = 0;
+  });
+
+  _loadAmenities();
+},
                       ),
                     ),
                   ],
@@ -304,12 +316,13 @@ Future<void> _deleteAmenity(AmenityResponse amenity) async {
 
             /// SEARCH
             TextField(
-              onChanged: (value) {
-                setState(() {
-                  _search = value;
-                  _applyFilters();
-                });
-              },
+             onChanged: (value) {
+  setState(() {
+    _search = value;
+    _page = 0; 
+  });
+  _loadAmenities();
+},
               decoration: InputDecoration(
                 hintText: "Quick search",
                 prefixIcon: const Icon(Icons.search),
@@ -327,103 +340,187 @@ Future<void> _deleteAmenity(AmenityResponse amenity) async {
             const SizedBox(height: 30),
 
             /// LIST
-            Expanded(
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(color: brandOrange),
-                    )
-                  : Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
+          Expanded(
+  child: _isLoading
+      ? const Center(
+          child: CircularProgressIndicator(color: brandOrange),
+        )
+      : SingleChildScrollView(
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _amenities.length,
+                  itemBuilder: (context, index) {
+                    final amenity = _amenities[index];
+
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 16),
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(color: Colors.black12),
+                        ),
                       ),
-                      child: ListView.builder(
-                        itemCount: _filtered.length,
-                        itemBuilder: (context, index) {
-                          final amenity = _filtered[index];
+                      child: Row(
+                        children: [
+                          const Icon(Icons.check, color: Colors.black54),
+                          const SizedBox(width: 10),
 
-                          return Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 16),
-                            decoration: const BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(color: Colors.black12),
-                              ),
-                            ),
-                            child: Row(
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(Icons.check, color: Colors.black54),
-                                const SizedBox(width: 10),
-
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        amenity.name,
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
-                                      if (amenity.description != null)
-                                        Text(
-                                          amenity.description!,
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.black54,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-
-                                /// PRICE
                                 Text(
-                                  "${amenity.price.toStringAsFixed(0)} BAM",
-                                  style: const TextStyle(
-                                    color: brandOrange,
-                                    fontWeight: FontWeight.bold,
+                                  amenity.name,
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                                if (amenity.description != null)
+                                  Text(
+                                    amenity.description!,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.black54,
+                                    ),
                                   ),
-                                ),
-
-                                const SizedBox(width: 10),
-
-                                /// EDIT
-                                IconButton(
-                                  icon: const Icon(Icons.edit, color: Colors.orange),
-                                  onPressed: () async {
-  final result = await showDialog(
-    context: context,
-    builder: (_) => AddAmenityDialog(amenity: amenity),
-  );
-
-  if (result == "updated") {
-    await _loadAmenities();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Amenity updated successfully"),
-        backgroundColor: Colors.orange,
-      ),
-    );
-  }
-},
-                                ),
-
-                                /// DELETE
-                               IconButton(
-  icon: const Icon(Icons.delete, color: Colors.red),
-  onPressed: () => _deleteAmenity(amenity),
-),
                               ],
                             ),
-                          );
-                        },
+                          ),
+
+                          Text(
+                            "${amenity.price.toStringAsFixed(0)} BAM",
+                            style: const TextStyle(
+                              color: brandOrange,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+
+                          const SizedBox(width: 10),
+
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.orange),
+                            onPressed: () async {
+                              final result = await showDialog(
+                                context: context,
+                                builder: (_) =>
+                                    AddAmenityDialog(amenity: amenity),
+                              );
+
+                              if (result == "updated") {
+                                await _loadAmenities();
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content:
+                                        Text("Amenity updated successfully"),
+                                    backgroundColor: Colors.orange,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _deleteAmenity(amenity),
+                          ),
+                        ],
                       ),
-                    ),
-            ),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              _buildPagination(),
+            ],
+          ),
+        ),
+),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildPagination() {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    decoration: BoxDecoration(
+      color: Colors.black.withOpacity(0.2),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: _page > 0
+              ? () {
+                  setState(() => _page--);
+                  _loadAmenities();
+                }
+              : null,
+          child: Icon(
+            Icons.chevron_left,
+            color: _page > 0 ? Colors.white : Colors.white24,
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        for (int i = 0; i < _totalPages; i++)
+          GestureDetector(
+            onTap: () {
+              setState(() => _page = i);
+              _loadAmenities();
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: _page == i
+                    ? const Color(0xFFA56E09)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                "${i + 1}",
+                style: TextStyle(
+                  fontSize: 13,
+                  color: _page == i ? Colors.white : Colors.white70,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+
+        const SizedBox(width: 8),
+
+        GestureDetector(
+          onTap: _page < _totalPages - 1
+              ? () {
+                  setState(() => _page++);
+                  _loadAmenities();
+                }
+              : null,
+          child: Icon(
+            Icons.chevron_right,
+            color: _page < _totalPages - 1
+                ? Colors.white
+                : Colors.white24,
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }

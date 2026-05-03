@@ -359,11 +359,7 @@ namespace MeetSpace.Services.Services
                 .OrderByDescending(b => b.StartTime)
                 .ToListAsync(cancellationToken);
 
-            var result = new PagedResult<BookingResponse>();
-            result.Items = list.Select(MapWithAudit).ToList();
-            result.TotalCount = list.Count;
-
-            return result;
+            return await base.GetAsync(search, cancellationToken);
         }
     }
 }

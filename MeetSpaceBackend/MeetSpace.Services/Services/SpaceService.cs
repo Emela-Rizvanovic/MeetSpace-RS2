@@ -280,11 +280,7 @@ namespace MeetSpace.Services.Services
             var entities = await query.ToListAsync(cancellationToken);
             var mapped = entities.Select(MapToResponse).ToList();
 
-            return new PagedResult<SpaceResponse>
-            {
-                Items = mapped,
-                TotalCount = totalCount
-            };
+            return await base.GetAsync(search, cancellationToken);
         }
 
         public override async Task<SpaceResponse?> GetByIdAsync(int id, CancellationToken cancellationToken = default)

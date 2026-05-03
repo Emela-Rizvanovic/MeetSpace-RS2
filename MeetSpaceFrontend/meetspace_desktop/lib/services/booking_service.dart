@@ -1,6 +1,7 @@
 import 'dart:convert';
 import '../models/booking.dart';
 import 'api_service.dart';
+import '../models/paged_result.dart';
 
 class BookingService {
   final ApiService api;
@@ -60,6 +61,26 @@ class BookingService {
   }
 
   throw Exception("Failed to load bookings");
+}
+
+Future<PagedResult<BookingResponse>> getPaged({
+  required int page,
+  required int pageSize,
+}) async {
+  final response = await api.get(
+    "Booking?page=$page&pageSize=$pageSize",
+  );
+
+  if (response.statusCode == 200) {
+    final decoded = jsonDecode(response.body);
+
+    return PagedResult<BookingResponse>.fromJson(
+      decoded,
+      (e) => BookingResponse.fromJson(e),
+    );
+  }
+
+  throw Exception("Failed to load paged bookings");
 }
 
 Future<void> approve(int id) async {

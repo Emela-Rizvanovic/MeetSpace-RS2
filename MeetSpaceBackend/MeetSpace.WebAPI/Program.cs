@@ -40,6 +40,7 @@ internal class Program
         builder.Services.AddScoped<IBookingService, BookingService>();
         builder.Services.AddScoped<IBookingStatusService, BookingStatusService>();
         builder.Services.AddScoped<IRecommendationService, RecommendationService>();
+        builder.Services.AddScoped<IRevenueService, RevenueService>();
 
 
         // Registracija AutoMappera
@@ -52,6 +53,7 @@ internal class Program
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<RoleProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<UserProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<BookingProfile>());
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<BookingStatusProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<ReviewProfile>());
 
         // JWT konfiguracija
