@@ -162,4 +162,20 @@ Future<List<BookingResponse>> getBookingsByUser(int userId) async {
   throw Exception("Failed to load user bookings");
 }
 
+Future<void> sendReminder(int id) async {
+  print("➡️ REMINDER request for booking $id");
+
+  final response = await api.post(
+    "Booking/$id/send-reminder",
+    {},
+  );
+
+  print("⬅️ RESPONSE: ${response.statusCode}");
+
+  if (response.statusCode != 200) {
+    print("❌ ERROR BODY: ${response.body}");
+    throw Exception("Reminder failed");
+  }
+}
+
 }

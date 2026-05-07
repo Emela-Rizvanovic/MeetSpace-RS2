@@ -15,6 +15,10 @@ import 'pages/contact_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/edit_profile_page.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'providers/notification_provider.dart';
+
+final GlobalKey<NavigatorState> navigatorKey =
+    GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +30,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: const MyApp(),
     ),
@@ -79,6 +84,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      navigatorKey: navigatorKey,
       home: const AuthWrapper(),
       routes: {
         '/login': (_) => const LoginPage(),

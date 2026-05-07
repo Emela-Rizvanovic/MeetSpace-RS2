@@ -1,12 +1,14 @@
 using AutoMapper;
+using MeetSpace.API.Helpers;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
 using MeetSpace.Services.Mapping;
 using MeetSpace.Services.Security;
 using MeetSpace.Services.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -89,6 +91,10 @@ internal class Program
         // Add controllers
         builder.Services.AddControllers();
 
+        builder.Services.AddSignalR();
+
+        builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
+
         // Swagger/OpenAPI
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(c =>
@@ -139,6 +145,8 @@ internal class Program
         app.UseAuthorization();
 
         app.MapControllers();
+
+        app.MapHub<MeetSpace.API.Hubs.NotificationHub>("/notificationHub");
 
         app.UseExceptionHandler(errorApp =>
         {
