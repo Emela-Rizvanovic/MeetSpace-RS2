@@ -177,5 +177,14 @@ namespace MeetSpace.WebAPI.Controllers
         }
 
 
+        [HttpPost("{id}/send-reminder")]
+        public async Task<IActionResult> SendReminder(int id)
+        {
+            await _bookingService.SendReminderAsync(id);
+
+            return Ok();
+        }
+
+
     }
 }

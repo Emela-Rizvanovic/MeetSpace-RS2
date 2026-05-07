@@ -1,29 +1,32 @@
 ﻿using AutoMapper;
 using MeetSpace.Models.Entities;
+using MeetSpace.Models.Messages;
 using MeetSpace.Models.Requests;
 using MeetSpace.Models.Responses;
 using MeetSpace.Models.SearchObjects;
 using MeetSpace.Services.BaseServices;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Http;
 
 namespace MeetSpace.Services.Services
 {
     public class BookingService : BaseCRUDService<BookingResponse, BookingSearchObject, Booking, BookingInsertRequest, BookingUpdateRequest>, IBookingService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-        public BookingService(MeetSpaceDbContext context, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        private readonly IRabbitMQService _rabbitMq;
+        public BookingService(MeetSpaceDbContext context, IMapper mapper, IHttpContextAccessor httpContextAccessor, IRabbitMQService rabbitMq)
             : base(context, mapper)
         {
             _httpContextAccessor = httpContextAccessor;
+            _rabbitMq = rabbitMq;
         }
 
         protected override IQueryable<Booking> ApplyFilter(IQueryable<Booking> query, BookingSearchObject search)
@@ -264,7 +267,9 @@ namespace MeetSpace.Services.Services
         public async Task ApproveAsync(int id, CancellationToken ct = default)
         {
             var entity = await _context.Bookings
-                .FirstOrDefaultAsync(b => b.Id == id, ct);
+    .Include(b => b.User)
+    .Include(b => b.Space)
+    .FirstOrDefaultAsync(b => b.Id == id, ct);
 
             if (entity == null)
                 throw new Exception("Booking not found");
@@ -284,12 +289,22 @@ namespace MeetSpace.Services.Services
             });
 
             await _context.SaveChangesAsync(ct);
+
+            await _rabbitMq.PublishAsync(new BookingStatusChangedMessage
+            {
+                UserId = entity.UserId,
+                SpaceName = entity.Space.Name,
+                StartTime = entity.StartTime,
+                IsApproved = true
+            }, "meetspace.booking-status");
         }
 
         public async Task RejectAsync(int id, string reason, CancellationToken ct = default)
         {
             var entity = await _context.Bookings
-                .FirstOrDefaultAsync(b => b.Id == id, ct);
+    .Include(b => b.User)
+    .Include(b => b.Space)
+    .FirstOrDefaultAsync(b => b.Id == id, ct);
 
             if (entity == null)
                 throw new Exception("Booking not found");
@@ -311,6 +326,16 @@ namespace MeetSpace.Services.Services
             });
 
             await _context.SaveChangesAsync(ct);
+
+
+            await _rabbitMq.PublishAsync(new BookingStatusChangedMessage
+            {
+                UserId = entity.UserId,
+                SpaceName = entity.Space.Name,
+                StartTime = entity.StartTime,
+                IsApproved = false,
+                Reason = reason
+            }, "meetspace.booking-status");
         }
 
         public async Task<bool> HasConflict(int spaceId, DateTime start, DateTime end, int? ignoreId = null)
@@ -360,6 +385,29 @@ namespace MeetSpace.Services.Services
                 .ToListAsync(cancellationToken);
 
             return await base.GetAsync(search, cancellationToken);
+        }
+
+        public async Task SendReminderAsync(
+       int bookingId,
+       CancellationToken ct = default)
+        {
+            var booking = await _context.Bookings
+                .Include(b => b.Space)
+                .FirstOrDefaultAsync(b => b.Id == bookingId, ct);
+
+            if (booking == null)
+                throw new Exception("Booking not found");
+
+            var message = new BookingReminderMessage
+            {
+                UserId = booking.UserId,
+                SpaceName = booking.Space.Name,
+                StartTime = booking.StartTime
+            };
+
+            await _rabbitMq.PublishAsync(
+                message,
+                "meetspace.booking-reminder");
         }
     }
 }

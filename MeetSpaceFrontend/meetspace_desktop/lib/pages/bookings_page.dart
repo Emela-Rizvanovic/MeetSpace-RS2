@@ -678,11 +678,47 @@ Future<void> _openDetails(BuildContext context) async {
               if (booking.bookingStatusId != 3)
                 _secondaryButton(
                   text: "Send reminder",
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Reminder sent")),
-                    );
-                  },
+                 onTap: () async {
+  await context
+      .read<AuthProvider>()
+      .bookingService
+      .sendReminder(booking.id);
+
+      Navigator.pop(context);
+
+  if (!context.mounted) return;
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.only(
+        bottom: 40,
+        left: 20,
+        right: 20,
+      ),
+      backgroundColor: const Color(0xFFA56E09),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      content: Row(
+        children: const [
+          Icon(Icons.notifications_active,
+              color: Colors.white),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              "Reminder sent successfully",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+},
                 ),
             ],
           ),
@@ -762,11 +798,13 @@ Future<void> _openDetails(BuildContext context) async {
     );
   }
 
-  Widget _secondaryButton({
-    required String text,
-    required VoidCallback onTap,
-  }) {
-    return Container(
+ Widget _secondaryButton({
+  required String text,
+  required VoidCallback onTap,
+}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
@@ -776,10 +814,14 @@ Future<void> _openDetails(BuildContext context) async {
       alignment: Alignment.center,
       child: Text(
         text,
-        style: const TextStyle(color: Colors.white),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   String _formatDate(DateTime dt) =>
       "${dt.day}.${dt.month}.${dt.year}";

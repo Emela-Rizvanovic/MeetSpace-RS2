@@ -1,11 +1,10 @@
-﻿using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
-using Newtonsoft.Json;
-using MeetSpace.Models.Messages;
-using Microsoft.Extensions.Logging;
+﻿using MeetSpace.Models.Messages;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using System.Text;
-
 
 namespace MeetSpace.Subscriber.Services
 {
@@ -38,11 +37,25 @@ namespace MeetSpace.Subscriber.Services
                 durable: true,
                 exclusive: false,
                 autoDelete: false);
-        }
 
+            _channel.QueueDeclare(
+    queue: "meetspace.booking-status",
+    durable: true,
+    exclusive: false,
+    autoDelete: false);
+
+            _channel.QueueDeclare(
+    queue: "meetspace.booking-reminder",
+    durable: true,
+    exclusive: false,
+    autoDelete: false);
+
+        }
         public Task StartConsumingAsync(CancellationToken cancellationToken)
         {
             var consumer = new EventingBasicConsumer(_channel);
+
+            _logger.LogInformation("STARTING CONSUMER...");
 
             consumer.Received += async (model, ea) =>
             {
@@ -55,6 +68,90 @@ namespace MeetSpace.Subscriber.Services
             };
 
             _channel.BasicConsume("meetspace.password-reset", false, consumer);
+
+            var bookingConsumer = new EventingBasicConsumer(_channel);
+
+            bookingConsumer.Received += async (model, ea) =>
+            {
+                try
+                {
+                    var json = Encoding.UTF8.GetString(ea.Body.ToArray());
+
+                    _logger.LogInformation("BOOKING MESSAGE RECEIVED: {json}", json);
+
+                    var message = JsonConvert.DeserializeObject<BookingStatusChangedMessage>(json);
+
+                    if (message == null)
+                    {
+                        _logger.LogWarning("Message null");
+                        return;
+                    }
+
+                    var client = new HttpClient();
+
+                    var url = "http://localhost:5245/api/notifications/send";
+
+                    var payload = JsonConvert.SerializeObject(message);
+                    var content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+                    var response = await client.PostAsync(url, content);
+
+                    _logger.LogInformation("Notification API response: {status}", response.StatusCode);
+
+                    _channel.BasicAck(ea.DeliveryTag, false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "ERROR IN CONSUMER");
+                }
+            };
+
+            var reminderConsumer = new EventingBasicConsumer(_channel);
+
+            reminderConsumer.Received += async (model, ea) =>
+            {
+                try
+                {
+                    var json = Encoding.UTF8.GetString(ea.Body.ToArray());
+
+                    _logger.LogInformation("REMINDER MESSAGE RECEIVED: {json}", json);
+
+                    var message = JsonConvert.DeserializeObject<BookingReminderMessage>(json);
+
+                    if (message == null)
+                        return;
+
+                    var client = new HttpClient();
+
+                    var url = "http://localhost:5245/api/notifications/reminder";
+
+                    var payload = JsonConvert.SerializeObject(message);
+
+                    var content = new StringContent(
+                        payload,
+                        Encoding.UTF8,
+                        "application/json");
+
+                    var response = await client.PostAsync(url, content);
+
+                    _logger.LogInformation(
+                        "Reminder API response: {status}",
+                        response.StatusCode);
+
+                    _channel.BasicAck(ea.DeliveryTag, false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "ERROR IN REMINDER CONSUMER");
+                }
+            };
+
+            _channel.BasicConsume(
+                "meetspace.booking-reminder",
+                false,
+                reminderConsumer);
+
+            _channel.BasicConsume("meetspace.booking-status", false, bookingConsumer);
 
             return Task.CompletedTask;
         }

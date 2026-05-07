@@ -4,6 +4,8 @@ import '../providers/auth_provider.dart';
 import '../models/space.dart';
 import 'menu_page.dart';
 import 'space_details_page.dart';
+import '../providers/notification_provider.dart';
+import '../main.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,6 +24,18 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadSpaces();
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+    final auth = context.read<AuthProvider>();
+
+    final token = auth.token;
+
+    if (token == null) return;
+
+    await context.read<NotificationProvider>().connect(
+          token: token,
+          navigatorKey: navigatorKey,
+        );
+  });
   }
 
   Future<void> _loadSpaces() async {
