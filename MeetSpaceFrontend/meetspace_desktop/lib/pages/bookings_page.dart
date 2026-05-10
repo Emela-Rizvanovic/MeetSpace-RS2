@@ -38,24 +38,51 @@ void initState() {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "MEETSPACE",
-              style: TextStyle(
-                color: Colors.white70,
-                letterSpacing: 4,
-                fontSize: 18,
-              ),
-            ),
-            const SizedBox(height: 30),
-            const Text(
-              "Upcoming bookings and reminders",
-              style: TextStyle(
-                color: Color(0xFFA56E09),
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 20),
+
+  /// 🔥 HEADER
+  Row(
+    children: [
+      InkWell(
+        onTap: () => Navigator.pop(context),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2E2E2E),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+        ),
+      ),
+
+      const SizedBox(width: 16),
+
+      const Text(
+        "MEETSPACE",
+        style: TextStyle(
+          color: Colors.white70,
+          letterSpacing: 4,
+          fontSize: 18,
+        ),
+      ),
+    ],
+  ),
+
+  const SizedBox(height: 30),
+
+  const Text(
+    "Upcoming bookings and reminders",
+    style: TextStyle(
+      color: Color(0xFFA56E09),
+      fontSize: 28,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+
+  SizedBox(height: 20),
 Expanded(
   child: _isLoading
       ? const Center(child: CircularProgressIndicator())
@@ -350,6 +377,9 @@ class _BookingCardState extends State<BookingCard> {
 Future<void> _openDetails(BuildContext context) async {
   final booking = widget.booking;
   final isPending = booking.bookingStatusId == 1;
+   final isReminderAvailable =
+    booking.bookingStatusId == 2 &&
+    booking.startTime.isAfter(DateTime.now());
   await _loadConflict();
 
   showDialog(
@@ -675,7 +705,7 @@ Future<void> _openDetails(BuildContext context) async {
               ],
 
               /// 🔥 REMINDER (NE ZA REJECTED)
-              if (booking.bookingStatusId != 3)
+              if (isReminderAvailable)
                 _secondaryButton(
                   text: "Send reminder",
                  onTap: () async {

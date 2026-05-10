@@ -36,7 +36,9 @@ class BookingConfirmationPage extends StatelessWidget {
   "price": totalPrice,
 });
 
-    return Scaffold(
+    return PopScope(
+  canPop: false,
+  child: Scaffold(
       backgroundColor: bg,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -117,6 +119,36 @@ class BookingConfirmationPage extends StatelessWidget {
                 ),
               ),
 
+              const SizedBox(height: 30),
+
+SizedBox(
+  width: double.infinity,
+  height: 52,
+  child: ElevatedButton(
+    onPressed: () {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/home',
+        (route) => false,
+      );
+    },
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.black,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+      ),
+    ),
+    child: const Text(
+      "Back to home",
+      style: TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  ),
+),
+
+const SizedBox(height: 30),
               const SizedBox(height: 40),
 
               const Center(
@@ -133,6 +165,7 @@ class BookingConfirmationPage extends StatelessWidget {
           ),
         ),
       ),
+  ),
     );
   }
 

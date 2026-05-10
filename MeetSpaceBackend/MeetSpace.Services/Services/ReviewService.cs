@@ -80,14 +80,21 @@ namespace MeetSpace.Services.Services
             if (!spaceExists)
                 throw new ApplicationException("Space not found.");
 
-            // 3️⃣ User mora imati booking za taj space
-            var hasBooking = await _context.Bookings
-                .AnyAsync(b => b.UserId == entity.UserId &&
-                               b.SpaceId == request.SpaceId,
-                               cancellationToken);
+            // 3️⃣ User mora imati ZAVRŠEN booking za taj space
+            var now = DateTime.UtcNow;
 
-            if (!hasBooking)
-                throw new ApplicationException("You can review only visited spaces.");
+            var hasCompletedBooking = await _context.Bookings
+                .AnyAsync(b =>
+                    b.UserId == entity.UserId &&
+                    b.SpaceId == request.SpaceId &&
+                    b.EndTime <= now,
+                    cancellationToken);
+
+            if (!hasCompletedBooking)
+            {
+                throw new ApplicationException(
+                    "You can leave a review only for visited spaces after your booking has finished.");
+            }
 
             // 4️⃣ Provjeri da već ne postoji review
             var exists = await _context.Reviews

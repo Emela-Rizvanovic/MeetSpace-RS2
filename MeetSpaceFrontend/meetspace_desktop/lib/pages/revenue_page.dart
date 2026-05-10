@@ -47,14 +47,37 @@ class _RevenuePageState extends State<RevenuePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /// LOGO
-            const Text(
-              "MEETSPACE",
-              style: TextStyle(
-                color: Colors.white70,
-                letterSpacing: 4,
-                fontSize: 18,
-              ),
-            ),
+           /// TOP BAR
+Row(
+  children: [
+    InkWell(
+      onTap: () => Navigator.pop(context),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2E2E2E),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(
+          Icons.arrow_back,
+          color: Colors.white,
+        ),
+      ),
+    ),
+
+    const SizedBox(width: 16),
+
+    const Text(
+      "MEETSPACE",
+      style: TextStyle(
+        color: Colors.white70,
+        letterSpacing: 4,
+        fontSize: 18,
+      ),
+    ),
+  ],
+),
 
             const SizedBox(height: 20),
 

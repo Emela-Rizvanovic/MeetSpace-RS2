@@ -4,14 +4,15 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/space.dart';
 import 'paypal_webview.dart';
-import 'package:collection/collection.dart';
 import 'booking_confirmation_page.dart';
+import '../models/amenity.dart';
 
 class PaymentPage extends StatefulWidget {
   final SpaceResponse space;
   final DateTime startTime;
   final DateTime endTime;
   final Map<int, bool> selectedAmenities;
+  final List<AmenityResponse> amenities;
 
   const PaymentPage({
     super.key,
@@ -19,6 +20,7 @@ class PaymentPage extends StatefulWidget {
     required this.startTime,
     required this.endTime,
     required this.selectedAmenities,
+    required this.amenities,
   });
 
   @override
@@ -31,18 +33,13 @@ class _PaymentPageState extends State<PaymentPage> {
   CardFieldInputDetails? _card;
   final _nameController = TextEditingController();
 
-  bool _agree = false;
   bool _loading = false;
 
   String _method = "card"; 
 
   // ---------------- STRIPE ----------------
   Future<void> _pay() async {
-    if (!_agree) {
-      _snack("Accept terms");
-      return;
-    }
-
+ 
     if (_card == null || !_card!.complete) {
       _snack("Enter valid card");
       return;
@@ -59,15 +56,9 @@ class _PaymentPageState extends State<PaymentPage> {
 double amount = hours * widget.space.pricePerHour;
 
 // ADD AMENITIES
-for (var entry in widget.selectedAmenities.entries) {
-  if (entry.value == true) {
-    final amenity = widget.space.amenities
-        .where((a) => a.id == entry.key)
-        .firstOrNull;
-
-    if (amenity != null) {
-      amount += amenity.price;
-    }
+for (var amenity in widget.amenities) {
+  if (widget.selectedAmenities[amenity.id] == true) {
+    amount += amenity.price;
   }
 }
 
@@ -141,15 +132,9 @@ Future<void> _payWithPaypal() async {
 double amount = hours * widget.space.pricePerHour;
 
 // ADD AMENITIES
-for (var entry in widget.selectedAmenities.entries) {
-  if (entry.value == true) {
-    final amenity = widget.space.amenities
-        .where((a) => a.id == entry.key)
-        .firstOrNull;
-
-    if (amenity != null) {
-      amount += amenity.price;
-    }
+for (var amenity in widget.amenities) {
+  if (widget.selectedAmenities[amenity.id] == true) {
+    amount += amenity.price;
   }
 }
 
@@ -265,16 +250,41 @@ for (var entry in widget.selectedAmenities.entries) {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              const Text(
-                "Payment information",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              Row(
+  children: [
 
-              const SizedBox(height: 20),
+    /// BACK BUTTON
+    InkWell(
+      onTap: () => Navigator.pop(context),
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.4),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: const Icon(
+          Icons.arrow_back_ios_new,
+          color: Colors.white,
+          size: 18,
+        ),
+      ),
+    ),
+
+    const SizedBox(width: 14),
+
+    const Text(
+      "Payment information",
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  ],
+),
+
+const SizedBox(height: 20),
 
               // ---------------- CARD TOGGLE ----------------
               GestureDetector(
@@ -352,23 +362,6 @@ for (var entry in widget.selectedAmenities.entries) {
                       border: InputBorder.none,
                     ),
                   ),
-                ),
-
-                Row(
-                  children: [
-                    Checkbox(
-                      value: _agree,
-                      activeColor: Colors.orange,
-                      onChanged: (v) =>
-                          setState(() => _agree = v ?? false),
-                    ),
-                    const Expanded(
-                      child: Text(
-                        "I agree to the Terms and conditions",
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                    )
-                  ],
                 ),
 
                 const SizedBox(height: 20),

@@ -97,14 +97,36 @@ final result = await auth.spaceService.getPaged(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /// HEADER
-           Row(
+  /// HEADER
+Row(
   children: [
+
+    /// BACK BUTTON
+    InkWell(
+      onTap: () => Navigator.pop(context),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2E2E2E),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(
+          Icons.arrow_back,
+          color: Colors.white,
+        ),
+      ),
+    ),
+
+    const SizedBox(width: 16),
+
+    /// LOGO
     const Text(
-      "Available locations",
+      "MEETSPACE",
       style: TextStyle(
-        color: brandOrange,
-        fontSize: 34,
-        fontWeight: FontWeight.bold,
+        color: Colors.white70,
+        letterSpacing: 4,
+        fontSize: 18,
       ),
     ),
 
@@ -182,6 +204,18 @@ onPressed: () async {
     ),
   ],
 ),
+
+ const SizedBox(width: 30),
+
+    /// PAGE TITLE
+    const Text(
+      "Available locations",
+      style: TextStyle(
+        color: brandOrange,
+        fontSize: 34,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
 
             const SizedBox(height: 20),
 

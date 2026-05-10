@@ -45,13 +45,11 @@ class _BookingPageState extends State<BookingPage> {
   }
 
   Future<void> _loadAmenities() async {
-    final auth = context.read<AuthProvider>();
-    final data = await auth.getAmenities();
-    setState(() {
-      _amenities = data;
-      _loading = false;
-    });
-  }
+  setState(() {
+    _amenities = widget.space.amenities; // koristi već učitane amenities tog spacea
+    _loading = false;
+  });
+}
 
   Future<void> _loadBookedHours() async {
     final auth = context.read<AuthProvider>();
@@ -143,6 +141,7 @@ class _BookingPageState extends State<BookingPage> {
           startTime: start,
           endTime: end,
           selectedAmenities: _selectedAmenities,
+          amenities: _amenities,
         ),
       ),
     );
@@ -165,14 +164,41 @@ class _BookingPageState extends State<BookingPage> {
                   crossAxisAlignment:
                       CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "Please select",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontFamily: "Poppins",
-                      ),
-                    ),
-                    const SizedBox(height: 18),
+                    Row(
+  children: [
+
+    /// BACK BUTTON
+    InkWell(
+      onTap: () => Navigator.pop(context),
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.4),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: const Icon(
+          Icons.arrow_back_ios_new,
+          color: Colors.white,
+          size: 18,
+        ),
+      ),
+    ),
+
+    const SizedBox(width: 14),
+
+    const Text(
+      "Please select",
+      style: TextStyle(
+        color: Colors.white70,
+        fontFamily: "Poppins",
+        fontSize: 16,
+      ),
+    ),
+  ],
+),
+
+const SizedBox(height: 18),
 
                     _inputBox(
                         "BAM ${widget.space.pricePerHour.toStringAsFixed(0)} per hour – starter"),
@@ -333,9 +359,18 @@ class _BookingPageState extends State<BookingPage> {
         final isInvalidEnd = !isStart &&
             _startHour != null &&
             hour <= _startHour!;
+        final now = DateTime.now();
+
+final isToday =
+    widget.selectedDate.year == now.year &&
+    widget.selectedDate.month == now.month &&
+    widget.selectedDate.day == now.day;
+
+final isPastHour =
+    isToday && hour <= now.hour;
 
         return GestureDetector(
-          onTap: (isBooked || isInvalidEnd)
+          onTap: (isBooked || isInvalidEnd || isPastHour)
               ? null
               : () {
                   setState(() {
@@ -355,7 +390,7 @@ class _BookingPageState extends State<BookingPage> {
             width: 60,
             height: 40,
             decoration: BoxDecoration(
-              color: isBooked
+              color: isBooked || isPastHour
                   ? Colors.black38
                   : isInvalidEnd
                       ? Colors.black45
@@ -370,7 +405,7 @@ class _BookingPageState extends State<BookingPage> {
                 "${hour.toString().padLeft(2, '0')}:00",
                 style: TextStyle(
                   fontFamily: "Poppins",
-                  color: isBooked
+                  color: isBooked || isPastHour
                       ? Colors.white30
                       : isInvalidEnd
                           ? Colors.white38

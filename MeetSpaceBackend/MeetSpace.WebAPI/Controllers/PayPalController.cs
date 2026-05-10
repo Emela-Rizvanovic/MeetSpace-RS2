@@ -1,6 +1,7 @@
 ﻿using MeetSpace.Models.Entities;
 using MeetSpace.Models.Requests;
 using MeetSpace.Services.Database;
+using MeetSpace.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,11 +13,15 @@ public class PayPalController : ControllerBase
 {
     private readonly MeetSpaceDbContext _context;
     private readonly IConfiguration _config;
-
-    public PayPalController(MeetSpaceDbContext context, IConfiguration config)
+    private readonly IBookingService _bookingService;
+    public PayPalController(
+     MeetSpaceDbContext context,
+     IConfiguration config,
+     IBookingService bookingService)
     {
         _context = context;
         _config = config;
+        _bookingService = bookingService;
     }
 
     [HttpPost("create-order")]
@@ -144,59 +149,33 @@ public class PayPalController : ControllerBase
         Console.WriteLine("PAYPAL CAPTURE RESPONSE:");
         Console.WriteLine(captureJson);
 
-        var space = await _context.Spaces
-            .FirstOrDefaultAsync(x => x.Id == request.SpaceId);
-
-        if (space == null)
-            return BadRequest("Space not found");
-
-        var hours = (request.EndTime - request.StartTime).TotalHours;
-        decimal total = space.PricePerHour * (decimal)hours;
-
-        foreach (var a in request.Amenities)
-        {
-            var amenity = await _context.Amenities
-                .FirstOrDefaultAsync(x => x.Id == a.AmenityId);
-
-            if (amenity != null)
-            {
-                total += amenity.Price * a.Quantity;
-            }
-        }
-
-        var booking = new Booking
+        var bookingRequest = new BookingInsertRequest
         {
             SpaceId = request.SpaceId,
             UserId = currentUserId,
             StartTime = request.StartTime,
             EndTime = request.EndTime,
-            BookingStatusId = 1, // Pending
-            PaymentStatusId = 2, //Completed
-            TotalPrice = total
+            Amenities = request.Amenities
+           .Select(x => new BookingAmenityInsertRequest
+           {
+               AmenityId = x.AmenityId,
+               Quantity = x.Quantity
+           })
+           .ToList()
         };
 
-        _context.Bookings.Add(booking);
+        var bookingResponse =
+            await _bookingService.CreateAsync(bookingRequest);
+
         await _context.SaveChangesAsync();
-
-        foreach (var a in request.Amenities)
-        {
-            _context.BookingAmenities.Add(new BookingAmenity
-            {
-                BookingId = booking.Id,
-                AmenityId = a.AmenityId,
-                Quantity = a.Quantity
-            });
-        }
-
-        decimal amount = total;
 
         var payment = new Payment
         {
-            BookingId = booking.Id,
+            BookingId = bookingResponse.Id,
             UserId = currentUserId,
             PaymentMethodId = 2, // PayPal
             PaymentStatusId = 2,
-            Amount = amount,
+            Amount = bookingResponse.TotalPrice,
             PaymentDate = DateTime.UtcNow
         };
 
@@ -206,7 +185,7 @@ public class PayPalController : ControllerBase
 
         return Ok(new
         {
-            bookingId = booking.Id
+            bookingId = bookingResponse.Id
         });
     }
 }

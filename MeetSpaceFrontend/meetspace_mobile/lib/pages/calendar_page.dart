@@ -222,7 +222,29 @@ class _CalendarPageState extends State<CalendarPage> {
                                     final isPast =
                                         dayDate.isBefore(todayOnly);
                                     final bookedHours = _bookedHoursPerDay[dayDate] ?? {};
-final isFullDay = bookedHours.length >= 8; // 8h: 8–16
+
+final now = DateTime.now();
+
+final isToday =
+    dayDate.year == now.year &&
+    dayDate.month == now.month &&
+    dayDate.day == now.day;
+
+/// prošli sati danas
+final pastHoursToday = isToday
+    ? List.generate(
+        now.hour - 8 > 0 ? now.hour - 8 : 0,
+        (i) => i + 8,
+      ).toSet()
+    : <int>{};
+
+/// booked + prošli sati
+final unavailableHours = {
+  ...bookedHours,
+  ...pastHoursToday,
+};
+
+final isFullDay = unavailableHours.length >= 8;
                                     final isSelected =
                                         _selectedDate == dayDate;
 

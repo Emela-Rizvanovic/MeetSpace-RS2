@@ -1,6 +1,7 @@
 ﻿using MeetSpace.Models.Entities;
 using MeetSpace.Models.Requests;
 using MeetSpace.Services.Database;
+using MeetSpace.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,10 +15,14 @@ namespace MeetSpace.WebAPI.Controllers
     public class PaymentController : ControllerBase
     {
         private readonly MeetSpaceDbContext _context;
+        private readonly IBookingService _bookingService;
 
-        public PaymentController(MeetSpaceDbContext context)
+        public PaymentController(
+            MeetSpaceDbContext context,
+            IBookingService bookingService)
         {
             _context = context;
+            _bookingService = bookingService;
         }
 
         [HttpPost("create-intent")]
@@ -85,56 +90,29 @@ namespace MeetSpace.WebAPI.Controllers
 
             paymentIntent.IsCompleted = true;
 
-            var space = await _context.Spaces
-                .FirstOrDefaultAsync(x => x.Id == request.SpaceId);
-
-            if (space == null)
-                return BadRequest("Space not found");
-
-            var hours = (request.EndTime - request.StartTime).TotalHours;
-
-            decimal total = space.PricePerHour * (decimal)hours;
-
-            foreach (var a in request.Amenities)
-            {
-                var amenity = await _context.Amenities
-                    .FirstOrDefaultAsync(x => x.Id == a.AmenityId);
-
-                if (amenity != null)
-                {
-                    total += amenity.Price * a.Quantity;
-                }
-            }
-
-            var booking = new Booking
+            var bookingRequest = new BookingInsertRequest
             {
                 SpaceId = request.SpaceId,
                 UserId = currentUserId,
                 StartTime = request.StartTime,
                 EndTime = request.EndTime,
-                BookingStatusId = 1, // Pending
-                PaymentStatusId = 2, //Completed
-                TotalPrice = total 
+                Amenities = request.Amenities
+         .Select(x => new BookingAmenityInsertRequest
+         {
+             AmenityId = x.AmenityId,
+             Quantity = x.Quantity
+         })
+         .ToList()
             };
 
-            _context.Bookings.Add(booking);
-            await _context.SaveChangesAsync(); 
+            var bookingResponse =
+                await _bookingService.CreateAsync(bookingRequest);
 
-            foreach (var a in request.Amenities)
-            {
-                var bookingAmenity = new BookingAmenity
-                {
-                    BookingId = booking.Id,
-                    AmenityId = a.AmenityId,
-                    Quantity = a.Quantity
-                };
-
-                _context.BookingAmenities.Add(bookingAmenity);
-            }
+            await _context.SaveChangesAsync();
 
             var payment = new Payment
             {
-                BookingId = booking.Id,
+                BookingId = bookingResponse.Id,
                 UserId = currentUserId,
                 PaymentIntentId = paymentIntent.Id,
                 PaymentMethodId = 1, // Stripe
@@ -149,7 +127,7 @@ namespace MeetSpace.WebAPI.Controllers
 
             return Ok(new
             {
-                bookingId = booking.Id
+                bookingId = bookingResponse.Id
             });
         }
     }

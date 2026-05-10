@@ -28,6 +28,9 @@ int _totalReviews = 0;
   ReviewResponse? _myReview;
   bool _loadingReviews = true;
 
+  SpaceResponse? _space;
+bool _loadingSpace = true;
+
   late final PageController _pageController;
   int _pageIndex = 0;
 
@@ -40,10 +43,29 @@ int _totalReviews = 0;
   void initState() {
     super.initState();
     _pageController = PageController();
+    _loadSpace();
     _checkIfFavorite();
     _loadReviews();
     _refreshSummary();
   }
+
+  Future<void> _loadSpace() async {
+  try {
+    final auth = context.read<AuthProvider>();
+
+    final data =
+        await auth.spaceService.getById(widget.space.id);
+
+    setState(() {
+      _space = data;
+      _loadingSpace = false;
+    });
+  } catch (e) {
+    setState(() {
+      _loadingSpace = false;
+    });
+  }
+}
 
   Future<void> _checkIfFavorite() async {
     final auth = context.read<AuthProvider>();
@@ -145,7 +167,16 @@ Future<void> _refreshSummary() async {
 
   @override
   Widget build(BuildContext context) {
-    final s = widget.space;
+   if (_loadingSpace) {
+  return const Scaffold(
+    backgroundColor: bgGrey,
+    body: Center(
+      child: CircularProgressIndicator(),
+    ),
+  );
+}
+
+final s = _space ?? widget.space;
 
     final address = (s.facilityAddress ?? '').trim().isEmpty
         ? 'Address not available'
@@ -599,7 +630,7 @@ const SizedBox(height: 12),
                     context,
                     MaterialPageRoute(
                       builder: (_) =>
-                          CalendarPage(space: widget.space),
+                          CalendarPage(space: _space ?? widget.space),
                     ),
                   );
                 },

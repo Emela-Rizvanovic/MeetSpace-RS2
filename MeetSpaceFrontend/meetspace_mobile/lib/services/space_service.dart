@@ -90,4 +90,15 @@ class SpaceService {
 
   throw Exception("Failed to load paged spaces");
 }
+
+Future<SpaceResponse> getById(int id) async {
+  final response = await api.get("Space/$id");
+
+  if (response.statusCode == 200) {
+    final decoded = jsonDecode(response.body);
+    return SpaceResponse.fromJson(decoded);
+  }
+
+  throw Exception("Failed to load space");
+}
 }
