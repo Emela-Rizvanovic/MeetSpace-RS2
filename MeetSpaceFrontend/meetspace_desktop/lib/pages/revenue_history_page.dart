@@ -7,6 +7,7 @@ import '../models/revenue.dart';
 import '../services/revenue_service.dart';
 import '../utils/pdf_helper.dart';
 import 'package:open_file/open_file.dart';
+import 'payment_reference_data_dialog.dart';
 
 class RevenueHistoryPage extends StatefulWidget {
   const RevenueHistoryPage({super.key});
@@ -54,6 +55,8 @@ final result = await service.getPaged(
   from: _fromDate,
   to: _toDate,
 );
+
+if (!mounted) return;
 
   setState(() {
     _data = result.items;
@@ -194,6 +197,38 @@ Row(
       ),
     ),
                 const Spacer(),
+
+                OutlinedButton.icon(
+  onPressed: () async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) =>
+          const PaymentReferenceDataDialog(),
+    );
+  },
+  icon: const Icon(Icons.settings),
+  label:
+      const Text("Manage payment data"),
+  style: OutlinedButton.styleFrom(
+    foregroundColor: Colors.white,
+    side:
+        const BorderSide(color: Colors.white24),
+    padding:
+        const EdgeInsets.symmetric(
+      horizontal: 20,
+      vertical: 16,
+    ),
+    minimumSize:
+        const Size(0, 52),
+    shape: RoundedRectangleBorder(
+      borderRadius:
+          BorderRadius.circular(14),
+    ),
+  ),
+),
+
+const SizedBox(width: 16),
 
                 /// DATE FILTER
                 _dateButton("From", _fromDate, () => _pickDate(true)),

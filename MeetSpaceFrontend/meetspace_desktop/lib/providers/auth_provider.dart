@@ -17,6 +17,14 @@ import '../services/amenity_service.dart';
 import '../services/user_service.dart';
 import '../services/recommendation_service.dart';
 import '../services/payment_service.dart';
+import '../services/country_service.dart';
+import '../services/city_service.dart';
+import '../services/facility_service.dart';
+import '../services/space_type_service.dart';
+import '../services/amenity_category_service.dart';
+import '../services/payment_method_service.dart';
+import '../services/payment_status_service.dart';
+import '../services/booking_status_service.dart';
 import 'dart:io';
 
 class AuthProvider with ChangeNotifier {
@@ -61,6 +69,30 @@ RecommendationService get recommendationService =>
 
 PaymentService get paymentService =>
     PaymentService(api);
+
+    CountryService get countryService =>
+    CountryService(api);
+
+    CityService get cityService =>
+    CityService(api);
+
+    FacilityService get facilityService =>
+    FacilityService(api);
+
+    SpaceTypeService get spaceTypeService =>
+    SpaceTypeService(api);
+
+    AmenityCategoryService get amenityCategoryService =>
+    AmenityCategoryService(api);
+
+ PaymentMethodService get paymentMethodService =>
+    PaymentMethodService(api);
+
+    PaymentStatusService get paymentStatusService =>
+    PaymentStatusService(api);
+
+    BookingStatusService get bookingStatusService =>
+    BookingStatusService(api);
 
 final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 

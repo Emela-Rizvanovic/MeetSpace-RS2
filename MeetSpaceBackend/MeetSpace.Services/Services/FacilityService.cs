@@ -6,6 +6,7 @@ using MeetSpace.Models.SearchObjects;
 using MeetSpace.Services.BaseServices;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading;
@@ -23,6 +24,10 @@ namespace MeetSpace.Services.Services
         // ApplyFilter za pretragu po poljima FacilitySearchObject
         protected override IQueryable<Facility> ApplyFilter(IQueryable<Facility> query, FacilitySearchObject search)
         {
+            query = query
+        .Include(f => f.City)
+        .ThenInclude(c => c.Country);
+
             if (!string.IsNullOrWhiteSpace(search.Name))
             {
                 query = query.Where(f => f.Name.Contains(search.Name));
@@ -36,6 +41,13 @@ namespace MeetSpace.Services.Services
             if (search.CityId.HasValue)
             {
                 query = query.Where(f => f.CityId == search.CityId.Value);
+            }
+
+            if (search.CountryID.HasValue)
+            {
+                query = query.Where(f =>
+                    f.City.CountryId ==
+                    search.CountryID.Value);
             }
 
             return query;

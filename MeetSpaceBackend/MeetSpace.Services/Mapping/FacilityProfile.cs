@@ -15,7 +15,13 @@ namespace MeetSpace.Services.Mapping
         public FacilityProfile() 
         {
             // Entity -> Response
-            CreateMap<Facility, FacilityResponse>();
+            CreateMap<Facility, FacilityResponse>()
+    .ForMember(
+        dest => dest.CityName,
+        opt => opt.MapFrom(src => src.City.Name))
+    .ForMember(
+        dest => dest.CountryName,
+        opt => opt.MapFrom(src => src.City.Country.Name));
 
             // InsertRequest -> Entity
             CreateMap<FacilityInsertRequest, Facility>();

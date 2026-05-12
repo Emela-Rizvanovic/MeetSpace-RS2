@@ -48,5 +48,12 @@ namespace MeetSpace.WebAPI.Controllers
         {
             return base.Update(id, request);
         }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id}")]
+        public override Task<bool> Delete(int id)
+        {
+            return base.Delete(id);
+        }
     }
 }

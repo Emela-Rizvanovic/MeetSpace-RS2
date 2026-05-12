@@ -4,6 +4,7 @@ import '../models/space.dart';
 import '../providers/auth_provider.dart';
 import 'add_space_dialog.dart';
 import 'space_details_page.dart';
+import 'reference_data_dialog.dart';
 
 class LocationsPage extends StatefulWidget {
   const LocationsPage({super.key});
@@ -164,9 +165,35 @@ onPressed: () async {
     ),
   ),
   child: const Text(
-    "Add new location",
+    "Add new space",
     style: TextStyle(
       fontWeight: FontWeight.w600,
+    ),
+  ),
+),
+
+const SizedBox(width: 16),
+
+OutlinedButton.icon(
+  onPressed: () async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const ReferenceDataDialog(),
+    );
+  },
+  icon: const Icon(Icons.settings),
+  label: const Text("Manage data"),
+  style: OutlinedButton.styleFrom(
+    foregroundColor: Colors.white,
+    side: const BorderSide(color: Colors.white24),
+    padding: const EdgeInsets.symmetric(
+      horizontal: 20,
+      vertical: 16,
+    ),
+    minimumSize: const Size(0, 52),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(14),
     ),
   ),
 ),

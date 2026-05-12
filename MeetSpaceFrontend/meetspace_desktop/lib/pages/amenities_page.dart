@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/amenity.dart';
 import '../providers/auth_provider.dart';
 import 'add_amenity_dialog.dart';
+import 'amenity_categories_dialog.dart';
 
 class AmenitiesPage extends StatefulWidget {
   const AmenitiesPage({super.key});
@@ -300,7 +301,33 @@ Row(
                       child: const Text("Add new amenity"),
                     ),
 
-                    const SizedBox(width: 16),
+                  const SizedBox(width: 16),
+
+OutlinedButton.icon(
+  onPressed: () async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AmenityCategoriesDialog(),
+    );
+  },
+  icon: const Icon(Icons.settings),
+  label: const Text("Manage categories"),
+  style: OutlinedButton.styleFrom(
+    foregroundColor: Colors.white,
+    side: const BorderSide(color: Colors.white24),
+    padding: const EdgeInsets.symmetric(
+      horizontal: 20,
+      vertical: 16,
+    ),
+    minimumSize: const Size(0, 52),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(14),
+    ),
+  ),
+),
+
+        const SizedBox(width: 16),
 
                     /// SORT
                     Container(

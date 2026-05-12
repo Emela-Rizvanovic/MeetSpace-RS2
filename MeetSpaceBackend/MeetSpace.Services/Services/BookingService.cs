@@ -46,6 +46,25 @@ namespace MeetSpace.Services.Services
             if (search.StartTo.HasValue)
                 query = query.Where(b => b.StartTime <= search.StartTo.Value);
 
+            if (!string.IsNullOrWhiteSpace(search.Name))
+            {
+                query = query.Where(b =>
+                    b.Space.Name.Contains(search.Name) ||
+                    b.User.Username.Contains(search.Name));
+            }
+
+            if (search.IsUpcoming.HasValue)
+            {
+                if (search.IsUpcoming.Value)
+                {
+                    query = query.Where(b => b.StartTime >= DateTime.Now);
+                }
+                else
+                {
+                    query = query.Where(b => b.StartTime < DateTime.Now);
+                }
+            }
+
             return query
                 .Include(b => b.Space)
                     .ThenInclude(s => s.Facility)
@@ -376,17 +395,36 @@ namespace MeetSpace.Services.Services
 
             query = ApplyFilter(query, search);
 
-            var list = await query
-                .Include(b => b.Space).ThenInclude(s => s.Facility)
-                .Include(b => b.Space).ThenInclude(s => s.Images)
+            query = query
+                .Include(b => b.Space)
+                    .ThenInclude(s => s.Facility)
+                .Include(b => b.Space)
+                    .ThenInclude(s => s.Images)
                 .Include(b => b.BookingStatus)
                 .Include(b => b.User)
                 .Include(b => b.PaymentStatus)
-                .OrderByDescending(b => b.StartTime)
-                .ToListAsync(cancellationToken);
+                .OrderBy(b => b.StartTime);
 
-            return await base.GetAsync(search, cancellationToken);
+            var totalCount = await query.CountAsync(cancellationToken);
+
+            if (search.Page.HasValue && search.PageSize.HasValue)
+            {
+                query = query
+                    .Skip(search.Page.Value * search.PageSize.Value)
+                    .Take(search.PageSize.Value);
+            }
+
+            var list = await query.ToListAsync(cancellationToken);
+
+            return new PagedResult<BookingResponse>
+            {
+                Items = list.Select(MapWithAudit).ToList(),
+                TotalCount = totalCount,
+                Page = search.Page ?? 0,
+                PageSize = search.PageSize ?? 10
+            };
         }
+
 
         public async Task SendReminderAsync(
        int bookingId,

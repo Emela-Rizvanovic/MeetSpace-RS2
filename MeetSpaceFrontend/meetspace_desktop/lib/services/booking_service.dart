@@ -66,9 +66,28 @@ class BookingService {
 Future<PagedResult<BookingResponse>> getPaged({
   required int page,
   required int pageSize,
+  String? name,
+  bool? isUpcoming,
 }) async {
+
+  final query = {
+    "Page": page.toString(),
+    "PageSize": pageSize.toString(),
+  };
+
+  if (name != null &&
+      name.isNotEmpty) {
+    query["Name"] = name;
+  }
+
+if (isUpcoming != null) {
+  query["IsUpcoming"] =
+      isUpcoming.toString();
+}
+
   final response = await api.get(
-    "Booking?page=$page&pageSize=$pageSize",
+    "Booking",
+    queryParameters: query,
   );
 
   if (response.statusCode == 200) {
@@ -80,7 +99,8 @@ Future<PagedResult<BookingResponse>> getPaged({
     );
   }
 
-  throw Exception("Failed to load paged bookings");
+  throw Exception(
+      "Failed to load paged bookings");
 }
 
 Future<void> approve(int id) async {

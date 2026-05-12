@@ -1,0 +1,80 @@
+import 'dart:convert';
+import 'api_service.dart';
+
+class PaymentMethodService {
+  final ApiService api;
+
+  PaymentMethodService(this.api);
+
+  Future<Map<String, dynamic>> getPaged({
+    int page = 0,
+    int pageSize = 10,
+    String? name,
+  }) async {
+    final query = {
+      "Page": page.toString(),
+      "PageSize": pageSize.toString(),
+    };
+
+    if (name != null &&
+        name.isNotEmpty) {
+      query["Name"] = name;
+    }
+
+    final response = await api.get(
+      "PaymentMethod",
+      queryParameters: query,
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(
+          "Failed to load payment methods");
+    }
+
+    return jsonDecode(response.body);
+  }
+
+  Future<void> insert(
+    Map<String, dynamic> body,
+  ) async {
+    final response =
+        await api.post(
+      "PaymentMethod",
+      body,
+    );
+
+    if (response.statusCode != 200 &&
+        response.statusCode != 201) {
+      throw Exception(
+          "Failed to add payment method");
+    }
+  }
+
+  Future<void> update(
+    int id,
+    Map<String, dynamic> body,
+  ) async {
+    final response =
+        await api.put(
+      "PaymentMethod/$id",
+      body,
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(
+          "Failed to update payment method");
+    }
+  }
+
+  Future<void> delete(int id) async {
+    final response =
+        await api.delete(
+      "PaymentMethod/$id",
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(
+          "Failed to delete payment method");
+    }
+  }
+}

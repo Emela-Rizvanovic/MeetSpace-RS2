@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/booking.dart';
+import 'booking_status_dialog.dart';
+import 'booking_history_page.dart';
 
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
@@ -18,6 +20,8 @@ int _totalPages = 1;
 bool _isLoading = false;
 
 List<BookingResponse> _bookings = [];
+
+String _search = "";
 
  @override
 void initState() {
@@ -73,16 +77,121 @@ void initState() {
 
   const SizedBox(height: 30),
 
-  const Text(
-    "Upcoming bookings and reminders",
-    style: TextStyle(
-      color: Color(0xFFA56E09),
-      fontSize: 28,
-      fontWeight: FontWeight.bold,
+  Row(
+  children: [
+    const Text(
+      "Upcoming bookings and reminders",
+      style: TextStyle(
+        color: Color(0xFFA56E09),
+        fontSize: 28,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+
+    const Spacer(),
+
+    /// HISTORY
+    OutlinedButton.icon(
+     onPressed: () {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) =>
+          const BookingHistoryPage(),
+    ),
+  );
+},
+      icon: const Icon(Icons.history),
+      label:
+          const Text("See booking history"),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Colors.white,
+        side: const BorderSide(
+          color: Colors.white24,
+        ),
+        padding:
+            const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
+        minimumSize:
+            const Size(0, 52),
+        shape: RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.circular(14),
+        ),
+      ),
+    ),
+
+    const SizedBox(width: 16),
+
+    /// STATUSES
+    OutlinedButton.icon(
+      onPressed: () async {
+  await showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) =>
+        const BookingStatusesDialog(),
+  );
+},
+      icon:
+          const Icon(Icons.settings),
+      label: const Text(
+        "Manage booking statuses",
+      ),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Colors.white,
+        side: const BorderSide(
+          color: Colors.white24,
+        ),
+        padding:
+            const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
+        minimumSize:
+            const Size(0, 52),
+        shape: RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.circular(14),
+        ),
+      ),
+    ),
+  ],
+),
+
+const SizedBox(height: 20),
+
+/// SEARCH
+TextField(
+  onChanged: (value) {
+    setState(() {
+      _search = value;
+      _page = 0;
+    });
+
+    _loadBookings();
+  },
+  decoration: InputDecoration(
+    hintText: "Quick search",
+    prefixIcon:
+        const Icon(Icons.search),
+    filled: true,
+    fillColor: Colors.white,
+    contentPadding:
+        const EdgeInsets.symmetric(
+      vertical: 14,
+    ),
+    border: OutlineInputBorder(
+      borderRadius:
+          BorderRadius.circular(14),
+      borderSide: BorderSide.none,
     ),
   ),
+),
 
-  SizedBox(height: 20),
+const SizedBox(height: 30),
 Expanded(
   child: _isLoading
       ? const Center(child: CircularProgressIndicator())
@@ -131,13 +240,17 @@ Expanded(
   Future<void> _loadBookings() async {
   setState(() => _isLoading = true);
 
-  final result = await context
-      .read<AuthProvider>()
-      .bookingService
-      .getPaged(
-        page: _page,
-        pageSize: _pageSize,
-      );
+ final result = await context
+    .read<AuthProvider>()
+    .bookingService
+    .getPaged(
+      page: _page,
+      pageSize: _pageSize,
+      name: _search.isNotEmpty
+          ? _search
+          : null,
+      isUpcoming: true,
+    );
 
   setState(() {
     _bookings = result.items;

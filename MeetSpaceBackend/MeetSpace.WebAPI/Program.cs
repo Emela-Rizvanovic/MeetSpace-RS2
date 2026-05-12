@@ -43,6 +43,10 @@ internal class Program
         builder.Services.AddScoped<IBookingStatusService, BookingStatusService>();
         builder.Services.AddScoped<IRecommendationService, RecommendationService>();
         builder.Services.AddScoped<IRevenueService, RevenueService>();
+        builder.Services.AddScoped<ICountryService, CountryService>();
+        builder.Services.AddScoped<ICityService, CityService>();
+        builder.Services.AddScoped<IPaymentMethodService, PaymentMethodService>();
+        builder.Services.AddScoped<IPaymentStatusService, PaymentStatusService>();
 
 
         // Registracija AutoMappera
@@ -57,6 +61,10 @@ internal class Program
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<BookingProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<BookingStatusProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<ReviewProfile>());
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<CountryProfile>());
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<CityProfile>());
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<PaymentMethodProfile>());
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<PaymentStatusProfile>());
 
         // JWT konfiguracija
         var jwtSettings = builder.Configuration.GetSection("Jwt");
