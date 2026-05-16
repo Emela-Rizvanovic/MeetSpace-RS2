@@ -1,4 +1,5 @@
-﻿using MeetSpace.Models.Requests;
+﻿using MeetSpace.Models.Constants;
+using MeetSpace.Models.Requests;
 using MeetSpace.Models.Responses;
 using MeetSpace.Models.SearchObjects;
 using MeetSpace.Services.Interfaces;
@@ -35,14 +36,14 @@ namespace MeetSpace.WebAPI.Controllers
             return base.GetById(id);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Roles.Admin)]
         [HttpPost]
         public override Task<AmenityResponse> Create(AmenityInsertRequest request)
         {
             return base.Create(request);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Roles.Admin)]
         [HttpPut("{id}")]
         public override Task<AmenityResponse?> Update(int id, AmenityUpdateRequest request)
         {

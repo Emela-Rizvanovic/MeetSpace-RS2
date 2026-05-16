@@ -1,4 +1,5 @@
-﻿using MeetSpace.Models.Enums;
+﻿using MeetSpace.Models.Constants;
+using MeetSpace.Models.Enums;
 using MeetSpace.Models.Requests;
 using MeetSpace.Models.Responses;
 using MeetSpace.Models.SearchObjects;
@@ -33,7 +34,7 @@ namespace MeetSpace.WebAPI.Controllers
             int currentUserId = int.Parse(userIdClaim.Value);
             string currentRole = roleClaim.Value;
 
-            if (currentRole != "Admin")
+            if (currentRole != Roles.Admin)
             {
                 // Force booking to logged-in user
                 request.UserId = currentUserId;
@@ -59,7 +60,7 @@ namespace MeetSpace.WebAPI.Controllers
             int currentUserId = int.Parse(userIdClaim.Value);
             string currentRole = roleClaim.Value;
 
-            if (currentRole != "Admin" && booking.UserId != currentUserId)
+            if (currentRole != Roles.Admin && booking.UserId != currentUserId)
                 throw new UnauthorizedAccessException("You cannot modify this booking.");
 
             return await base.Update(id, request);
@@ -78,7 +79,7 @@ namespace MeetSpace.WebAPI.Controllers
             int currentUserId = int.Parse(userIdClaim.Value);
             string currentRole = roleClaim.Value;
 
-            if (currentRole != "Admin")
+            if (currentRole != Roles.Admin)
             {
                 // Force filter to current user
                 search.UserId = currentUserId;
@@ -105,7 +106,7 @@ namespace MeetSpace.WebAPI.Controllers
             int currentUserId = int.Parse(userIdClaim.Value);
             string currentRole = roleClaim.Value;
 
-            if (currentRole != "Admin" && booking.UserId != currentUserId)
+            if (currentRole != Roles.Admin && booking.UserId != currentUserId)
                 throw new UnauthorizedAccessException("You cannot access this booking.");
 
             return booking;
@@ -123,7 +124,7 @@ namespace MeetSpace.WebAPI.Controllers
             int currentUserId = int.Parse(userIdClaim.Value);
             string currentRole = roleClaim.Value;
 
-            if (currentRole != "Admin" && currentUserId != userId)
+            if (currentRole != Roles.Admin && currentUserId != userId)
                 throw new UnauthorizedAccessException("You cannot access other users' bookings.");
 
             var result = await _bookingService.GetByUserIdAsync(userId, ct);
@@ -138,7 +139,7 @@ namespace MeetSpace.WebAPI.Controllers
         }
 
         [HttpPut("{id}/approve")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Roles.Admin)]
         public async Task<IActionResult> Approve(int id)
         {
             var booking = await _bookingService.GetByIdAsync(id);
@@ -157,7 +158,7 @@ namespace MeetSpace.WebAPI.Controllers
         }
 
         [HttpPut("{id}/reject")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Roles.Admin)]
         public async Task<IActionResult> Reject(int id, [FromBody] RejectRequest reason)
         {
             var booking = await _bookingService.GetByIdAsync(id);

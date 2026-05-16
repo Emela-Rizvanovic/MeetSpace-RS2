@@ -1,10 +1,11 @@
-﻿using MeetSpace.Services.Database;
+﻿using MeetSpace.Models.Constants;
+using MeetSpace.Services.Database;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 [ApiController]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = Roles.Admin)]
 [Route("api/[controller]")]
 public class ReportController : ControllerBase
 {

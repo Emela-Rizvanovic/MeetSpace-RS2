@@ -1,4 +1,5 @@
-﻿using MeetSpace.Models.Entities;
+﻿using MeetSpace.Models.Constants;
+using MeetSpace.Models.Entities;
 using MeetSpace.Models.Requests;
 using MeetSpace.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -29,7 +30,7 @@ public class FavoriteController : ControllerBase
         int currentUserId = int.Parse(userIdClaim.Value);
         string currentRole = roleClaim.Value;
 
-        if (currentRole != "Admin")
+        if (currentRole != Roles.Admin)
         {
             request.UserId = currentUserId;
         }
@@ -50,7 +51,7 @@ public class FavoriteController : ControllerBase
         int currentUserId = int.Parse(userIdClaim.Value);
         string currentRole = roleClaim.Value;
 
-        if (currentRole != "Admin" && currentUserId != userId)
+        if (currentRole != Roles.Admin && currentUserId != userId)
             throw new UnauthorizedAccessException("You cannot remove another user's favorite.");
 
         await _service.RemoveAsync(userId, spaceId);
@@ -69,7 +70,7 @@ public class FavoriteController : ControllerBase
         int currentUserId = int.Parse(userIdClaim.Value);
         string currentRole = roleClaim.Value;
 
-        if (currentRole != "Admin" && currentUserId != userId)
+        if (currentRole != Roles.Admin && currentUserId != userId)
             throw new UnauthorizedAccessException("You cannot access another user's favorites.");
 
         var result = await _service.GetByUserAsync(userId);

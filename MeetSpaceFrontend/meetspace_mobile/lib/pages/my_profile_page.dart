@@ -449,6 +449,46 @@ class _BookingCardFromApi extends StatelessWidget {
                 ),
             ],
           ),
+          if (status.toLowerCase() == "rejected" &&
+    booking.rejectionReason != null &&
+    booking.rejectionReason!.trim().isNotEmpty) ...[
+  const SizedBox(height: 10),
+  Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: const Color(0xFFFFF1F1),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: Colors.red.shade200,
+      ),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Rejection reason",
+          style: TextStyle(
+            fontFamily: "Poppins",
+            color: Colors.red,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          booking.rejectionReason!,
+          style: const TextStyle(
+            fontFamily: "Poppins",
+            color: Colors.black87,
+            fontWeight: FontWeight.w300,
+            fontSize: 13,
+          ),
+        ),
+      ],
+    ),
+  ),
+],
         ],
       ),
     );

@@ -1,4 +1,5 @@
-﻿using MeetSpace.Models.Requests;
+﻿using MeetSpace.Models.Constants;
+using MeetSpace.Models.Requests;
 using MeetSpace.Models.Responses;
 using MeetSpace.Models.SearchObjects;
 using MeetSpace.Services.Interfaces;
@@ -38,7 +39,7 @@ namespace MeetSpace.WebAPI.Controllers
             int currentUserId = int.Parse(userIdClaim.Value);
             string currentRole = roleClaim.Value;
 
-            if (currentRole != "Admin")
+            if (currentRole != Roles.Admin)
             {
                 request.UserId = currentUserId;
             }
@@ -63,7 +64,7 @@ namespace MeetSpace.WebAPI.Controllers
             int currentUserId = int.Parse(userIdClaim.Value);
             string currentRole = roleClaim.Value;
 
-            if (currentRole != "Admin" && review.UserId != currentUserId)
+            if (currentRole != Roles.Admin && review.UserId != currentUserId)
                 throw new UnauthorizedAccessException("You cannot modify this review.");
 
             return await base.Update(id, request);
@@ -86,7 +87,7 @@ namespace MeetSpace.WebAPI.Controllers
             int currentUserId = int.Parse(userIdClaim.Value);
             string currentRole = roleClaim.Value;
 
-            if (currentRole != "Admin" && review.UserId != currentUserId)
+            if (currentRole != Roles.Admin && review.UserId != currentUserId)
                 throw new UnauthorizedAccessException("You cannot access this review.");
 
             return review;
@@ -104,7 +105,7 @@ namespace MeetSpace.WebAPI.Controllers
             int currentUserId = int.Parse(userIdClaim.Value);
             string currentRole = roleClaim.Value;
 
-            if (currentRole != "Admin")
+            if (currentRole != Roles.Admin)
             {
                 search.UserId = currentUserId;
             }
