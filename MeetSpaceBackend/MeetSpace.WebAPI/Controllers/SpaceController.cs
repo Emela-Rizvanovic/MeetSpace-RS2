@@ -1,4 +1,5 @@
-﻿using MeetSpace.Models.Requests;
+﻿using MeetSpace.Models.Constants;
+using MeetSpace.Models.Requests;
 using MeetSpace.Models.Responses;
 using MeetSpace.Models.SearchObjects;
 using MeetSpace.Services.Interfaces;
@@ -34,7 +35,7 @@ namespace MeetSpace.WebAPI.Controllers
             return base.GetById(id);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Roles.Admin)]
         [HttpPost]
         [Consumes("multipart/form-data")]
         public override Task<SpaceResponse> Create([FromForm] SpaceInsertRequest request)
@@ -42,7 +43,7 @@ namespace MeetSpace.WebAPI.Controllers
             return base.Create(request);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Roles.Admin)]
         [HttpPut("{id}")]
         [Consumes("multipart/form-data")]
         public override Task<SpaceResponse?> Update(int id, [FromForm] SpaceUpdateRequest request)
@@ -50,7 +51,7 @@ namespace MeetSpace.WebAPI.Controllers
             return base.Update(id, request);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Roles.Admin)]
         [HttpPost("{id}/images")]
         public async Task<IActionResult> AddImages(int id, [FromForm] List<IFormFile> images)
         {

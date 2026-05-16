@@ -29,8 +29,6 @@ namespace MeetSpace.Models.Responses
         public DateTime? LastActionAt { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
-
-        // Za prikaz u profilu (nije obavezno, ali korisno)
         public string? SpaceName { get; set; }
         public string? StatusName { get; set; }
         public string? FacilityAddress { get; set; }

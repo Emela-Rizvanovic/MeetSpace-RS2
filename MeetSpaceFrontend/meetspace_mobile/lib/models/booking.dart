@@ -10,6 +10,7 @@ class BookingResponse {
   final String? spaceName;
   final String? statusName;
   final String? facilityAddress;
+  final String? rejectionReason;
 
   BookingResponse({
     required this.id,
@@ -22,6 +23,7 @@ class BookingResponse {
     this.spaceName,
     this.statusName,
     this.facilityAddress,
+    this.rejectionReason,
   });
 
   factory BookingResponse.fromJson(Map<String, dynamic> json) {
@@ -38,6 +40,7 @@ class BookingResponse {
       spaceName: json['spaceName']?.toString(),
       statusName: json['statusName']?.toString(),
       facilityAddress: json['facilityAddress']?.toString(),
+      rejectionReason: json['rejectionReason']?.toString(),
     );
   }
 }

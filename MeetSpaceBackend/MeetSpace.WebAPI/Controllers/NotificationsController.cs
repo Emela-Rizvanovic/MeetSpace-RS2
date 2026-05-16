@@ -1,5 +1,6 @@
 ﻿using MeetSpace.API.Hubs;
 using MeetSpace.Models.Entities;
+using MeetSpace.Models.Enums;
 using MeetSpace.Models.Messages;
 using MeetSpace.Models.Responses;
 using MeetSpace.Services.Database;
@@ -38,7 +39,7 @@ public class NotificationsController : ControllerBase
 
             Message = isApproved
                 ? $"Your reservation for {message.SpaceName} has been approved."
-                : $"Your reservation for {message.SpaceName} was rejected.",
+                : $"Your reservation for {message.SpaceName} was rejected. \nReason: {message.Reason}",
 
             IsRead = false,
             CreatedAt = DateTime.UtcNow
@@ -70,7 +71,7 @@ public class NotificationsController : ControllerBase
         var notification = new Notification
         {
             UserId = message.UserId,
-            NotificationTypeId = 3,
+            NotificationTypeId = (int)NotificationTypeEnum.BookingReminder,
             Title = "Upcoming booking!",
             Message =
                 $"Don't forget your reservation at {message.SpaceName}.",

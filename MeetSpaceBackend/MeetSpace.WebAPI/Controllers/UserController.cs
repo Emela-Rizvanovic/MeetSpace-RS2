@@ -1,4 +1,5 @@
-﻿using MeetSpace.Models.Requests;
+﻿using MeetSpace.Models.Constants;
+using MeetSpace.Models.Requests;
 using MeetSpace.Models.Responses;
 using MeetSpace.Models.SearchObjects;
 using MeetSpace.Services.Interfaces;
@@ -112,7 +113,7 @@ namespace MeetSpace.WebAPI.Controllers
 
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Roles.Admin)]
         [Consumes("multipart/form-data")]
         public override Task<UserResponse> Create([FromForm] UserInsertRequest request)
         {
@@ -134,10 +135,10 @@ namespace MeetSpace.WebAPI.Controllers
             int currentUserId = int.Parse(userIdClaim.Value);
             string currentRole = roleClaim.Value;
 
-            if (currentRole != "Admin" && currentUserId != id)
+            if (currentRole != Roles.Admin && currentUserId != id)
                 throw new UnauthorizedAccessException("You are not allowed to update this user.");
 
-            if (currentRole != "Admin")
+            if (currentRole != Roles.Admin)
             {
                 request.RoleId = null;
             }
@@ -184,14 +185,14 @@ namespace MeetSpace.WebAPI.Controllers
             }
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Roles.Admin)]
         [HttpGet]
         public override Task<PagedResult<UserResponse>> Get([FromQuery] UserSearchObject search)
         {
             return base.Get(search);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Roles.Admin)]
         [HttpGet("{id}")]
         public override Task<UserResponse?> GetById(int id)
         {

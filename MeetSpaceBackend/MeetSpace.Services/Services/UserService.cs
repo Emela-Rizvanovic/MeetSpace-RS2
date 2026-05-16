@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using MeetSpace.Models.Constants;
 using MeetSpace.Models.Entities;
 using MeetSpace.Models.Messages;
 using MeetSpace.Models.Requests;
@@ -201,7 +202,7 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
             return null;
 
         // provjera da li je user admin
-        if (user.Role?.Name?.ToLower() != "admin")
+        if (user.Role?.Name != Roles.Admin)
             throw new Exception("Access denied. User is not an admin.");
 
         return _mapper.Map<UserResponse>(user);

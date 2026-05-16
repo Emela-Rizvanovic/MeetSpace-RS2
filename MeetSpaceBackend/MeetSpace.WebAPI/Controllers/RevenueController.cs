@@ -1,4 +1,5 @@
-﻿using MeetSpace.Models.Responses;
+﻿using MeetSpace.Models.Constants;
+using MeetSpace.Models.Responses;
 using MeetSpace.Models.SearchObjects;
 using MeetSpace.Services.Interfaces;
 using MeetSpace.WebAPI.BaseControllers;
@@ -8,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MeetSpace.WebAPI.Controllers
 {
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = Roles.Admin)]
     [Route("api/[controller]")]
     public class RevenueController
         : BaseController<RevenueResponse, RevenueSearchObject>
