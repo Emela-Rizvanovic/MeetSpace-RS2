@@ -1,4 +1,5 @@
 ﻿using MeetSpace.Models.Entities;
+using MeetSpace.Models.Enums;
 using MeetSpace.Models.Requests;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
@@ -173,8 +174,8 @@ public class PayPalController : ControllerBase
         {
             BookingId = bookingResponse.Id,
             UserId = currentUserId,
-            PaymentMethodId = 2, // PayPal
-            PaymentStatusId = 2,
+            PaymentMethodId = (int)PaymentMethodEnum.PayPal, // PayPal
+            PaymentStatusId = (int)PaymentStatusEnum.Completed,
             Amount = bookingResponse.TotalPrice,
             PaymentDate = DateTime.UtcNow
         };

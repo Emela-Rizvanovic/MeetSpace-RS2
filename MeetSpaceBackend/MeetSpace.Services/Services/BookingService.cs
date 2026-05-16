@@ -143,7 +143,7 @@ namespace MeetSpace.Services.Services
             // 4️⃣ Final total
             entity.TotalPrice = Math.Round(basePrice + amenitiesTotal, 2);
 
-            entity.PaymentStatusId = 2; // Completed
+            entity.PaymentStatusId = (int)PaymentStatusEnum.Completed; // Completed
             entity.BookingStatusId = (int)BookingStatusEnum.Pending; // Pending approval
 
             await base.BeforeInsert(entity, request, cancellationToken);
