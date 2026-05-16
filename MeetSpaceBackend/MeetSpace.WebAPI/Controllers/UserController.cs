@@ -30,22 +30,31 @@ namespace MeetSpace.WebAPI.Controllers
     UserLoginRequest request,
     CancellationToken cancellationToken)
         {
-            var userResponse = await _userService
-                .AuthenticateUser(request, cancellationToken);
-
-            if (userResponse == null)
-                return Unauthorized("Invalid username or password.");
-
-            var userEntity = await _userService
-                .GetEntityByUsername(request.Username, cancellationToken);
-
-            var token = _jwtTokenService.GenerateToken(userEntity);
-
-            return Ok(new LoginResponse
+            try
             {
-                Token = token,
-                User = userResponse
-            });
+                var userResponse = await _userService
+                    .AuthenticateUser(request, cancellationToken);
+
+                if (userResponse == null)
+                    return Unauthorized("Invalid username or password.");
+
+                var userEntity = await _userService
+                    .GetEntityByUsername(
+                        request.Username,
+                        cancellationToken);
+
+                var token = _jwtTokenService.GenerateToken(userEntity);
+
+                return Ok(new LoginResponse
+                {
+                    Token = token,
+                    User = userResponse
+                });
+            }
+            catch (Exception ex)
+            {
+                return Unauthorized(ex.Message);
+            }
         }
 
         [AllowAnonymous]

@@ -181,6 +181,9 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
         if (!verified)
             return null;
 
+        if (!user.IsActive)
+            throw new Exception("Your account has been deactivated.");
+
         // Uspješna prijava mapira i vrati korisnika
         return _mapper.Map<UserResponse>(user);
     }
