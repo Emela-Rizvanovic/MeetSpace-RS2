@@ -58,8 +58,16 @@ class _LoginPageState extends State<LoginPage>
   });
 
 } catch (e) {
-  ScaffoldMessenger.of(context)
-      .showSnackBar(SnackBar(content: Text(e.toString())));
+
+  final message =
+      e.toString().replaceFirst("Exception: ", "");
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.redAccent,
+    ),
+  );
 }
 
   }

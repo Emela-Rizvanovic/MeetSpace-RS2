@@ -107,8 +107,15 @@ await _secureStorage.write(
 
   notifyListeners();
 } else {
-      throw Exception("Invalid username or password");
-    }
+
+  String message = response.body;
+
+  if (message.isEmpty) {
+    message = "Invalid username or password";
+  }
+
+  throw Exception(message);
+}
   }
 
   Future<void> logout() async {

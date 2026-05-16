@@ -1,4 +1,5 @@
-﻿using MeetSpace.Models.Requests;
+﻿using MeetSpace.Models.Enums;
+using MeetSpace.Models.Requests;
 using MeetSpace.Models.Responses;
 using MeetSpace.Models.SearchObjects;
 using MeetSpace.Services.Interfaces;
@@ -147,7 +148,7 @@ namespace MeetSpace.WebAPI.Controllers
 
             var request = new BookingUpdateRequest
             {
-                BookingStatusId = 2 // Approved
+                BookingStatusId = (int)BookingStatusEnum.Approved // Approved
             };
 
             await _bookingService.ApproveAsync(id);

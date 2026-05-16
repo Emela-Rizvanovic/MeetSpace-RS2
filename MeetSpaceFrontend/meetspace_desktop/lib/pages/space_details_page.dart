@@ -134,28 +134,46 @@ Widget build(BuildContext context) {
                         ),
                         const SizedBox(height: 12),
 
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: space.amenities.map((a) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF2E2E2E),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.white10),
-                              ),
-                              child: Text(
-                                a.name,
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
+                  space.amenities.isEmpty
+    ? Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2E2E2E),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: const Text(
+          "No amenities listed.",
+          style: TextStyle(
+            color: Colors.white54,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      )
+    : Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: space.amenities.map((a) {
+          return Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 10,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2E2E2E),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white10),
+            ),
+            child: Text(
+              a.name,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          );
+        }).toList(),
+      ),
                       ],
                     ),
                   ),

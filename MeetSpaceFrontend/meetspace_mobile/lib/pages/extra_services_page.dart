@@ -422,17 +422,7 @@ class _Footer extends StatelessWidget {
         ),
         SizedBox(height: 10),
         Text(
-          '+387 00 000 000',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-            color: Colors.white70,
-          ),
-        ),
-        SizedBox(height: 4),
-        Text(
-          'info@meetspace.com',
+          'meetspace.app@gmail.com',
           style: TextStyle(
             fontFamily: 'Poppins',
             fontSize: 14,

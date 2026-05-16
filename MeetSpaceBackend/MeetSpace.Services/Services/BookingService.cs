@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MeetSpace.Models.Entities;
+using MeetSpace.Models.Enums;
 using MeetSpace.Models.Messages;
 using MeetSpace.Models.Requests;
 using MeetSpace.Models.Responses;
@@ -88,7 +89,7 @@ namespace MeetSpace.Services.Services
             var hasConflict = await _context.Bookings
     .AnyAsync(b =>
         b.SpaceId == request.SpaceId &&
-        b.BookingStatusId != 3 && // ignore rejected
+        b.BookingStatusId != (int)BookingStatusEnum.Rejected && // ignore rejected
         request.StartTime < b.EndTime &&
         request.EndTime > b.StartTime
     );
@@ -143,7 +144,7 @@ namespace MeetSpace.Services.Services
             entity.TotalPrice = Math.Round(basePrice + amenitiesTotal, 2);
 
             entity.PaymentStatusId = 2; // Completed
-            entity.BookingStatusId = 1; // Pending approval
+            entity.BookingStatusId = (int)BookingStatusEnum.Pending; // Pending approval
 
             await base.BeforeInsert(entity, request, cancellationToken);
         }
@@ -294,7 +295,7 @@ namespace MeetSpace.Services.Services
             if (entity == null)
                 throw new Exception("Booking not found");
 
-            entity.BookingStatusId = 2; // Approved
+            entity.BookingStatusId = (int)BookingStatusEnum.Approved; // Approved
 
             var userId = int.Parse(
                 _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value
@@ -329,7 +330,7 @@ namespace MeetSpace.Services.Services
             if (entity == null)
                 throw new Exception("Booking not found");
 
-            entity.BookingStatusId = 3;
+            entity.BookingStatusId = (int)BookingStatusEnum.Rejected; //Rejected
             entity.RejectionReason = reason;
 
             var userId = int.Parse(
@@ -363,7 +364,7 @@ namespace MeetSpace.Services.Services
             return await _context.Bookings
                 .AnyAsync(b =>
                     b.SpaceId == spaceId &&
-                    b.BookingStatusId != 3 &&
+                    b.BookingStatusId != (int)BookingStatusEnum.Rejected &&
                     (ignoreId == null || b.Id != ignoreId) &&
                     start < b.EndTime &&
                     end > b.StartTime
