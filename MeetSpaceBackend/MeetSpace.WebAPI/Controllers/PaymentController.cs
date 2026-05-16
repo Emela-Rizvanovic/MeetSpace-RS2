@@ -1,4 +1,5 @@
 ﻿using MeetSpace.Models.Entities;
+using MeetSpace.Models.Enums;
 using MeetSpace.Models.Requests;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
@@ -115,8 +116,8 @@ namespace MeetSpace.WebAPI.Controllers
                 BookingId = bookingResponse.Id,
                 UserId = currentUserId,
                 PaymentIntentId = paymentIntent.Id,
-                PaymentMethodId = 1, // Stripe
-                PaymentStatusId = 2, // Completed
+                PaymentMethodId = (int)PaymentMethodEnum.Stripe, // Stripe
+                PaymentStatusId = (int)PaymentStatusEnum.Completed, // Completed
                 Amount = paymentIntent.Amount,
                 PaymentDate = DateTime.UtcNow
             };
