@@ -6,6 +6,7 @@ import 'menu_page.dart';
 import 'space_details_page.dart';
 import '../providers/notification_provider.dart';
 import '../main.dart';
+import '../widgets/notification_sheet.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -31,10 +32,11 @@ class _HomePageState extends State<HomePage> {
 
     if (token == null) return;
 
-    await context.read<NotificationProvider>().connect(
-          token: token,
-          navigatorKey: navigatorKey,
-        );
+  await context.read<NotificationProvider>().connect(
+      token: token,
+      userId: auth.user!.id,
+      navigatorKey: navigatorKey,
+);
   });
   }
 
@@ -93,8 +95,81 @@ class _HomePageState extends State<HomePage> {
                           fontSize: 20,
                         ),
                       ),
-                      const Spacer(),
-                      GestureDetector(
+                     const Spacer(),
+
+Consumer<NotificationProvider>(
+  builder: (context, notificationProvider, _) {
+    return GestureDetector(
+      onTap: () async {
+        final auth = context.read<AuthProvider>();
+
+        await notificationProvider.markAllAsRead(
+          token: auth.token!,
+          userId: auth.user!.id,
+        );
+
+        if (!context.mounted) return;
+
+        showModalBottomSheet(
+          context: context,
+          backgroundColor: Colors.transparent,
+          isScrollControlled: true,
+          builder: (_) => SizedBox(
+            height: MediaQuery.of(context).size.height * 0.7,
+            child: NotificationSheet(
+              notifications:
+                  notificationProvider.notifications,
+            ),
+          ),
+        );
+      },
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(right: 18),
+            child: Icon(
+              Icons.notifications_none_rounded,
+              color: Colors.white,
+              size: 30,
+            ),
+          ),
+
+          if (notificationProvider.unreadCount > 0)
+            Positioned(
+              right: 12,
+              top: -2,
+              child: Container(
+                padding: const EdgeInsets.all(5),
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                constraints: const BoxConstraints(
+                  minWidth: 20,
+                  minHeight: 20,
+                ),
+                child: Text(
+                  notificationProvider.unreadCount > 9
+                      ? "9+"
+                      : notificationProvider.unreadCount
+                          .toString(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  },
+),
+
+GestureDetector(
                         onTap: () {
                           Navigator.push(
                             context,

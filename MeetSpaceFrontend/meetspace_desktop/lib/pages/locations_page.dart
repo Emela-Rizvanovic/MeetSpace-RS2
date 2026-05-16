@@ -131,6 +131,8 @@ Row(
       ),
     ),
 
+     const SizedBox(height: 10),
+
     const Spacer(),
 
     Row(

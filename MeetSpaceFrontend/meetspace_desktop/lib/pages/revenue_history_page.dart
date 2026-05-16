@@ -183,7 +183,7 @@ Row(
   ],
 ),
 
-const SizedBox(height: 30),
+const SizedBox(height: 10),
             /// TITLE + ACTIONS
            
 Row(
@@ -329,11 +329,8 @@ _dateButton("To", _toDate, () => _pickDate(false)),
               const SizedBox(height: 12),
 
               _buildPagination(),
-            ],
-          ),
-        ),
-),
-            const SizedBox(height: 20),
+
+                     const SizedBox(height: 20),
 
 /// 🔥 PDF BUTTON (BOTTOM)
 Align(
@@ -351,6 +348,10 @@ Align(
       ),
     ),
   ),
+),
+            ],
+          ),
+        ),
 ),
           ],
         ),

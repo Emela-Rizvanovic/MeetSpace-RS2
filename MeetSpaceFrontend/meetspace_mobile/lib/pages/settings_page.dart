@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'menu_page.dart';
 import 'my_profile_page.dart';
 import 'login_page.dart';
+import 'package:provider/provider.dart';
+import '../providers/notification_provider.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -14,7 +16,6 @@ class _SettingsPageState extends State<SettingsPage> {
   static const Color bgGrey = Color.fromARGB(255, 59, 59, 59);
   static const Color brandOrange = Color.fromARGB(255, 165, 110, 9);
 
-  bool _notificationsEnabled = true;
 
   @override
   Widget build(BuildContext context) {
@@ -100,30 +101,33 @@ class _SettingsPageState extends State<SettingsPage> {
                       child: Column(
                         children: [
 
-                          SwitchListTile(
-                            value: _notificationsEnabled,
-                            activeColor: brandOrange,
-                            onChanged: (value) {
-                              setState(() {
-                                _notificationsEnabled = value;
-                              });
-                            },
-                            title: const Text(
-                              "Enable notifications",
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                color: Colors.white,
-                              ),
-                            ),
-                            subtitle: const Text(
-                              "Receive booking updates and reminders",
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                color: Colors.white60,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
+                        Consumer<NotificationProvider>(
+  builder: (context, notificationProvider, _) {
+    return SwitchListTile(
+      value: notificationProvider.notificationsEnabled,
+      activeColor: brandOrange,
+      onChanged: (value) async {
+        await notificationProvider
+            .setNotificationsEnabled(value);
+      },
+      title: const Text(
+        "Enable notifications",
+        style: TextStyle(
+          fontFamily: 'Poppins',
+          color: Colors.white,
+        ),
+      ),
+      subtitle: const Text(
+        "Receive booking updates and reminders",
+        style: TextStyle(
+          fontFamily: 'Poppins',
+          color: Colors.white60,
+          fontSize: 13,
+        ),
+      ),
+    );
+  },
+),
 
                     
                         ],

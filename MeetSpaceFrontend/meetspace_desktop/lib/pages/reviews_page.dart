@@ -123,7 +123,7 @@ Row(
   ],
 ),
 
-const SizedBox(height: 30),
+const SizedBox(height: 10),
             /// TITLE
            Row(
   children: [

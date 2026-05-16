@@ -79,19 +79,18 @@ Row(
   ],
 ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
 
             /// TITLE
-            const Center(
-              child: Text(
-                "Revenue history",
-                style: TextStyle(
-                  color: brandOrange,
-                  fontSize: 34,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+           /// TITLE
+const Text(
+  "Revenue history",
+  style: TextStyle(
+    color: brandOrange,
+    fontSize: 34,
+    fontWeight: FontWeight.bold,
+  ),
+),
 
             const SizedBox(height: 30),
 

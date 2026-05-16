@@ -3,6 +3,10 @@ import 'package:provider/provider.dart';
 import '../models/user.dart';
 import '../providers/auth_provider.dart';
 import 'user_details_page.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
+import '../utils/pdf_helper.dart';
  
 class UsersPage extends StatefulWidget {
   const UsersPage({super.key});
@@ -78,6 +82,25 @@ Future<void> _loadUsers() async {
     "desc": desc,
   };
 }
+
+Future<void> _generatePdf() async {
+  try {
+    final pdf = await PdfHelper.generateUsersPdf(_users);
+
+    final bytes = await pdf.save();
+
+    final dir = await getApplicationDocumentsDirectory();
+
+    final file = File("${dir.path}/users_report.pdf");
+
+    await file.writeAsBytes(bytes);
+
+    await OpenFile.open(file.path);
+
+  } catch (e) {
+    debugPrint("PDF error: $e");
+  }
+}
  
   @override
   Widget build(BuildContext context) {
@@ -120,7 +143,7 @@ Row(
   ],
 ),
 
-const SizedBox(height: 30),
+const SizedBox(height: 10),
             /// TITLE
       Row(
   children: [
@@ -264,6 +287,28 @@ Expanded(
               const SizedBox(height: 12),
 
               _buildPagination(),
+
+              const SizedBox(height: 20),
+
+Align(
+  alignment: Alignment.centerRight,
+  child: ElevatedButton.icon(
+    onPressed: _generatePdf,
+    icon: const Icon(Icons.picture_as_pdf),
+    label: const Text("Generate PDF"),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: brandOrange,
+      foregroundColor: Colors.black,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 24,
+        vertical: 16,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+      ),
+    ),
+  ),
+),
             ],
           ),
         ),
