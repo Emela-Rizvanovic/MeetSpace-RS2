@@ -68,6 +68,7 @@ Future<PagedResult<BookingResponse>> getPaged({
   required int pageSize,
   String? name,
   bool? isUpcoming,
+  int? bookingStatusId,
 }) async {
 
   final query = {
@@ -83,6 +84,11 @@ Future<PagedResult<BookingResponse>> getPaged({
 if (isUpcoming != null) {
   query["IsUpcoming"] =
       isUpcoming.toString();
+}
+
+if (bookingStatusId != null) {
+  query["BookingStatusId"] =
+      bookingStatusId.toString();
 }
 
   final response = await api.get(

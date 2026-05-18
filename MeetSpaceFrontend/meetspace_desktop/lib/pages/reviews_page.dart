@@ -21,7 +21,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
   bool _loading = true;
   String _search = "";
 
-  //int? _selectedRating; 
+int? _selectedRating; 
 String _sort = "Newest";
 
 int _page = 0;
@@ -45,7 +45,7 @@ int _totalPages = 1;
       page: _page,
       pageSize: _pageSize,
       search: _search.isNotEmpty ? _search : null,
-      /*rating: _selectedRating,*/
+      rating: _selectedRating,
       sortBy: sort["sortBy"],
       desc: sort["desc"],
     );
@@ -139,38 +139,69 @@ const SizedBox(height: 10),
     const Spacer(),
 
     /// ⭐ RATING
-    /*Container(
-      height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: DropdownButton<int?>(
-        value: _selectedRating,
-        underline: const SizedBox(),
-        hint: const Text("Rating"),
-        items: [
-          const DropdownMenuItem(value: null, child: Text("All")),
-          ...List.generate(5, (i) {
-            final value = 5 - i;
-            return DropdownMenuItem(
-              value: value,
-              child: Text("$value ★"),
-            );
-          })
-        ],
-        onChanged: (v) {
-          setState(() {
-            _selectedRating = v;
-            _page = 0;
-          });
-          _load(); // 🔥 BITNO
-        },
-      ),
-    ),
+  Container(
+  height: 52,
+  padding: const EdgeInsets.symmetric(horizontal: 16),
 
-    const SizedBox(width: 12),*/
+  decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(14),
+  ),
+
+  child: DropdownButton<int?>(
+    value: _selectedRating,
+
+    underline: const SizedBox(),
+
+    dropdownColor: Colors.white,
+
+    hint: const Text("Rating"),
+
+    items: const [
+
+      DropdownMenuItem(
+        value: null,
+        child: Text("All ratings"),
+      ),
+
+      DropdownMenuItem(
+        value: 5,
+        child: Text("5 ★"),
+      ),
+
+      DropdownMenuItem(
+        value: 4,
+        child: Text("4 ★"),
+      ),
+
+      DropdownMenuItem(
+        value: 3,
+        child: Text("3 ★"),
+      ),
+
+      DropdownMenuItem(
+        value: 2,
+        child: Text("2 ★"),
+      ),
+
+      DropdownMenuItem(
+        value: 1,
+        child: Text("1 ★"),
+      ),
+    ],
+
+    onChanged: (v) {
+      setState(() {
+        _selectedRating = v;
+        _page = 0;
+      });
+
+      _load();
+    },
+  ),
+),
+
+    const SizedBox(width: 12),
 
     /// SORT
     Container(
@@ -370,18 +401,23 @@ const SizedBox(height: 20),
                 const SizedBox(height: 6),
 
                 /// STARS
-                /*Row(
-                  children: List.generate(
-                    5,
-                    (i) => Icon(
-                      i < r.rating ? Icons.star : Icons.star_border,
-                      color: Colors.orange,
-                      size: 16,
-                    ),
-                  ),
-                ),
+               Row(
+  children: List.generate(
+    5,
+    (i) => Padding(
+      padding: const EdgeInsets.only(right: 2),
+      child: Icon(
+        i < r.rating
+            ? Icons.star_rounded
+            : Icons.star_border_rounded,
+        color: brandOrange,
+        size: 18,
+      ),
+    ),
+  ),
+),
 
-                const SizedBox(height: 8),*/
+const SizedBox(height: 10),
 
                 /// COMMENT
                 Text(

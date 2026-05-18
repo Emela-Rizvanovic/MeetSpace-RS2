@@ -31,6 +31,8 @@ class _BookingHistoryPageState
 
   String _search = "";
 
+  int? _selectedStatusId;
+
   int _page = 0;
 
   final int _pageSize = 10;
@@ -62,6 +64,7 @@ class _BookingHistoryPageState
                   ? _search
                   : null,
           isUpcoming: false,
+          bookingStatusId: _selectedStatusId,
         );
 
     setState(() {
@@ -150,20 +153,103 @@ class _BookingHistoryPageState
                 height: 30),
 
             /// TITLE
-            const Text(
-              "Booking history",
+           Row(
+  mainAxisAlignment:
+      MainAxisAlignment.spaceBetween,
 
-              style: TextStyle(
-                color:
-                    brandOrange,
-                fontSize: 34,
-                fontWeight:
-                    FontWeight.bold,
-              ),
+  crossAxisAlignment:
+      CrossAxisAlignment.center,
+
+  children: [
+
+    const Text(
+      "Booking history",
+
+      style: TextStyle(
+        color: brandOrange,
+        fontSize: 34,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+
+    SizedBox(
+      width: 240,
+
+      child: DropdownButtonFormField<int?>(
+        value: _selectedStatusId,
+
+        dropdownColor: Colors.white,
+
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.white,
+
+          prefixIcon: const Icon(
+            Icons.filter_alt_outlined,
+          ),
+
+          border: OutlineInputBorder(
+            borderRadius:
+                BorderRadius.circular(14),
+
+            borderSide: BorderSide.none,
+          ),
+
+          enabledBorder: OutlineInputBorder(
+            borderRadius:
+                BorderRadius.circular(14),
+
+            borderSide: BorderSide.none,
+          ),
+
+          focusedBorder: OutlineInputBorder(
+            borderRadius:
+                BorderRadius.circular(14),
+
+            borderSide: const BorderSide(
+              color: brandOrange,
+              width: 1.2,
             ),
+          ),
+        ),
 
-            const SizedBox(
-                height: 20),
+        items: const [
+
+          DropdownMenuItem(
+            value: null,
+            child: Text("All statuses"),
+          ),
+
+          DropdownMenuItem(
+            value: 1,
+            child: Text("Pending"),
+          ),
+
+          DropdownMenuItem(
+            value: 2,
+            child: Text("Approved"),
+          ),
+
+          DropdownMenuItem(
+            value: 3,
+            child: Text("Rejected"),
+          ),
+        ],
+
+        onChanged: (value) {
+          setState(() {
+            _selectedStatusId = value;
+            _page = 0;
+          });
+
+          _loadBookings();
+        },
+      ),
+    ),
+  ],
+),
+
+const SizedBox(height: 20),
 
             /// SEARCH
             TextField(

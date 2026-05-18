@@ -34,6 +34,22 @@ namespace MeetSpace.Services.Services
             if (search.SpaceTypeId.HasValue)
                 query = query.Where(s => s.SpaceTypeId == search.SpaceTypeId.Value);
 
+            if (search.MinPrice.HasValue)
+                query = query.Where(s =>
+                    s.PricePerHour >= search.MinPrice.Value);
+
+            if (search.MaxPrice.HasValue)
+                query = query.Where(s =>
+                    s.PricePerHour <= search.MaxPrice.Value);
+
+            if (search.MinCapacity.HasValue)
+                query = query.Where(s =>
+                    s.Capacity >= search.MinCapacity.Value);
+
+            if (search.MaxCapacity.HasValue)
+                query = query.Where(s =>
+                    s.Capacity <= search.MaxCapacity.Value);
+
             return query;
         }
 

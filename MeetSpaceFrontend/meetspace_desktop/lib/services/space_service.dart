@@ -68,13 +68,17 @@ class SpaceService {
 
 
 Future<PagedResult<SpaceResponse>> getPaged({
-  required int page,
+    required int page,
   required int pageSize,
   String? name,
   int? facilityId,
   int? spaceTypeId,
+  double? minPrice,
+  double? maxPrice,
+  int? minCapacity,
+  int? maxCapacity,
   String? sortBy,
-bool desc = false,
+  bool desc = false,
 }) async {
   final query = <String, String>{
     "page": page.toString(),
@@ -84,6 +88,10 @@ bool desc = false,
   if (name != null && name.isNotEmpty) query["Name"] = name;
   if (facilityId != null) query["FacilityId"] = facilityId.toString();
   if (spaceTypeId != null) query["SpaceTypeId"] = spaceTypeId.toString();
+  if (minPrice != null) query["MinPrice"] = minPrice.toString();
+if (maxPrice != null) query["MaxPrice"] = maxPrice.toString();
+if (minCapacity != null) query["MinCapacity"] = minCapacity.toString();
+if (maxCapacity != null) query["MaxCapacity"] = maxCapacity.toString();
   if (sortBy != null) query["SortBy"] = sortBy;
 query["Desc"] = desc.toString();
 
