@@ -114,8 +114,9 @@ Future<PagedResult<ReviewResponse>> getPaged({
 }
 
   if (rating != null) {
-    query["Rating"] = rating.toString();
-  }
+  query["MinRating"] = rating.toString();
+  query["MaxRating"] = rating.toString();
+}
 
   if (sortBy != null) {
     query["SortBy"] = sortBy;

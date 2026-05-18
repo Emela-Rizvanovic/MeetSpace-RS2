@@ -22,6 +22,18 @@ class _LocationsPageState extends State<LocationsPage> {
   bool _isLoading = true;
 
   String _search = "";
+  final _minPriceController =
+    TextEditingController();
+
+final _maxPriceController =
+    TextEditingController();
+
+final _minCapacityController =
+    TextEditingController();
+
+final _maxCapacityController =
+    TextEditingController();
+
   String _sort = "Price ↑";
 
   int _page = 0;
@@ -47,6 +59,29 @@ final result = await auth.spaceService.getPaged(
   name: _search.isNotEmpty ? _search : null,
   sortBy: sort["sortBy"],
   desc: sort["desc"],
+  minPrice:
+    _minPriceController.text.isNotEmpty
+        ? double.tryParse(
+            _minPriceController.text)
+        : null,
+
+maxPrice:
+    _maxPriceController.text.isNotEmpty
+        ? double.tryParse(
+            _maxPriceController.text)
+        : null,
+
+minCapacity:
+    _minCapacityController.text.isNotEmpty
+        ? int.tryParse(
+            _minCapacityController.text)
+        : null,
+
+maxCapacity:
+    _maxCapacityController.text.isNotEmpty
+        ? int.tryParse(
+            _maxCapacityController.text)
+        : null,
 );
 
     setState(() {
@@ -200,33 +235,50 @@ OutlinedButton.icon(
   ),
 ),
 
-        const SizedBox(width: 16),
+const SizedBox(width: 16),
 
-        /// SORT
-    Container(
-  height: 52, // 👈 isto kao button visina
+/// SORT
+Container(
+  height: 52,
   padding: const EdgeInsets.symmetric(horizontal: 16),
   decoration: BoxDecoration(
     color: Colors.white,
     borderRadius: BorderRadius.circular(14),
   ),
-  child: DropdownButton<String>(
-    value: _sort,
-    underline: const SizedBox(),
-    icon: const Icon(Icons.keyboard_arrow_down),
-    items: const [
-      DropdownMenuItem(value: "Price ↑", child: Text("Price ↑")),
-      DropdownMenuItem(value: "Price ↓", child: Text("Price ↓")),
-      DropdownMenuItem(value: "Capacity ↑", child: Text("Capacity ↑")),
-      DropdownMenuItem(value: "Capacity ↓", child: Text("Capacity ↓")),
-    ],
-    onChanged: (value) {
-      setState(() {
-        _sort = value!;
-        _page = 0;
-      });
-      _loadSpaces();
-    },
+  child: DropdownButtonHideUnderline(
+    child: DropdownButton<String>(
+      isDense: true,
+      value: _sort,
+      icon: const Icon(Icons.keyboard_arrow_down),
+
+      items: const [
+        DropdownMenuItem(
+          value: "Price ↑",
+          child: Text("Price ↑"),
+        ),
+        DropdownMenuItem(
+          value: "Price ↓",
+          child: Text("Price ↓"),
+        ),
+        DropdownMenuItem(
+          value: "Capacity ↑",
+          child: Text("Capacity ↑"),
+        ),
+        DropdownMenuItem(
+          value: "Capacity ↓",
+          child: Text("Capacity ↓"),
+        ),
+      ],
+
+      onChanged: (value) {
+        setState(() {
+          _sort = value!;
+          _page = 0;
+        });
+
+        _loadSpaces();
+      },
+    ),
   ),
 ),
       ],
@@ -249,28 +301,149 @@ OutlinedButton.icon(
             const SizedBox(height: 20),
 
             /// SEARCH BAR
-            TextField(
-             onChanged: (value) {
-  setState(() {
-    _search = value;
-    _page = 0; 
-  });
-  _loadSpaces();
-},
+ /// SEARCH + FILTERS
+Row(
+  children: [
+    /// SEARCH
+    Expanded(
+      child: TextField(
+        onChanged: (value) {
+          setState(() {
+            _search = value;
+            _page = 0;
+          });
+
+          _loadSpaces();
+        },
+        decoration: InputDecoration(
+          hintText: "Quick search",
+          prefixIcon: const Icon(Icons.search),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 14),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
+    ),
+
+    const SizedBox(width: 18),
+
+    /// FILTERS
+    Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: 10,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          /// MIN PRICE
+          SizedBox(
+            width: 95,
+            child: TextField(
+              controller: _minPriceController,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(fontSize: 13),
               decoration: InputDecoration(
-                hintText: "Quick search",
-                prefixIcon: const Icon(Icons.search),
+                hintText: "Min",
                 filled: true,
                 fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                isDense: true,
+                contentPadding:
+                    const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 14,
+                ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius:
+                      BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
               ),
+              onChanged: (_) {
+                _page = 0;
+                _loadSpaces();
+              },
             ),
+          ),
 
-            const SizedBox(height: 30),
+          const SizedBox(width: 10),
+
+          /// MAX PRICE
+          SizedBox(
+            width: 95,
+            child: TextField(
+              controller: _maxPriceController,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(fontSize: 13),
+              decoration: InputDecoration(
+                hintText: "Max",
+                filled: true,
+                fillColor: Colors.white,
+                isDense: true,
+                contentPadding:
+                    const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 14,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius:
+                      BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              onChanged: (_) {
+                _page = 0;
+                _loadSpaces();
+              },
+            ),
+          ),
+
+          const SizedBox(width: 10),
+
+          /// CAPACITY
+          SizedBox(
+            width: 120,
+            child: TextField(
+              controller: _minCapacityController,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(fontSize: 13),
+              decoration: InputDecoration(
+                hintText: "Min people",
+                filled: true,
+                fillColor: Colors.white,
+                isDense: true,
+                contentPadding:
+                    const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 14,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius:
+                      BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              onChanged: (_) {
+                _page = 0;
+                _loadSpaces();
+              },
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+),
+
+const SizedBox(height: 30),
 
             /// GRID
            Expanded(
