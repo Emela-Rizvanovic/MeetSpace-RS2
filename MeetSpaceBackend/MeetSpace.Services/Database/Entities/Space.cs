@@ -16,8 +16,6 @@ namespace MeetSpace.Models.Entities
         public Facility? Facility { get; set; }
         public SpaceType? SpaceType { get; set; }
         public ICollection<SpaceImage> Images { get; set; } = new HashSet<SpaceImage>();
-        public ICollection<SpaceWorkingHours> WorkingHours { get; set; } = new HashSet<SpaceWorkingHours>();
-        public ICollection<SpaceBlockedDate> BlockedDates { get; set; } = new HashSet<SpaceBlockedDate>();
         public ICollection<SpaceAmenity> SpaceAmenities { get; set; } = new HashSet<SpaceAmenity>();
         public ICollection<Booking> Bookings { get; set; } = new HashSet<Booking>();
         public ICollection<Review> Reviews { get; set; } = new HashSet<Review>();

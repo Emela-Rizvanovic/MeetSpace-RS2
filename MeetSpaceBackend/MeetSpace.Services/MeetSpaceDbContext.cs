@@ -18,8 +18,6 @@ namespace MeetSpace.Services.Database
         public DbSet<Space> Spaces { get; set; }
         public DbSet<SpaceType> SpaceTypes { get; set; }
         public DbSet<SpaceImage> SpaceImages { get; set; }
-        public DbSet<SpaceWorkingHours> SpaceWorkingHours { get; set; }
-        public DbSet<SpaceBlockedDate> SpaceBlockedDates { get; set; }
         public DbSet<Amenity> Amenities { get; set; }
         public DbSet<AmenityCategory> AmenityCategories { get; set; }
         public DbSet<SpaceAmenity> SpaceAmenities { get; set; }
@@ -33,9 +31,6 @@ namespace MeetSpace.Services.Database
         public DbSet<Favorite> Favorites { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<NotificationType> NotificationTypes { get; set; }
-        public DbSet<QRCode> QRCodes { get; set; }
-        public DbSet<Report> Reports { get; set; }
-        public DbSet<ReportType> ReportTypes { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<RecommendationLog> RecommendationLogs { get; set; }
         public DbSet<PasswordReset> PasswordResets { get; set; }

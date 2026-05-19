@@ -30,7 +30,6 @@ internal class Program
         builder.Services.AddScoped<ISpaceTypeService, SpaceTypeService>();
         builder.Services.AddScoped<IAmenityCategoryService, AmenityCategoryService>();
         builder.Services.AddScoped<IAmenityService, AmenityService>();
-        builder.Services.AddScoped<IReportTypeService, ReportTypeService>();
         builder.Services.AddScoped<IRoleService, RoleService>();
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
@@ -55,7 +54,6 @@ internal class Program
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<SpaceTypeProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<AmenityCategoryProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<AmenityProfile>());
-        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<ReportTypeProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<RoleProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<UserProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<BookingProfile>());
