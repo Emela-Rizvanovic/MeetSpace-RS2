@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MeetSpace.Models.Entities;
+using MeetSpace.Models.Enums;
 using MeetSpace.Models.Responses;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
@@ -26,7 +27,9 @@ namespace MeetSpace.Services.Services
         public async Task<List<SpaceResponse>> GetRecommendedSpaces(int userId, int count = 5)
         {
             // 1️⃣ Učitaj interakcije
-            var bookings = await _context.Bookings.ToListAsync();
+            var bookings = await _context.Bookings
+    .Where(b => b.BookingStatusId == (int)BookingStatusEnum.Approved)
+    .ToListAsync();
             var reviews = await _context.Reviews.ToListAsync();
             var favorites = await _context.Set<Favorite>().ToListAsync();
 
@@ -125,7 +128,15 @@ namespace MeetSpace.Services.Services
                 .OrderByDescending(s => scores.ContainsKey(s.Id) ? scores[s.Id] : 0)
                 .ToList();
 
-            return _mapper.Map<List<SpaceResponse>>(ordered);
+            var mapped = _mapper.Map<List<SpaceResponse>>(ordered);
+
+            foreach (var space in mapped)
+            {
+                space.RecommendationReason =
+                    "Recommended based on your previous bookings and similar user interactions.";
+            }
+
+            return mapped;
 
         }
 
@@ -185,7 +196,15 @@ namespace MeetSpace.Services.Services
                 .Take(count)
                 .ToList();
 
-            return _mapper.Map<List<SpaceResponse>>(ordered);
+            var mapped = _mapper.Map<List<SpaceResponse>>(ordered);
+
+            foreach (var space in mapped)
+            {
+                space.RecommendationReason =
+                    "Popular highly-rated space.";
+            }
+
+            return mapped;
         }
     }
 }
