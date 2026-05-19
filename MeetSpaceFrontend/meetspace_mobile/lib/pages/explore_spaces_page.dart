@@ -980,6 +980,45 @@ Row(
                       ),
                     ],
                   ),
+                  if (space.recommendationReason != null) ...[
+  const SizedBox(height: 10),
+
+  Container(
+    padding: const EdgeInsets.symmetric(
+      horizontal: 10,
+      vertical: 8,
+    ),
+    decoration: BoxDecoration(
+      color: brandOrange.withOpacity(0.08),
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(
+          Icons.auto_awesome,
+          size: 16,
+          color: brandOrange,
+        ),
+
+        const SizedBox(width: 8),
+
+        Expanded(
+          child: Text(
+            space.recommendationReason!,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12.5,
+              height: 1.35,
+              color: Colors.black87,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+],
                   const SizedBox(height: 12),
                   Row(
                     children: [

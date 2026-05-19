@@ -19,6 +19,7 @@ namespace MeetSpace.Models.Responses
 
         public double AverageRating { get; set; }
         public int TotalReviews { get; set; }
+        public string? RecommendationReason { get; set; }
 
         public int SpaceTypeId { get; set; }
         public string? SpaceTypeName { get; set; }
