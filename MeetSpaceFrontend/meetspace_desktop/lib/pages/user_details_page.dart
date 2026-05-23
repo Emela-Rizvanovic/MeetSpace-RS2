@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/user.dart';
 import '../providers/auth_provider.dart';
 import '../models/booking.dart';
+import '../constants/app_constants.dart';
  
 class UserDetailsPage extends StatefulWidget {
   final UserResponse user;
@@ -416,8 +417,8 @@ _isBookingsLoading
                   DropdownButtonFormField<String>(
                     value: localRole,
                     items: const [
-                      DropdownMenuItem(value: "Admin", child: Text("Admin")),
-                      DropdownMenuItem(value: "Client", child: Text("Client")),
+                      DropdownMenuItem(value: AppRoles.admin, child: Text(AppRoles.admin)),
+DropdownMenuItem(value: AppRoles.client, child: Text(AppRoles.client)),
                     ],
                     onChanged: (v) => setDialogState(() => localRole = v!),
                     decoration: _inputDecoration("Role"),
@@ -440,7 +441,9 @@ _isBookingsLoading
                             email: emailCtrl.text,
                             phone: user.phoneNumber ?? "",
                             isActive: user.isActive,
-                            roleId: localRole == "Admin" ? 1 : 2,
+                            roleId: localRole == AppRoles.admin
+    ? RoleIds.admin
+    : RoleIds.client,
                           );
                           // API ok → zatvori modal s "updated"
                           Navigator.pop(dialogContext, "updated");

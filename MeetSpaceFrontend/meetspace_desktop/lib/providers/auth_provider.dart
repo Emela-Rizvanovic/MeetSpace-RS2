@@ -18,6 +18,7 @@ import '../services/amenity_category_service.dart';
 import '../services/payment_method_service.dart';
 import '../services/payment_status_service.dart';
 import '../services/booking_status_service.dart';
+import '../constants/app_constants.dart';
 
 class AuthProvider with ChangeNotifier {
   UserResponse? user;
@@ -32,7 +33,7 @@ class AuthProvider with ChangeNotifier {
 
 String? get token => _token;
 bool get isLoggedIn => _token != null;
-bool get isAdmin => user?.roleName == "Admin";
+bool get isAdmin => user?.roleName == AppRoles.admin;
 
 ApiService get api => ApiService(
   baseUrl: baseUrl,

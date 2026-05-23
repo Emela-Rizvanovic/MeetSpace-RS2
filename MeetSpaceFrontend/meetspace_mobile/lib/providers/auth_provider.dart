@@ -18,6 +18,7 @@ import '../services/amenity_service.dart';
 import '../services/user_service.dart';
 import '../services/recommendation_service.dart';
 import '../services/payment_service.dart';
+import '../constants/app_constants.dart';
 
 class AuthProvider with ChangeNotifier {
   UserResponse? user;
@@ -27,13 +28,12 @@ class AuthProvider with ChangeNotifier {
       'API_BASE_URL',
       defaultValue: 'http://10.0.2.2:5245/api',
     );
-  // 10.0.2.2 = localhost za Android emulator
 
   String? _token;
 
 String? get token => _token;
 bool get isLoggedIn => _token != null;
-bool get isAdmin => user?.roleName == "Admin";
+bool get isAdmin => user?.roleName == AppRoles.admin;
 
 ApiService get api => ApiService(
   baseUrl: baseUrl,
@@ -264,7 +264,7 @@ Future<void> createBooking({
 
   final body = {
     "spaceId": spaceId,
-    "bookingStatusId": 1,
+    "bookingStatusId": BookingStatusIds.pending,
     "startTime": startTime.toIso8601String(),
     "endTime": endTime.toIso8601String(),
     "amenities": amenities,

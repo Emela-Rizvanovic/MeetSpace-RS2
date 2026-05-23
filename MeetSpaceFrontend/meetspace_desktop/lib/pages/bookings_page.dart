@@ -4,6 +4,7 @@ import '../providers/auth_provider.dart';
 import '../models/booking.dart';
 import 'booking_status_dialog.dart';
 import 'booking_history_page.dart';
+import '../constants/app_constants.dart';
 
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
@@ -431,7 +432,7 @@ class _BookingCardState extends State<BookingCard> {
 
               _statusBadge(),
 
-              if (booking.bookingStatusId == 3 && booking.rejectionReason != null)
+              if (booking.bookingStatusId == BookingStatusIds.rejected && booking.rejectionReason != null)
   Padding(
     padding: const EdgeInsets.only(top: 6),
     child: Text(
@@ -489,9 +490,9 @@ class _BookingCardState extends State<BookingCard> {
   /// 🔥 MODAL FIX (NO OVERFLOW)
 Future<void> _openDetails(BuildContext context) async {
   final booking = widget.booking;
-  final isPending = booking.bookingStatusId == 1;
+  final isPending = booking.bookingStatusId == BookingStatusIds.pending;
    final isReminderAvailable =
-    booking.bookingStatusId == 2 &&
+    booking.bookingStatusId == BookingStatusIds.approved &&
     booking.startTime.isAfter(DateTime.now());
   await _loadConflict();
 
@@ -625,7 +626,7 @@ Future<void> _openDetails(BuildContext context) async {
   ),
 
                       /// 🔥 REJECTION REASON
-                      if (booking.bookingStatusId == 3 &&
+                      if (booking.bookingStatusId == BookingStatusIds.rejected &&
                           booking.rejectionReason != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 6),

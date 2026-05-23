@@ -3,6 +3,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import '../models/revenue.dart';
 import '../models/user.dart';
+import '../constants/app_constants.dart';
 
 class PdfHelper {
   static Future<pw.Document> generateRevenuePdf(
@@ -267,7 +268,7 @@ static Future<pw.Document> generateUsersPdf(
             pw.Expanded(
               child: _buildStatCard(
                 "Admins",
-                "${users.where((e) => e.roleName == "Admin").length}",
+                "${users.where((e) => e.roleName == AppRoles.admin).length}",
                 boldFont,
               ),
             ),
@@ -277,7 +278,7 @@ static Future<pw.Document> generateUsersPdf(
             pw.Expanded(
               child: _buildStatCard(
                 "Regular users",
-                "${users.where((e) => e.roleName != "Admin").length}",
+                "${users.where((e) => e.roleName != AppRoles.admin).length}",
                 boldFont,
               ),
             ),

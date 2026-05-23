@@ -4,6 +4,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/user.dart';
 import 'api_service.dart';
+import '../constants/app_constants.dart';
 
 class UserService {
   final ApiService api;
@@ -32,7 +33,7 @@ class UserService {
     request.fields['Username'] = username;
     request.fields['Password'] = password;
     request.fields['PhoneNumber'] = phone;
-    request.fields['RoleId'] = '2';
+    request.fields['RoleId'] = RoleIds.client.toString();
 
     if (profileImage != null) {
       request.files.add(
