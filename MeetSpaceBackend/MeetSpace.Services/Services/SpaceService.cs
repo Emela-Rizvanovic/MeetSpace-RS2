@@ -279,6 +279,7 @@ namespace MeetSpace.Services.Services
                 .AsQueryable();
 
             query = ApplyFilter(query, search);
+            query = ApplySort(query, search);
 
             int? totalCount = null;
             if (search.IncludeTotalCount)
@@ -296,7 +297,13 @@ namespace MeetSpace.Services.Services
             var entities = await query.ToListAsync(cancellationToken);
             var mapped = entities.Select(MapToResponse).ToList();
 
-            return await base.GetAsync(search, cancellationToken);
+            return new PagedResult<SpaceResponse>
+            {
+                Items = mapped,
+                TotalCount = totalCount ?? mapped.Count,
+                Page = search.Page ?? 0,
+                PageSize = search.PageSize ?? mapped.Count
+            };
         }
 
         public override async Task<SpaceResponse?> GetByIdAsync(int id, CancellationToken cancellationToken = default)

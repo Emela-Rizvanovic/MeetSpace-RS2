@@ -12,9 +12,15 @@ public class BlobService : IBlobService
 
     public BlobService(IConfiguration config)
     {
-        _blobServiceClient = new BlobServiceClient(config["AzureBlobStorage:ConnectionString"]);
-        _userImagesContainer = config["AzureBlobStorage:UserImagesContainer"]!;
-        _spaceImagesContainer = config["AzureBlobStorage:SpaceImagesContainer"]!;
+        _blobServiceClient = new BlobServiceClient(
+       Environment.GetEnvironmentVariable("AZURE_BLOB_CONNECTION")
+   );
+
+        _userImagesContainer =
+            Environment.GetEnvironmentVariable("AZURE_USER_CONTAINER")!;
+
+        _spaceImagesContainer =
+            Environment.GetEnvironmentVariable("AZURE_SPACE_CONTAINER")!;
     }
 
     // User Images

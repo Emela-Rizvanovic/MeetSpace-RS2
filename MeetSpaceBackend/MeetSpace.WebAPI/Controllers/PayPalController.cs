@@ -32,7 +32,7 @@ public class PayPalController : ControllerBase
 
         // 🔐 uzmi token
         var auth = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(
-            $"{_config["PayPal:ClientId"]}:{_config["PayPal:Secret"]}"
+            $"{Environment.GetEnvironmentVariable("PAYPAL_CLIENT_ID")}:{Environment.GetEnvironmentVariable("PAYPAL_SECRET")}"
         ));
 
         client.DefaultRequestHeaders.Authorization =
@@ -110,7 +110,7 @@ public class PayPalController : ControllerBase
         var client = new HttpClient();
 
         var auth = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(
-            $"{_config["PayPal:ClientId"]}:{_config["PayPal:Secret"]}"
+            $"{Environment.GetEnvironmentVariable("PAYPAL_CLIENT_ID")}:{Environment.GetEnvironmentVariable("PAYPAL_SECRET")}"
         ));
 
         client.DefaultRequestHeaders.Authorization =

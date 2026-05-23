@@ -22,7 +22,11 @@ import '../services/payment_service.dart';
 class AuthProvider with ChangeNotifier {
   UserResponse? user;
 
-  final String baseUrl = "http://10.0.2.2:5245/api";  
+  final String baseUrl =
+    const String.fromEnvironment(
+      'API_BASE_URL',
+      defaultValue: 'http://10.0.2.2:5245/api',
+    );
   // 10.0.2.2 = localhost za Android emulator
 
   String? _token;

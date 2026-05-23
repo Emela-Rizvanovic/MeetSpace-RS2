@@ -30,7 +30,11 @@ import 'dart:io';
 class AuthProvider with ChangeNotifier {
   UserResponse? user;
 
-  final String baseUrl = "http://localhost:5245/api";
+  final String baseUrl =
+    const String.fromEnvironment(
+      'API_BASE_URL',
+      defaultValue: 'http://localhost:5245/api',
+    );
 
   String? _token;
 

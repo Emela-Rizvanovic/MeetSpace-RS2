@@ -11,17 +11,20 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using DotNetEnv;
 
 internal class Program
 {
     private static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+        Env.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
+
+        Stripe.StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
 
         // DbContext
         builder.Services.AddDbContext<MeetSpaceDbContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+            options.UseSqlServer(Environment.GetEnvironmentVariable("DB_CONNECTION"))
         );
 
         // Registracija servisa
@@ -65,8 +68,11 @@ internal class Program
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<PaymentStatusProfile>());
 
         // JWT konfiguracija
-        var jwtSettings = builder.Configuration.GetSection("Jwt");
-        var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
+        var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY");
+        var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER");
+        var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE");
+
+        var key = Encoding.UTF8.GetBytes(jwtKey!);
 
         builder.Services.AddAuthentication(options =>
         {
@@ -84,8 +90,8 @@ internal class Program
                 ValidateAudience = true,
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
-                ValidIssuer = jwtSettings["Issuer"],
-                ValidAudience = jwtSettings["Audience"],
+                ValidIssuer = jwtIssuer,
+                ValidAudience = jwtAudience,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
                 ClockSkew = TimeSpan.Zero
             };

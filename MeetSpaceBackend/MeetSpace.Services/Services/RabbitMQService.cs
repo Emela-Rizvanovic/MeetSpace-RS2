@@ -24,9 +24,9 @@ namespace MeetSpace.Services.Services
             {
                 var factory = new ConnectionFactory
                 {
-                    HostName = config["RabbitMQ:HostName"],
-                    UserName = config["RabbitMQ:UserName"],
-                    Password = config["RabbitMQ:Password"]
+                    HostName = Environment.GetEnvironmentVariable("RABBITMQ_HOST"),
+                    UserName = Environment.GetEnvironmentVariable("RABBITMQ_USERNAME"),
+                    Password = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD")
                 };
 
                 _connection = factory.CreateConnection();

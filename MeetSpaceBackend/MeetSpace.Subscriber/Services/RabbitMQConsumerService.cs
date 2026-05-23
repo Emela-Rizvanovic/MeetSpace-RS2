@@ -24,9 +24,9 @@ namespace MeetSpace.Subscriber.Services
 
             var factory = new ConnectionFactory()
             {
-                HostName = config["RabbitMQ:HostName"],
-                UserName = config["RabbitMQ:UserName"],
-                Password = config["RabbitMQ:Password"]
+                HostName = Environment.GetEnvironmentVariable("RABBITMQ_HOST"),
+                UserName = Environment.GetEnvironmentVariable("RABBITMQ_USERNAME"),
+                Password = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD")
             };
 
             var connection = factory.CreateConnection();
@@ -89,7 +89,8 @@ namespace MeetSpace.Subscriber.Services
 
                     var client = new HttpClient();
 
-                    var url = "http://localhost:5245/api/notifications/send";
+                    var url =
+    $"{Environment.GetEnvironmentVariable("API_BASE_URL")}/api/notifications/send";
 
                     var payload = JsonConvert.SerializeObject(message);
                     var content = new StringContent(payload, Encoding.UTF8, "application/json");
@@ -123,7 +124,8 @@ namespace MeetSpace.Subscriber.Services
 
                     var client = new HttpClient();
 
-                    var url = "http://localhost:5245/api/notifications/reminder";
+                    var url =
+    $"{Environment.GetEnvironmentVariable("API_BASE_URL")}/api/notifications/reminder";
 
                     var payload = JsonConvert.SerializeObject(message);
 

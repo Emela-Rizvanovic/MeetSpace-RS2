@@ -30,17 +30,23 @@ namespace MeetSpace.Subscriber.Services
         </div>
         <p>This code expires at {message.ExpiresAt.ToLocalTime():HH:mm}.</p>";
 
-            using var smtp = new SmtpClient(_configuration["Email:SmtpHost"])
+            using var smtp = new SmtpClient(
+    Environment.GetEnvironmentVariable("SMTP_HOST"))
             {
-                Port = int.Parse(_configuration["Email:SmtpPort"]),
+                Port = int.Parse(
+        Environment.GetEnvironmentVariable("SMTP_PORT")!),
+
                 EnableSsl = true,
+
                 Credentials = new NetworkCredential(
-                    _configuration["Email:Username"],
-                    _configuration["Email:Password"])
+        Environment.GetEnvironmentVariable("SMTP_USERNAME"),
+        Environment.GetEnvironmentVariable("SMTP_PASSWORD"))
             };
 
             await smtp.SendMailAsync(
-                new MailMessage(_configuration["Email:FromEmail"], message.UserEmail)
+                new MailMessage(
+                    Environment.GetEnvironmentVariable("SMTP_FROM"),
+                    message.UserEmail)
                 {
                     Subject = subject,
                     Body = body,
