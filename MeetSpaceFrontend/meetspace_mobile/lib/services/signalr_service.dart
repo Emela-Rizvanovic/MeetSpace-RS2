@@ -15,21 +15,18 @@ class SignalRService {
         .build();
 
    _connection!.on("ReceiveNotification", (arguments) {
-    print("EVENT RECEIVED");
   if (arguments != null && arguments.isNotEmpty) {
     try {
       final raw = arguments[0];
       final data = Map<String, dynamic>.from(raw as Map);
       onMessage(data);
-    } catch (e) {
-      print("SignalR parse error: $e");
-    }
+    } catch (_) {
+  return;
+}
   }
 });
 
     await _connection!.start();
-
-    print("SIGNALR CONNECTED");
   }
 
   Future<void> disconnect() async {

@@ -703,7 +703,6 @@ class _TopGallery extends StatelessWidget {
                             url,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
-                              debugPrint('DETAIL IMAGE ERROR url=$url → $error');
                               return Container(
                                 color: const Color(0xFFEDEDED),
                                 child: const Center(

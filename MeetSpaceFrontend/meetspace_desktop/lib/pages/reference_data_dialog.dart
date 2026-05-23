@@ -555,9 +555,12 @@ Future<void> _showCountryDialog({
                 }
 
                 Navigator.pop(context, true);
-              } catch (e) {
-                debugPrint(e.toString());
-              }
+             } catch (_) {
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("Action failed")),
+  );
+}
             },
           style: AdminStyles.primaryButton,
             child: const Text("Save"),
@@ -779,10 +782,12 @@ decoration:
                       context,
                       true,
                     );
-                  } catch (e) {
-                    debugPrint(
-                        e.toString());
-                  }
+                } catch (_) {
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("Action failed")),
+  );
+}
                 },
                style: AdminStyles.primaryButton,
                 child: const Text(
@@ -1168,10 +1173,12 @@ decoration:
                       context,
                       true,
                     );
-                  } catch (e) {
-                    debugPrint(
-                        e.toString());
-                  }
+                 } catch (_) {
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("Action failed")),
+  );
+}
                 },
                 style: AdminStyles.primaryButton,
                 child:
@@ -1361,10 +1368,12 @@ content: SizedBox(
                   context,
                   true,
                 );
-              } catch (e) {
-                debugPrint(
-                    e.toString());
-              }
+            } catch (_) {
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("Action failed")),
+  );
+}
             },
            style: AdminStyles.primaryButton,
             child:
@@ -1477,7 +1486,6 @@ Future<void> _deleteSpaceType(
       _isLoadingCountries = false;
     });
   } catch (e) {
-    debugPrint(e.toString());
 
     setState(() {
       _isLoadingCountries = false;
@@ -1514,7 +1522,6 @@ Future<void> _loadCities() async {
       _isLoadingCities = false;
     });
   } catch (e) {
-    debugPrint(e.toString());
 
     setState(() {
       _isLoadingCities = false;
@@ -1552,7 +1559,6 @@ Future<void> _loadFacilities() async {
       _isLoadingFacilities = false;
     });
   } catch (e) {
-    debugPrint(e.toString());
 
     setState(() {
       _isLoadingFacilities = false;
@@ -1594,7 +1600,6 @@ Future<void> _loadSpaceTypes() async {
           false;
     });
   } catch (e) {
-    debugPrint(e.toString());
 
     setState(() {
       _isLoadingSpaceTypes =

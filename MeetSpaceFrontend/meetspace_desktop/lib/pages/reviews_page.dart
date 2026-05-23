@@ -55,9 +55,12 @@ int _totalPages = 1;
       _totalPages = result.totalPages;
       _loading = false;
     });
-  } catch (e) {
-    debugPrint(e.toString());
-  }
+ } catch (_) {
+  if (!mounted) return;
+  setState(() {
+    _loading = false;
+  });
+}
 }
 
 Map<String, dynamic> _getSortParams() {
@@ -229,7 +232,7 @@ const SizedBox(height: 10),
     ),
   ],
 ),
-const SizedBox(height: 20),
+const SizedBox(height: 10),
 
             /// SEARCH
             TextField(
@@ -252,7 +255,7 @@ const SizedBox(height: 20),
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
 
             /// LIST
           Expanded(

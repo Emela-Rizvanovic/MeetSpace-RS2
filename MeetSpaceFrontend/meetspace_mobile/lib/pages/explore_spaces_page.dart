@@ -446,15 +446,15 @@ InputDecoration _filterDecoration(String hint) {
               return const Iterable<SpaceResponse>.empty();
             }
 
-            if (textEditingValue.text.isEmpty) {
-              return _allSpaces;
+            if (textEditingValue.text.trim().isEmpty) {
+              return const Iterable<SpaceResponse>.empty();
             }
 
             return _allSpaces.where(
               (space) => space.name
                   .toLowerCase()
-                  .startsWith(
-                    textEditingValue.text.toLowerCase(),
+                  .contains(
+                    textEditingValue.text.trim().toLowerCase()
                   ),
             );
           },
@@ -670,9 +670,9 @@ if (_mode == ExploreMode.all) ...[
   if (_mode == ExploreMode.recommended) {
     try {
       await auth.recommendationService.markClicked(s.id);
-    } catch (e) {
-      debugPrint("Click tracking failed: $e");
-    }
+    } catch (_) {
+  return;
+}
   }
 
   await Navigator.push(
@@ -833,11 +833,6 @@ class _SpaceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-     debugPrint(
-    'SPACE ${space.id} → images=${space.images.length}, '
-    'first="${space.firstImageOrEmpty}"'
-  );
-
     final imageUrl = space.firstImageOrEmpty;
     
     final price = space.pricePerHour > 0
@@ -886,9 +881,6 @@ final reviewCount = space.totalReviews;
     imageUrl,
     fit: BoxFit.cover,
     errorBuilder: (context, error, stackTrace) {
-      debugPrint(
-        'IMAGE ERROR space=${space.id} url=$imageUrl → $error',
-      );
       return Container(
         color: const Color(0xFFEDEDED),
         child: const Center(

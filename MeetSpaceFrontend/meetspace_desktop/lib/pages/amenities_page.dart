@@ -53,9 +53,12 @@ final result = await auth.amenityService.getPaged(
       _totalPages = result.totalPages;
       _isLoading = false;
     });
-  } catch (e) {
-    debugPrint(e.toString());
-  }
+  } catch (_) {
+  if (!mounted) return;
+  setState(() {
+    _isLoading = false;
+  });
+}
 }
 
   Map<String, dynamic> _getSortParams() {
@@ -362,7 +365,7 @@ OutlinedButton.icon(
               ],
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
 
             /// SEARCH
             TextField(
@@ -387,7 +390,7 @@ OutlinedButton.icon(
               ),
             ),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 10),
 
             /// LIST
           Expanded(

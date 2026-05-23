@@ -38,7 +38,7 @@ void initState() {
     return Scaffold(
       backgroundColor: const Color(0xFF3B3B3B),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 40),
+        padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 25),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -191,7 +191,7 @@ TextField(
   ),
 ),
 
-const SizedBox(height: 30),
+const SizedBox(height: 10),
 Expanded(
   child: _isLoading
       ? const Center(child: CircularProgressIndicator())

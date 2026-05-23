@@ -14,7 +14,6 @@ class RecommendationService {
     if (response.body.isEmpty) return [];
 
     final decoded = jsonDecode(response.body);
-    print(decoded.toString());
 
     if (decoded is List) {
       return decoded

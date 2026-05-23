@@ -144,12 +144,6 @@ public class PayPalController : ControllerBase
         if (captureStatus != "COMPLETED")
             return BadRequest("Payment not completed");
 
-        Console.WriteLine($"STATUS CODE: {captureResponse.StatusCode}");
-        Console.WriteLine(captureJson);
-
-        Console.WriteLine("PAYPAL CAPTURE RESPONSE:");
-        Console.WriteLine(captureJson);
-
         var bookingRequest = new BookingInsertRequest
         {
             SpaceId = request.SpaceId,

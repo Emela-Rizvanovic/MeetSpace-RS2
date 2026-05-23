@@ -326,9 +326,12 @@ _isBookingsLoading
       _bookings = data;
       _isBookingsLoading = false;
     });
-  } catch (e) {
-    debugPrint(e.toString());
-  }
+  } catch (_) {
+  if (!mounted) return;
+  setState(() {
+    _isBookingsLoading = false;
+  });
+}
 }
  
   Widget _actionButton(String text, Color color, VoidCallback onTap) {

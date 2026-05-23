@@ -314,10 +314,12 @@ class _BookingStatusesDialogState
                     true,
                   );
 
-                } catch (e) {
-                  debugPrint(
-                      e.toString());
-                }
+              } catch (_) {
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("Action failed")),
+  );
+}
               },
 
               style: AdminStyles
@@ -470,10 +472,6 @@ class _BookingStatusesDialogState
       });
 
     } catch (e) {
-
-      debugPrint(
-          e.toString());
-
       setState(() {
         _isLoadingBookingStatuses =
             false;

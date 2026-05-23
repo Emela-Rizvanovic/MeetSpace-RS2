@@ -14,7 +14,7 @@ class DashboardPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF3B3B3B),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 40),
+        padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -89,9 +89,12 @@ maxCapacity:
       _totalPages = result.totalPages;
       _isLoading = false;
     });
-  } catch (e) {
-    debugPrint(e.toString());
-  }
+} catch (_) {
+  if (!mounted) return;
+  setState(() {
+    _isLoading = false;
+  });
+}
 }
 
   Map<String, dynamic> _getSortParams() {
@@ -134,10 +137,9 @@ maxCapacity:
           children: [
             /// HEADER
   /// HEADER
+/// TOP BAR
 Row(
   children: [
-
-    /// BACK BUTTON
     InkWell(
       onTap: () => Navigator.pop(context),
       borderRadius: BorderRadius.circular(12),
@@ -156,7 +158,6 @@ Row(
 
     const SizedBox(width: 16),
 
-    /// LOGO
     const Text(
       "MEETSPACE",
       style: TextStyle(
@@ -165,130 +166,14 @@ Row(
         fontSize: 18,
       ),
     ),
-
-     const SizedBox(height: 10),
-
-    const Spacer(),
-
-    Row(
-      children: [
-        /// ADD BUTTON
-       ElevatedButton(
-onPressed: () async {
-  final result = await showDialog(
-    context: context,
-    builder: (_) => const AddSpaceDialog(),
-  );
-
-  if (result == "created") {
-    await _loadSpaces();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text("Space added successfully"),
-        backgroundColor: Colors.green,
-      ),
-    );
-  } 
-},
-  style: ElevatedButton.styleFrom(
-    backgroundColor: brandOrange,
-    foregroundColor: Colors.white, 
-    elevation: 0,
-    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-     minimumSize: const Size(0, 52),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(14),
-    ),
-  ),
-  child: const Text(
-    "Add new space",
-    style: TextStyle(
-      fontWeight: FontWeight.w600,
-    ),
-  ),
-),
-
-const SizedBox(width: 16),
-
-OutlinedButton.icon(
-  onPressed: () async {
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const ReferenceDataDialog(),
-    );
-  },
-  icon: const Icon(Icons.settings),
-  label: const Text("Manage data"),
-  style: OutlinedButton.styleFrom(
-    foregroundColor: Colors.white,
-    side: const BorderSide(color: Colors.white24),
-    padding: const EdgeInsets.symmetric(
-      horizontal: 20,
-      vertical: 16,
-    ),
-    minimumSize: const Size(0, 52),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(14),
-    ),
-  ),
-),
-
-const SizedBox(width: 16),
-
-/// SORT
-Container(
-  height: 52,
-  padding: const EdgeInsets.symmetric(horizontal: 16),
-  decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(14),
-  ),
-  child: DropdownButtonHideUnderline(
-    child: DropdownButton<String>(
-      isDense: true,
-      value: _sort,
-      icon: const Icon(Icons.keyboard_arrow_down),
-
-      items: const [
-        DropdownMenuItem(
-          value: "Price ↑",
-          child: Text("Price ↑"),
-        ),
-        DropdownMenuItem(
-          value: "Price ↓",
-          child: Text("Price ↓"),
-        ),
-        DropdownMenuItem(
-          value: "Capacity ↑",
-          child: Text("Capacity ↑"),
-        ),
-        DropdownMenuItem(
-          value: "Capacity ↓",
-          child: Text("Capacity ↓"),
-        ),
-      ],
-
-      onChanged: (value) {
-        setState(() {
-          _sort = value!;
-          _page = 0;
-        });
-
-        _loadSpaces();
-      },
-    ),
-  ),
-),
-      ],
-    ),
   ],
 ),
 
- const SizedBox(width: 30),
+const SizedBox(height: 10),
 
-    /// PAGE TITLE
+/// HEADER
+Row(
+  children: [
     const Text(
       "Available locations",
       style: TextStyle(
@@ -298,7 +183,123 @@ Container(
       ),
     ),
 
-            const SizedBox(height: 20),
+    const Spacer(),
+
+    /// ADD BUTTON
+    ElevatedButton(
+      onPressed: () async {
+        final result = await showDialog(
+          context: context,
+          builder: (_) => const AddSpaceDialog(),
+        );
+
+        if (result == "created") {
+          await _loadSpaces();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Space added successfully"),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: brandOrange,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
+        minimumSize: const Size(0, 52),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+      child: const Text(
+        "Add new space",
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ),
+
+    const SizedBox(width: 16),
+
+    /// MANAGE DATA
+    OutlinedButton.icon(
+      onPressed: () async {
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => const ReferenceDataDialog(),
+        );
+      },
+      icon: const Icon(Icons.settings),
+      label: const Text("Manage data"),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Colors.white,
+        side: const BorderSide(color: Colors.white24),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
+        minimumSize: const Size(0, 52),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+    ),
+
+    const SizedBox(width: 16),
+
+    /// SORT
+    Container(
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          isDense: true,
+          value: _sort,
+          icon: const Icon(Icons.keyboard_arrow_down),
+          items: const [
+            DropdownMenuItem(
+              value: "Price ↑",
+              child: Text("Price ↑"),
+            ),
+            DropdownMenuItem(
+              value: "Price ↓",
+              child: Text("Price ↓"),
+            ),
+            DropdownMenuItem(
+              value: "Capacity ↑",
+              child: Text("Capacity ↑"),
+            ),
+            DropdownMenuItem(
+              value: "Capacity ↓",
+              child: Text("Capacity ↓"),
+            ),
+          ],
+          onChanged: (value) {
+            setState(() {
+              _sort = value!;
+              _page = 0;
+            });
+
+            _loadSpaces();
+          },
+        ),
+      ),
+    ),
+  ],
+),
+
+            const SizedBox(height: 10),
 
             /// SEARCH BAR
  /// SEARCH + FILTERS
@@ -443,7 +444,7 @@ Row(
   ],
 ),
 
-const SizedBox(height: 30),
+const SizedBox(height: 10),
 
             /// GRID
            Expanded(

@@ -48,9 +48,12 @@ class _AddAmenityDialogState extends State<AddAmenityDialog> {
       setState(() {
         _categories = decoded['items'] ?? [];
       });
-    } catch (e) {
-      debugPrint(e.toString());
-    }
+   } catch (_) {
+  if (!mounted) return;
+  setState(() {
+    _categories = [];
+  });
+}
   }
 
   Future<void> _submit() async {

@@ -112,7 +112,6 @@ Navigator.pushReplacement(
     } catch (e) {
       if (!mounted) return;
       _snack("Payment failed");
-      print(e);
     }
 
     if (!mounted) return;
@@ -170,7 +169,6 @@ for (var amenity in widget.amenities) {
   } catch (e) {
     if (!mounted) return;
     _snack("PayPal failed");
-    print(e);
   }
 
   if (!mounted) return;

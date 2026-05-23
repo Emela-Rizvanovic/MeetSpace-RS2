@@ -91,11 +91,6 @@ Map<String, dynamic>? _decodeToken(String token) {
       body: jsonEncode(request.toJson()),
     );
 
-    print("URL → $url");
-    print("REQUEST → ${request.toJson()}");
-    print("STATUS → ${response.statusCode}");
-    print("BODY → ${response.body}");
-
     if (response.statusCode == 200) {
   final decoded = jsonDecode(response.body);
   final loginResponse = LoginResponse.fromJson(decoded);

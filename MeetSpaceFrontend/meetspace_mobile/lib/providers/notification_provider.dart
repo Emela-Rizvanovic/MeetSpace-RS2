@@ -53,7 +53,6 @@ bool get notificationsEnabled =>
         notifyListeners();
       }
     } catch (e) {
-      print("LOAD NOTIFICATIONS ERROR: $e");
     }
   }
 
@@ -104,9 +103,9 @@ Future<void> setNotificationsEnabled(bool value) async {
           .toList();
 
       notifyListeners();
-    } catch (e) {
-      print("MARK READ ERROR: $e");
-    }
+    } catch (_) {
+  return;
+}
   }
 
   Future<void> connect({

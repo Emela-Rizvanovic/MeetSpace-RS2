@@ -2,21 +2,14 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../models/user.dart';
-import '../models/booking.dart';
-import '../models/amenity.dart';
-import '../models/space.dart';
-import '../models/review.dart';
 import '../models/login_response.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../services/api_service.dart';
 import '../services/booking_service.dart';
 import '../services/review_service.dart';
-import '../services/favorite_service.dart';
 import '../services/space_service.dart';
 import '../services/amenity_service.dart';
 import '../services/user_service.dart';
-import '../services/recommendation_service.dart';
-import '../services/payment_service.dart';
 import '../services/country_service.dart';
 import '../services/city_service.dart';
 import '../services/facility_service.dart';
@@ -25,7 +18,6 @@ import '../services/amenity_category_service.dart';
 import '../services/payment_method_service.dart';
 import '../services/payment_status_service.dart';
 import '../services/booking_status_service.dart';
-import 'dart:io';
 
 class AuthProvider with ChangeNotifier {
   UserResponse? user;
@@ -53,9 +45,6 @@ BookingService get bookingService =>
 ReviewService get reviewService =>
     ReviewService(api);
 
-FavoriteService get favoriteService =>
-    FavoriteService(api);
-
 SpaceService get spaceService =>
     SpaceService(api);
 
@@ -68,11 +57,6 @@ UserService get userService =>
       baseUrl: baseUrl,
     );
 
-RecommendationService get recommendationService =>
-    RecommendationService(api);
-
-PaymentService get paymentService =>
-    PaymentService(api);
 
     CountryService get countryService =>
     CountryService(api);
@@ -121,12 +105,7 @@ Map<String, dynamic>? _decodeToken(String token) {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(request.toJson()),
     );
-
-    print("URL → $url");
-    print("REQUEST → ${request.toJson()}");
-    print("STATUS → ${response.statusCode}");
-    print("BODY → ${response.body}");
-
+    
     if (response.statusCode == 200) {
   final decoded = jsonDecode(response.body);
   final loginResponse = LoginResponse.fromJson(decoded);
@@ -154,195 +133,6 @@ await _secureStorage.write(
   await _secureStorage.delete(key: 'user_data');
 
   notifyListeners();
-}
-
-Future<void> register({
-  required String firstName,
-  required String lastName,
-  required String email,
-  required String username,
-  required String password,
-  required String phone,
-  File? profileImage,
-}) async {
-  final registeredUser = await userService.register(
-    firstName: firstName,
-    lastName: lastName,
-    email: email,
-    username: username,
-    password: password,
-    phone: phone,
-    profileImage: profileImage,
-  );
-
-  user = registeredUser;
-  notifyListeners();
-}
-
-Future<ForgotPasswordResponse> forgotPassword(String email) async {
-  final result = await userService.forgotPassword(email);
-
-  return ForgotPasswordResponse.fromJson(result);
-}
-
-Future<ForgotPasswordResponse> resetPassword({
-  required String email,
-  required String code,
-  required String newPassword,
-}) async {
-  final result = await userService.resetPassword(
-    email: email,
-    code: code,
-    newPassword: newPassword,
-  );
-
-  return ForgotPasswordResponse.fromJson(result);
-}
-
-Future<List<BookingResponse>> getMyBookings() async {
-  if (user == null) throw Exception("Not logged in");
-
-  return bookingService.getMyBookings(user!.id);
-}
-
-Future<List<AmenityResponse>> getAmenities({
-  String? name,
-  int? amenityCategoryId,
-}) {
-  return amenityService.getAmenities(
-    name: name,
-    amenityCategoryId: amenityCategoryId,
-  );
-}
-
-Future<List<SpaceResponse>> getSpaces({
-  String? name,
-  int? facilityId,
-  int? spaceTypeId,
-  double? minPrice,
-  double? maxPrice,
-  int? minCapacity,
-  int? maxCapacity,
-}) {
-  return spaceService.getSpaces(
-    name: name,
-    facilityId: facilityId,
-    spaceTypeId: spaceTypeId,
-    minPrice: minPrice,
-    maxPrice: maxPrice,
-    minCapacity: minCapacity,
-    maxCapacity: maxCapacity,
-  );
-}
-
-Future<void> addFavorite(int spaceId) async {
-  if (user == null) throw Exception("Not logged in");
-
-  return favoriteService.addFavorite(spaceId);
-}
-
-Future<void> removeFavorite(int spaceId) async {
-  if (user == null) throw Exception("Not logged in");
-
-  return favoriteService.removeFavorite(user!.id, spaceId);
-}
-
-Future<List<SpaceResponse>> getFavoriteSpaces() async {
-  if (user == null) throw Exception("Not logged in");
-
-  return favoriteService.getFavoriteSpaces(user!.id);
-}
-
-Future<void> updateProfile({
-  required String firstName,
-  required String lastName,
-  required String username,
-  required String email,
-  required String phone,
-  String? newPassword,
-  File? profileImage,
-}) async {
-  if (user == null) throw Exception("Not logged in");
-
-  final updatedUser = await userService.updateProfile(
-    userId: user!.id,
-    firstName: firstName,
-    lastName: lastName,
-    username: username,
-    email: email,
-    phone: phone,
-    newPassword: newPassword,
-    profileImage: profileImage,
-  );
-
-  user = updatedUser;
-  notifyListeners();
-}
-
-Future<List<BookingResponse>> getBookingsForSpace(int spaceId) {
-  return bookingService.getBookingsForSpace(spaceId);
-}
-
-Future<void> createBooking({
-  required int spaceId,
-  required DateTime startTime,
-  required DateTime endTime,
-  required List<Map<String, dynamic>> amenities,
-}) async {
-  if (user == null) throw Exception("Not logged in");
-
-  final body = {
-    "spaceId": spaceId,
-    "bookingStatusId": 1,
-    "startTime": startTime.toIso8601String(),
-    "endTime": endTime.toIso8601String(),
-    "amenities": amenities,
-  };
-
-  return bookingService.createBooking(body);
-}
-
-Future<List<ReviewResponse>> getReviewsBySpace(int spaceId) {
-  return reviewService.getReviewsBySpace(spaceId);
-}
-
-Future<void> createReview({
-  required int spaceId,
-  required int rating,
-  String? comment,
-}) async {
-  if (user == null) throw Exception("Not logged in");
-
-  final body = {
-    "spaceId": spaceId,
-    "rating": rating,
-    "comment": comment ?? "",
-  };
-
-  return reviewService.createReview(body);
-}
-
-Future<void> updateReview({
-  required int reviewId,
-  required int rating,
-  String? comment,
-}) async {
-  if (user == null) throw Exception("Not logged in");
-
-  final body = {
-    "rating": rating,
-    "comment": comment ?? "",
-  };
-
-  return reviewService.updateReview(reviewId, body);
-}
-
-Future<Map<String, dynamic>> getReviewSummary(int spaceId) {
-  return reviewService.getReviewSummary(spaceId);
-}
-
-Future<void> deleteReview(int reviewId) {
-  return reviewService.deleteReview(reviewId);
 }
 
 Future<void> tryAutoLogin() async {
@@ -379,16 +169,3 @@ bool _isTokenExpired(String token) {
 
 }
 
-class ForgotPasswordResponse {
-  final bool success;
-  final String message;
-
-  ForgotPasswordResponse({required this.success, required this.message});
-
-  factory ForgotPasswordResponse.fromJson(Map<String, dynamic> json) {
-    return ForgotPasswordResponse(
-      success: json['success'] == true,
-      message: (json['message'] ?? '').toString(),
-    );
-  }
-}

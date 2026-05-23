@@ -55,9 +55,12 @@ Future<void> _loadUsers() async {
       _totalPages = result.totalPages;
       _isLoading = false;
     });
-  } catch (e) {
-    debugPrint(e.toString());
-  }
+ } catch (_) {
+  if (!mounted) return;
+  setState(() {
+    _isLoading = false;
+  });
+}
 }
 
 
@@ -97,9 +100,12 @@ Future<void> _generatePdf() async {
 
     await OpenFile.open(file.path);
 
-  } catch (e) {
-    debugPrint("PDF error: $e");
-  }
+ } catch (_) {
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("Failed to generate PDF")),
+  );
+}
 }
  
   @override
@@ -185,7 +191,7 @@ const SizedBox(height: 10),
   ],
 ),
 
-const SizedBox(height: 20),
+const SizedBox(height: 10),
  
             /// SEARCH
             TextField(
@@ -208,7 +214,7 @@ const SizedBox(height: 20),
               ),
             ),
  
-            const SizedBox(height: 30),
+            const SizedBox(height: 10),
  
             /// GRID
 Expanded(

@@ -137,9 +137,12 @@ Future<void> _generatePdf() async {
     /// 🔥 OTVORI FAJL
     await OpenFile.open(file.path);
 
-  } catch (e) {
-    debugPrint("PDF error: $e");
-  }
+  } catch (_) {
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("Failed to generate PDF")),
+  );
+}
 }
 
   @override
@@ -276,7 +279,6 @@ _dateButton("To", _toDate, () => _pickDate(false)),
     _search = value;
     _page = 0;
   });
-  print("SEARCH SENT: $_search");
 
   _load();
 },
@@ -292,7 +294,7 @@ _dateButton("To", _toDate, () => _pickDate(false)),
               ),
             ),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 10),
 
             /// LIST
         Expanded(

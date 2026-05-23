@@ -314,10 +314,12 @@ class _AmenityCategoriesDialogState
                     true,
                   );
 
-                } catch (e) {
-                  debugPrint(
-                      e.toString());
-                }
+              } catch (_) {
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("Action failed")),
+  );
+}
               },
 
               style: AdminStyles
@@ -470,9 +472,6 @@ class _AmenityCategoriesDialogState
       });
 
     } catch (e) {
-
-      debugPrint(
-          e.toString());
 
       setState(() {
         _isLoadingCategories =

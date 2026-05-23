@@ -135,7 +135,6 @@ final spaceService = auth.spaceService;
 
       Navigator.pop(context, widget.space == null ? "created" : "updated");
     } catch (e) {
-      debugPrint(e.toString());
       ScaffoldMessenger.of(context).showSnackBar(
        SnackBar(
   content: Text(widget.space == null

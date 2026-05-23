@@ -66,7 +66,6 @@ class UserService {
   }) async {
     var uri = Uri.parse('$baseUrl/User/$userId');
     var request = http.MultipartRequest('PUT', uri);
-    print("TOKEN → ${api.token}");
     request.headers['Authorization'] =
     'Bearer ${api.token}';
 

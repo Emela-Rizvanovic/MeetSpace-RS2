@@ -25,23 +25,6 @@ class RevenueService {
     throw Exception("Failed to load latest revenue");
   }
 
-  /// 🔹 ALL TRANSACTIONS (za future "See full history")
-  Future<List<RevenueResponse>> getAll() async {
-    final response = await api.get("Revenue/all");
-
-    if (response.statusCode == 200) {
-      final decoded = jsonDecode(response.body);
-
-      if (decoded is List) {
-        return decoded
-            .map((e) => RevenueResponse.fromJson(e))
-            .toList();
-      }
-    }
-
-    throw Exception("Failed to load revenue history");
-  }
-
   Future<PagedResult<RevenueResponse>> getPaged({
   required int page,
   required int pageSize,
@@ -78,7 +61,6 @@ class RevenueService {
     queryParameters: query,
   );
 
-print(query);
   if (response.statusCode == 200) {
     final decoded = jsonDecode(response.body);
 

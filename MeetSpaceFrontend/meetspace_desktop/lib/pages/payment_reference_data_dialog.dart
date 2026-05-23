@@ -571,10 +571,12 @@ class _PaymentReferenceDataDialogState
                     true,
                   );
 
-                } catch (e) {
-                  debugPrint(
-                      e.toString());
-                }
+               } catch (_) {
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("Action failed")),
+  );
+}
               },
 
               style: AdminStyles
@@ -746,10 +748,12 @@ class _PaymentReferenceDataDialogState
                     true,
                   );
 
-                } catch (e) {
-                  debugPrint(
-                      e.toString());
-                }
+               } catch (_) {
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("Action failed")),
+  );
+}
               },
 
               style: AdminStyles
@@ -972,9 +976,6 @@ class _PaymentReferenceDataDialogState
 
     } catch (e) {
 
-      debugPrint(
-          e.toString());
-
       setState(() {
         _isLoadingStatuses =
             false;
@@ -1033,9 +1034,6 @@ class _PaymentReferenceDataDialogState
       });
 
     } catch (e) {
-
-      debugPrint(
-          e.toString());
 
       setState(() {
         _isLoadingMethods =

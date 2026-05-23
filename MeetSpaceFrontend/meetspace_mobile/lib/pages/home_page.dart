@@ -222,13 +222,13 @@ GestureDetector(
       return const Iterable<SpaceResponse>.empty();
     }
 
-    if (textEditingValue.text.isEmpty) {
-      return _spaces;
+    if (textEditingValue.text.trim().isEmpty) {
+      return const Iterable<SpaceResponse>.empty();
     }
 
     return _spaces.where((space) =>
-        space.name.toLowerCase().startsWith(
-              textEditingValue.text.toLowerCase(),
+        space.name.toLowerCase().contains(
+              textEditingValue.text.trim().toLowerCase()
             ));
   },
 
