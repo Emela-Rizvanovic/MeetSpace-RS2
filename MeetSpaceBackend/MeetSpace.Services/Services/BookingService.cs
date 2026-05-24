@@ -16,6 +16,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace MeetSpace.Services.Services
 {
@@ -177,6 +178,12 @@ namespace MeetSpace.Services.Services
 
         public override async Task<BookingResponse> CreateAsync(BookingInsertRequest request, CancellationToken cancellationToken = default)
         {
+            var ownsTransaction = _context.Database.CurrentTransaction == null;
+
+            IDbContextTransaction? transaction = ownsTransaction
+                ? await _context.Database.BeginTransactionAsync(cancellationToken)
+                : null;
+
             var entity = _mapper.Map<Booking>(request);
 
             await BeforeInsert(entity, request, cancellationToken);
@@ -206,6 +213,12 @@ namespace MeetSpace.Services.Services
                 .Include(b => b.User)
                 .Include(b => b.PaymentStatus)
                 .FirstAsync(b => b.Id == entity.Id, cancellationToken);
+
+            if (transaction != null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+                await transaction.DisposeAsync();
+            }
 
             return MapWithAudit(loaded);
         }

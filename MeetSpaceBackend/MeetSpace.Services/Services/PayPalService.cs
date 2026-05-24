@@ -141,6 +141,8 @@ namespace MeetSpace.Services.Services
             if (captureStatus != "COMPLETED")
                 throw new ApplicationException("Payment not completed");
 
+            await using var transaction = await _context.Database.BeginTransactionAsync(ct);
+
             var bookingRequest = new BookingInsertRequest
             {
                 SpaceId = request.SpaceId,
@@ -174,6 +176,8 @@ namespace MeetSpace.Services.Services
             _context.Payments.Add(payment);
 
             await _context.SaveChangesAsync(ct);
+
+            await transaction.CommitAsync(ct);
 
             return new PayPalCaptureResponse
             {

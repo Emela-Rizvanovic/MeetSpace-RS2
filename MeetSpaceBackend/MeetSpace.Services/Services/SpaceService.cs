@@ -68,6 +68,9 @@ namespace MeetSpace.Services.Services
             CancellationToken cancellationToken = default
         )
         {
+            await using var transaction =
+    await _context.Database.BeginTransactionAsync(cancellationToken);
+
             var entity = _mapper.Map<Space>(request);
             entity.CreatedAt = DateTime.UtcNow;
 
@@ -124,6 +127,8 @@ namespace MeetSpace.Services.Services
                 .Include(s => s.Reviews)
                 .Include(s => s.SpaceType)
                 .FirstAsync(s => s.Id == entity.Id, cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
 
             return _mapper.Map<SpaceResponse>(entity);
         }
