@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Text.Json;
 
 internal class Program
 {
@@ -174,29 +175,62 @@ internal class Program
 
                 var exception = exceptionHandlerPathFeature?.Error;
 
+                var logger = context.RequestServices
+    .GetRequiredService<ILogger<Program>>();
+
+                context.Response.ContentType = "application/json";
+
                 if (exception is BusinessException)
                 {
+
+                    logger.LogWarning(exception, "Business exception occurred while processing request.");
+
                     context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                    await context.Response.WriteAsync(exception.Message);
+
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(new
+                    {
+                        message = exception.Message
+                    }));
+
                     return;
                 }
 
                 if (exception is NotFoundException)
                 {
+                    logger.LogWarning(exception, "Requested resource was not found.");
+
                     context.Response.StatusCode = StatusCodes.Status404NotFound;
-                    await context.Response.WriteAsync(exception.Message);
+
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(new
+                    {
+                        message = exception.Message
+                    }));
+
                     return;
                 }
 
                 if (exception is UnauthorizedAccessException)
                 {
+                    logger.LogWarning(exception, "Unauthorized access attempt.");
+
                     context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                    await context.Response.WriteAsync(exception.Message);
+
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(new
+                    {
+                        message = "Access denied."
+                    }));
+
                     return;
                 }
 
+                logger.LogError(exception, "Unhandled exception occurred while processing request.");
+
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                await context.Response.WriteAsync("An error occurred while processing your request.");
+
+                await context.Response.WriteAsync(JsonSerializer.Serialize(new
+                {
+                    message = "An error occurred while processing your request."
+                }));
             });
         });
 

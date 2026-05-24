@@ -175,7 +175,10 @@ namespace MeetSpace.WebAPI.Controllers
         public async Task<IActionResult> CheckConflict(int spaceId, DateTime start, DateTime end, int? ignoreId)
         {
             var result = await _bookingService.HasConflict(spaceId, start, end, ignoreId);
-            return Ok(new { hasConflict = result });
+            return Ok(new BookingConflictResponse
+            {
+                HasConflict = result
+            });
         }
 
 

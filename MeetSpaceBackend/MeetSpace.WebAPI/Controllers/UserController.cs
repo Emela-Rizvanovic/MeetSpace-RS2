@@ -1,4 +1,5 @@
 ﻿using MeetSpace.Models.Constants;
+using MeetSpace.Models.Exceptions;
 using MeetSpace.Models.Requests;
 using MeetSpace.Models.Responses;
 using MeetSpace.Models.SearchObjects;
@@ -7,6 +8,7 @@ using MeetSpace.Services.Security;
 using MeetSpace.WebAPI.BaseControllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace MeetSpace.WebAPI.Controllers
 {
@@ -17,12 +19,17 @@ namespace MeetSpace.WebAPI.Controllers
     {
         private readonly IUserService _userService;
         private readonly IJwtTokenService _jwtTokenService;
+        private readonly ILogger<UserController> _logger;
 
-        public UserController(IUserService service, IJwtTokenService jwtTokenService)
+        public UserController(
+    IUserService service,
+    IJwtTokenService jwtTokenService,
+    ILogger<UserController> logger)
     : base(service)
         {
             _userService = service;
             _jwtTokenService = jwtTokenService;
+            _logger = logger;
         }
 
         [AllowAnonymous]
@@ -37,7 +44,7 @@ namespace MeetSpace.WebAPI.Controllers
                     .AuthenticateUser(request, cancellationToken);
 
                 if (userResponse == null)
-                    return Unauthorized("Invalid username or password.");
+                    return Unauthorized(new { message = "Invalid username or password." });
 
                 var userEntity = await _userService
                     .GetEntityByUsername(
@@ -54,7 +61,8 @@ namespace MeetSpace.WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return Unauthorized(ex.Message);
+                _logger.LogWarning(ex, "Login failed for username {Username}.", request.Username);
+                return Unauthorized(new { message = "Invalid username or password." });
             }
         }
 
@@ -69,7 +77,7 @@ namespace MeetSpace.WebAPI.Controllers
                 var userResponse = await _userService.AuthenticateAdmin(request, ct);
 
                 if (userResponse == null)
-                    return Unauthorized("Invalid credentials.");
+                    return Unauthorized(new { message = "Invalid credentials." });
 
                 var userEntity = await _userService
                     .GetEntityByUsername(request.Username, ct);
@@ -84,7 +92,8 @@ namespace MeetSpace.WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return Unauthorized(ex.Message);
+                _logger.LogWarning(ex, "Admin login failed for username {Username}.", request.Username);
+                return Unauthorized(new { message = "Invalid credentials." });
             }
         }
 
@@ -105,9 +114,10 @@ namespace MeetSpace.WebAPI.Controllers
                 var response = await _userService.RegisterAsync(request, ct);
                 return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
             }
-            catch (ArgumentException ex)
+            catch (BusinessException ex)
             {
-                return Conflict(ex.Message);
+                _logger.LogWarning(ex, "Registration failed for email {Email}.", request.Email);
+                return Conflict(new { message = ex.Message });
             }
         }
 
@@ -160,7 +170,8 @@ namespace MeetSpace.WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "An error occurred while processing your request." });
+                _logger.LogError(ex, "Forgot password failed for email {Email}.", request.Email);
+                return StatusCode(500, new { message = "An error occurred while processing your request." });
             }
         }
 
@@ -181,7 +192,8 @@ namespace MeetSpace.WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "An error occurred while processing your request." });
+                _logger.LogError(ex, "Reset password failed.");
+                return StatusCode(500, new { message = "An error occurred while processing your request." });
             }
         }
 
@@ -212,13 +224,6 @@ namespace MeetSpace.WebAPI.Controllers
             var user = await _userService.GetByIdAsync(userId, ct);
 
             return Ok(user);
-        }
-
-        [AllowAnonymous]
-        [HttpGet("test")]
-        public IActionResult Test()
-        {
-            return Ok(new { message = "hello", time = DateTime.UtcNow });
         }
 
     }

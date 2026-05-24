@@ -2,7 +2,6 @@
 using MeetSpace.Services.BaseInterfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MeetSpace.Models.Exceptions;
 
 namespace MeetSpace.WebAPI.BaseControllers
 {
@@ -21,15 +20,7 @@ namespace MeetSpace.WebAPI.BaseControllers
         [HttpGet("")]
         public virtual async Task<Models.Responses.PagedResult<T>> Get([FromQuery] TSearch? search = null)
         {
-            //return await _service.GetAsync(search ?? new TSearch());
-            try
-            {
-                return await _service.GetAsync(search ?? new TSearch());
-            }
-            catch (Exception ex)
-            {
-                throw new BusinessException(ex.Message);
-            }
+            return await _service.GetAsync(search ?? new TSearch());
         }
 
         [HttpGet("{id}")]

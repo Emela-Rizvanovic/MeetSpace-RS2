@@ -130,15 +130,15 @@ namespace MeetSpace.WebAPI.Controllers
 
         [AllowAnonymous]
         [HttpGet("space/{spaceId}/summary")]
-        public async Task<ActionResult<object>> GetSummary(int spaceId)
+        public async Task<ActionResult<ReviewSummaryResponse>> GetSummary(int spaceId)
         {
             var average = await _reviewService.GetAverageRatingAsync(spaceId);
             var count = await _reviewService.GetReviewCountAsync(spaceId);
 
-            return Ok(new
+            return Ok(new ReviewSummaryResponse
             {
-                averageRating = Math.Round(average, 2),
-                totalReviews = count
+                AverageRating = Math.Round(average, 2),
+                TotalReviews = count
             });
         }
 

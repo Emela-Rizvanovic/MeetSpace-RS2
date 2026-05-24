@@ -47,8 +47,8 @@ namespace MeetSpace.Services.Services
                 ct);
 
             var tokenJson = await tokenResponse.Content.ReadAsStringAsync(ct);
-            dynamic tokenData = JsonConvert.DeserializeObject(tokenJson);
-            string accessToken = tokenData.access_token;
+            var tokenData = JObject.Parse(tokenJson);
+            string accessToken = tokenData["access_token"]?.ToString();
 
             client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", accessToken);
@@ -123,8 +123,8 @@ namespace MeetSpace.Services.Services
                 ct);
 
             var tokenJson = await tokenResponse.Content.ReadAsStringAsync(ct);
-            dynamic tokenData = JsonConvert.DeserializeObject(tokenJson);
-            string accessToken = tokenData.access_token;
+            var tokenData = JObject.Parse(tokenJson);
+            string accessToken = tokenData["access_token"]?.ToString();
 
             client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", accessToken);
@@ -135,7 +135,7 @@ namespace MeetSpace.Services.Services
                 ct);
 
             var captureJson = await captureResponse.Content.ReadAsStringAsync(ct);
-            dynamic captureData = JsonConvert.DeserializeObject(captureJson);
+            var captureData = JObject.Parse(captureJson);
 
             var captureStatus = captureData["purchase_units"]?[0]?["payments"]?["captures"]?[0]?["status"]?.ToString();
 
