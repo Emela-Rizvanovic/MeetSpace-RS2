@@ -17,6 +17,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Storage;
+using MeetSpace.Models.Exceptions;
 
 namespace MeetSpace.Services.Services
 {
@@ -85,7 +86,7 @@ namespace MeetSpace.Services.Services
             entity.CreatedAt = DateTime.UtcNow;
 
             if (request.EndTime <= request.StartTime)
-                throw new Exception("EndTime must be greater than StartTime.");
+                throw new BusinessException("EndTime must be greater than StartTime.");
 
             var hasConflict = await _context.Bookings
     .AnyAsync(b =>
@@ -96,20 +97,20 @@ namespace MeetSpace.Services.Services
     );
 
             if (hasConflict)
-                throw new Exception("Time slot already booked.");
+                throw new BusinessException("Time slot already booked.");
 
             // 1️⃣ Space
             var space = await _context.Spaces
                 .FirstOrDefaultAsync(s => s.Id == request.SpaceId, cancellationToken);
 
             if (space == null)
-                throw new Exception("Space not found.");
+                throw new NotFoundException("Space not found.");
 
             // 2️⃣ Duration
             var hours = (decimal)(request.EndTime - request.StartTime).TotalHours;
 
             if (hours <= 0)
-                throw new Exception("Invalid booking duration.");
+                throw new BusinessException("Invalid booking duration.");
 
             var basePrice = Math.Round(hours * space.PricePerHour, 2);
 
@@ -124,7 +125,7 @@ namespace MeetSpace.Services.Services
                         .FirstOrDefaultAsync(a => a.Id == item.AmenityId, cancellationToken);
 
                     if (amenity == null)
-                        throw new Exception($"Amenity {item.AmenityId} not found.");
+                        throw new NotFoundException($"Amenity {item.AmenityId} not found.");
 
                     var quantity = item.Quantity <= 0 ? 1 : item.Quantity;
 
@@ -154,22 +155,21 @@ namespace MeetSpace.Services.Services
         {
             entity.UpdatedAt = DateTime.UtcNow;
 
-            // Ako mijenjaš vrijeme / space, recalculiraj
             var start = request.StartTime ?? entity.StartTime;
             var end = request.EndTime ?? entity.EndTime;
 
             if (end <= start)
-                throw new Exception("EndTime must be greater than StartTime.");
+                throw new BusinessException("EndTime must be greater than StartTime.");
 
             var spaceId = request.SpaceId ?? entity.SpaceId;
 
             var space = await _context.Spaces.FirstOrDefaultAsync(s => s.Id == spaceId, cancellationToken);
             if (space == null)
-                throw new Exception("Space not found.");
+                throw new NotFoundException("Space not found.");
 
             var hours = (decimal)(end - start).TotalHours;
             if (hours <= 0)
-                throw new Exception("Invalid booking duration.");
+                throw new BusinessException("Invalid booking duration.");
 
             entity.TotalPrice = Math.Round(hours * space.PricePerHour, 2);
 
@@ -306,7 +306,7 @@ namespace MeetSpace.Services.Services
     .FirstOrDefaultAsync(b => b.Id == id, ct);
 
             if (entity == null)
-                throw new Exception("Booking not found");
+                throw new NotFoundException("Booking not found");
 
             entity.BookingStatusId = (int)BookingStatusEnum.Approved; // Approved
 
@@ -341,7 +341,7 @@ namespace MeetSpace.Services.Services
     .FirstOrDefaultAsync(b => b.Id == id, ct);
 
             if (entity == null)
-                throw new Exception("Booking not found");
+                throw new NotFoundException("Booking not found");
 
             entity.BookingStatusId = (int)BookingStatusEnum.Rejected; //Rejected
             entity.RejectionReason = reason;
@@ -449,7 +449,7 @@ namespace MeetSpace.Services.Services
                 .FirstOrDefaultAsync(b => b.Id == bookingId, ct);
 
             if (booking == null)
-                throw new Exception("Booking not found");
+                throw new NotFoundException("Booking not found");
 
             var message = new BookingReminderMessage
             {

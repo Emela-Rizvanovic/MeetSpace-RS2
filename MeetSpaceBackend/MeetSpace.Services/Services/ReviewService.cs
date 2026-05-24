@@ -7,6 +7,7 @@ using MeetSpace.Services.BaseServices;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using MeetSpace.Models.Exceptions;
 
 namespace MeetSpace.Services.Services
 {
@@ -71,14 +72,14 @@ namespace MeetSpace.Services.Services
 
             // 1️⃣ Rating validacija (dodatna zaštita)
             if (request.Rating < 1 || request.Rating > 5)
-                throw new ApplicationException("Rating must be between 1 and 5.");
+                throw new BusinessException("Rating must be between 1 and 5.");
 
             // 2️⃣ Space mora postojati
             var spaceExists = await _context.Spaces
                 .AnyAsync(s => s.Id == request.SpaceId, cancellationToken);
 
             if (!spaceExists)
-                throw new ApplicationException("Space not found.");
+                throw new NotFoundException("Space not found.");
 
             // 3️⃣ User mora imati ZAVRŠEN booking za taj space
             var now = DateTime.UtcNow;
@@ -92,7 +93,7 @@ namespace MeetSpace.Services.Services
 
             if (!hasCompletedBooking)
             {
-                throw new ApplicationException(
+                throw new BusinessException(
                     "You can leave a review only for visited spaces after your booking has finished.");
             }
 
@@ -103,7 +104,7 @@ namespace MeetSpace.Services.Services
                                cancellationToken);
 
             if (exists)
-                throw new ApplicationException("Review already exists.");
+                throw new BusinessException("Review already exists.");
 
             await base.BeforeInsert(entity, request, cancellationToken);
         }
@@ -116,7 +117,7 @@ namespace MeetSpace.Services.Services
             entity.UpdatedAt = DateTime.UtcNow;
 
             if (request.Rating < 1 || request.Rating > 5)
-                throw new ApplicationException("Rating must be between 1 and 5.");
+                throw new BusinessException("Rating must be between 1 and 5.");
 
             await base.BeforeUpdate(entity, request, cancellationToken);
         }

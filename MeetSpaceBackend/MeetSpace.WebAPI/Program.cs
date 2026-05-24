@@ -1,17 +1,19 @@
 using AutoMapper;
+using DotNetEnv;
 using MeetSpace.API.Helpers;
+using MeetSpace.Models.Exceptions;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
 using MeetSpace.Services.Mapping;
 using MeetSpace.Services.Security;
 using MeetSpace.Services.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using DotNetEnv;
 
 internal class Program
 {
@@ -168,14 +170,22 @@ internal class Program
             errorApp.Run(async context =>
             {
                 var exceptionHandlerPathFeature =
-                    context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+                    context.Features.Get<IExceptionHandlerPathFeature>();
 
                 var exception = exceptionHandlerPathFeature?.Error;
 
-                if (exception is ApplicationException)
+                if (exception is BusinessException)
                 {
                     context.Response.StatusCode = StatusCodes.Status400BadRequest;
                     await context.Response.WriteAsync(exception.Message);
+                    return;
+                }
+
+                if (exception is NotFoundException)
+                {
+                    context.Response.StatusCode = StatusCodes.Status404NotFound;
+                    await context.Response.WriteAsync(exception.Message);
+                    return;
                 }
 
                 if (exception is UnauthorizedAccessException)
@@ -184,6 +194,9 @@ internal class Program
                     await context.Response.WriteAsync(exception.Message);
                     return;
                 }
+
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                await context.Response.WriteAsync("An error occurred while processing your request.");
             });
         });
 

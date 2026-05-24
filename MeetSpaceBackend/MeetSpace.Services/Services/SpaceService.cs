@@ -8,6 +8,7 @@ using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using MeetSpace.Models.Exceptions;
 
 namespace MeetSpace.Services.Services
 {
@@ -96,12 +97,10 @@ namespace MeetSpace.Services.Services
                 await _context.SaveChangesAsync(cancellationToken);
             }
 
-            // ✅ 2) Save amenities (NEW)
             if (request.AmenityIds != null && request.AmenityIds.Any())
             {
                 var distinctIds = request.AmenityIds.Distinct().ToList();
 
-                // (optional) validate IDs exist to avoid FK errors
                 var existingAmenityIds = await _context.Amenities
                     .Where(a => distinctIds.Contains(a.Id))
                     .Select(a => a.Id)
@@ -119,7 +118,6 @@ namespace MeetSpace.Services.Services
                 await _context.SaveChangesAsync(cancellationToken);
             }
 
-            // ✅ Reload with all includes so response has Images + Facility + Amenities
             entity = await _context.Spaces
                 .Include(s => s.Images)
                 .Include(s => s.Facility)
@@ -331,7 +329,7 @@ namespace MeetSpace.Services.Services
                 .FirstOrDefaultAsync(s => s.Id == spaceId);
 
             if (space == null)
-                throw new Exception("Space not found.");
+                throw new NotFoundException("Space not found.");
 
             var newImages = new List<SpaceImage>();
 

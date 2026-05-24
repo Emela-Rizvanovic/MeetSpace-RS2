@@ -2,6 +2,7 @@
 using MeetSpace.Services.BaseInterfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MeetSpace.Models.Exceptions;
 
 namespace MeetSpace.WebAPI.BaseControllers
 {
@@ -27,7 +28,7 @@ namespace MeetSpace.WebAPI.BaseControllers
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw new BusinessException(ex.Message);
             }
         }
 

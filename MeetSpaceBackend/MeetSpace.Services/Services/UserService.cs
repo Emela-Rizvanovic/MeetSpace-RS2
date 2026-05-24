@@ -13,6 +13,7 @@ using MeetSpace.Services.Security;
 using MeetSpace.Services.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Threading;
+using MeetSpace.Models.Exceptions;
 
 public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User, UserInsertRequest, UserUpdateRequest>, IUserService
 {
@@ -61,7 +62,7 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
     {
         var existing = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
         if (existing != null)
-            throw new Exception("Email already exists.");
+            throw new BusinessException("Email already exists.");
 
         entity.PasswordHash = _passwordHasher.Hash(request.Password);
         entity.CreatedAt = DateTime.UtcNow;
@@ -183,7 +184,7 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
             return null;
 
         if (!user.IsActive)
-            throw new Exception("Your account has been deactivated.");
+            throw new BusinessException("Your account has been deactivated.");
 
         // Uspješna prijava mapira i vrati korisnika
         return _mapper.Map<UserResponse>(user);
@@ -196,14 +197,14 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
             .FirstOrDefaultAsync(u => u.Username.ToLower() == request.Username.ToLower(), ct);
 
         if (user == null)
-            throw new Exception("User not found");
+            throw new NotFoundException("User not found");
 
         if (!_passwordHasher.Verify(request.Password, user.PasswordHash))
             return null;
 
         // provjera da li je user admin
         if (user.Role?.Name != Roles.Admin)
-            throw new Exception("Access denied. User is not an admin.");
+            throw new UnauthorizedAccessException("Access denied. User is not an admin.");
 
         return _mapper.Map<UserResponse>(user);
     }

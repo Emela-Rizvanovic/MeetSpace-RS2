@@ -1,5 +1,6 @@
 ﻿using MeetSpace.Models.Entities;
 using MeetSpace.Models.Enums;
+using MeetSpace.Models.Exceptions;
 using MeetSpace.Models.Requests;
 using MeetSpace.Models.Responses;
 using MeetSpace.Services.Database;
@@ -67,13 +68,13 @@ namespace MeetSpace.Services.Services
                 .FirstOrDefaultAsync(x => x.Id == request.PaymentIntentId, ct);
 
             if (paymentIntent == null)
-                throw new ApplicationException("Payment intent not found");
+                throw new NotFoundException("Payment intent not found");
 
             var service = new PaymentIntentService();
             var stripeIntent = await service.GetAsync(paymentIntent.StripePaymentIntentId);
 
             if (stripeIntent.Status != "succeeded")
-                throw new ApplicationException("Payment not completed");
+                throw new BusinessException("Payment not completed");
 
             await using var transaction = await _context.Database.BeginTransactionAsync(ct);
 

@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
 using System.Text;
+using MeetSpace.Models.Exceptions;
 
 namespace MeetSpace.Services.Services
 {
@@ -139,7 +140,7 @@ namespace MeetSpace.Services.Services
             var captureStatus = captureData["purchase_units"]?[0]?["payments"]?["captures"]?[0]?["status"]?.ToString();
 
             if (captureStatus != "COMPLETED")
-                throw new ApplicationException("Payment not completed");
+                throw new BusinessException("Payment not completed");
 
             await using var transaction = await _context.Database.BeginTransactionAsync(ct);
 
