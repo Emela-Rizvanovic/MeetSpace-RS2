@@ -49,6 +49,9 @@ internal class Program
         builder.Services.AddScoped<ICityService, CityService>();
         builder.Services.AddScoped<IPaymentMethodService, PaymentMethodService>();
         builder.Services.AddScoped<IPaymentStatusService, PaymentStatusService>();
+        builder.Services.AddScoped<INotificationService, NotificationService>();
+        builder.Services.AddScoped<IPaymentService, PaymentService>();
+        builder.Services.AddScoped<IPayPalService, PayPalService>();
 
 
         // Registracija AutoMappera

@@ -206,5 +206,22 @@ namespace MeetSpace.Services.Services
 
             return mapped;
         }
+
+        public async Task MarkClickedAsync(
+    int userId,
+    int spaceId,
+    CancellationToken ct = default)
+        {
+            var log = await _context.RecommendationLogs
+                .Where(r => r.UserId == userId && r.SpaceId == spaceId)
+                .OrderByDescending(r => r.RecommendedAt)
+                .FirstOrDefaultAsync(ct);
+
+            if (log != null)
+            {
+                log.Clicked = true;
+                await _context.SaveChangesAsync(ct);
+            }
+        }
     }
 }
