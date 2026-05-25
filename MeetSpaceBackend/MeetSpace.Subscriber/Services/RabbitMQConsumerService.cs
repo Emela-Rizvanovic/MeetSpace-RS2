@@ -13,14 +13,16 @@ namespace MeetSpace.Subscriber.Services
         private readonly IModel _channel;
         private readonly IEmailService _emailService;
         private readonly ILogger<RabbitMQConsumerService> _logger;
-
+        private readonly IHttpClientFactory _httpClientFactory;
         public RabbitMQConsumerService(
-            IConfiguration config,
-            IEmailService emailService,
-            ILogger<RabbitMQConsumerService> logger)
+    IConfiguration config,
+    IEmailService emailService,
+    ILogger<RabbitMQConsumerService> logger,
+    IHttpClientFactory httpClientFactory)
         {
             _emailService = emailService;
             _logger = logger;
+            _httpClientFactory = httpClientFactory;
 
             var factory = new ConnectionFactory()
             {
@@ -87,7 +89,7 @@ namespace MeetSpace.Subscriber.Services
                         return;
                     }
 
-                    var client = new HttpClient();
+                    var client = _httpClientFactory.CreateClient();
 
                     var url =
     $"{Environment.GetEnvironmentVariable("API_BASE_URL")}/api/notifications/send";
@@ -122,7 +124,7 @@ namespace MeetSpace.Subscriber.Services
                     if (message == null)
                         return;
 
-                    var client = new HttpClient();
+                    var client = _httpClientFactory.CreateClient();
 
                     var url =
     $"{Environment.GetEnvironmentVariable("API_BASE_URL")}/api/notifications/reminder";

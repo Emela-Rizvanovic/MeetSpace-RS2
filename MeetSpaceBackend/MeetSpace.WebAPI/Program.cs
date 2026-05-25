@@ -146,6 +146,23 @@ internal class Program
         });
 
         builder.Services.AddHttpContextAccessor();
+        builder.Services.AddHttpClient();
+
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("MeetSpaceCors", policy =>
+            {
+                policy.WithOrigins(
+                        "http://localhost:5245",
+                        "https://localhost:7256",
+                        "http://localhost:6269",
+                        "http://10.0.2.2:5245"
+                    )
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            });
+        });
 
         var app = builder.Build();
 
@@ -157,6 +174,8 @@ internal class Program
         }
 
         //app.UseHttpsRedirection();
+
+        app.UseCors("MeetSpaceCors");
 
 
         app.UseAuthentication();

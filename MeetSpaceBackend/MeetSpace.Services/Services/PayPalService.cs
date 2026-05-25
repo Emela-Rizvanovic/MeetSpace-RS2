@@ -9,6 +9,7 @@ using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
 using System.Text;
 using MeetSpace.Models.Exceptions;
+using System.Net.Http;
 
 namespace MeetSpace.Services.Services
 {
@@ -16,20 +17,23 @@ namespace MeetSpace.Services.Services
     {
         private readonly MeetSpaceDbContext _context;
         private readonly IBookingService _bookingService;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         public PayPalService(
-            MeetSpaceDbContext context,
-            IBookingService bookingService)
+       MeetSpaceDbContext context,
+       IBookingService bookingService,
+       IHttpClientFactory httpClientFactory)
         {
             _context = context;
             _bookingService = bookingService;
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task<PayPalOrderResponse> CreateOrderAsync(
             decimal amount,
             CancellationToken ct = default)
         {
-            var client = new HttpClient();
+            var client = _httpClientFactory.CreateClient();
 
             var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(
                 $"{Environment.GetEnvironmentVariable("PAYPAL_CLIENT_ID")}:{Environment.GetEnvironmentVariable("PAYPAL_SECRET")}"
@@ -105,7 +109,7 @@ namespace MeetSpace.Services.Services
             int currentUserId,
             CancellationToken ct = default)
         {
-            var client = new HttpClient();
+            var client = _httpClientFactory.CreateClient();
 
             var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(
                 $"{Environment.GetEnvironmentVariable("PAYPAL_CLIENT_ID")}:{Environment.GetEnvironmentVariable("PAYPAL_SECRET")}"
