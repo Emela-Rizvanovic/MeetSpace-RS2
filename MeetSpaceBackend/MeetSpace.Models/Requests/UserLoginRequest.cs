@@ -14,8 +14,6 @@ namespace MeetSpace.Models.Requests
         public string Username { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Password is required.")]
-        [RegularExpression(@"^(?=.*[A-Z])(?=.*\d).{6,}$",
-        ErrorMessage = "Password must contain 1 uppercase letter and 1 number.")]
         public string Password { get; set; } = string.Empty;
     }
 }

@@ -136,17 +136,19 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return "Enter email";
-                            }
-                            final emailRegex =
-                                RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-                            if (!emailRegex.hasMatch(value.trim())) {
-                              return "Enter a valid email";
-                            }
-                            return null;
-                          },
+                         validator: (value) {
+  if (value == null || value.trim().isEmpty) {
+    return "Email is required.";
+  }
+
+  final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+
+  if (!emailRegex.hasMatch(value.trim())) {
+    return "Email must be in a valid format, e.g. example@mail.com.";
+  }
+
+  return null;
+},
                         ),
                         const SizedBox(height: 24),
                         SizedBox(

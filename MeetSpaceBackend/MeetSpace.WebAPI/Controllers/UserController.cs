@@ -151,6 +151,13 @@ namespace MeetSpace.WebAPI.Controllers
             if (currentRole != Roles.Admin)
             {
                 request.RoleId = null;
+                request.IsActive = null;
+
+                if (!string.IsNullOrWhiteSpace(request.Password) &&
+                    string.IsNullOrWhiteSpace(request.CurrentPassword))
+                {
+                    throw new BusinessException("Current password is required when changing your password.");
+                }
             }
 
             return await base.Update(id, request);

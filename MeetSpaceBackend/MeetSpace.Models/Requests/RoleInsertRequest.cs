@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace MeetSpace.Models.Requests
 {
     public class RoleInsertRequest
     {
-        public string Name { get; set; }
+        [Required(ErrorMessage = "Role name is required.")]
+        [StringLength(50, MinimumLength = 2, ErrorMessage = "Role name must contain 2-50 characters.")]
+        public string Name { get; set; } = string.Empty;
     }
 }

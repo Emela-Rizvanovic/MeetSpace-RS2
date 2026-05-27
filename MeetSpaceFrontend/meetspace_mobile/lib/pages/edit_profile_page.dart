@@ -26,7 +26,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _usernameController;
   late TextEditingController _phoneController;
   late TextEditingController _emailController;
-
+  
+  final TextEditingController _currentPasswordController =
+    TextEditingController();
   final TextEditingController _newPasswordController =
       TextEditingController();
   final TextEditingController _confirmPasswordController =
@@ -60,6 +62,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _usernameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
+    _currentPasswordController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -93,10 +96,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
         username: _usernameController.text.trim(),
         email: _emailController.text.trim(),
         phone: _phoneController.text.trim(),
-        newPassword: _changePassword
-            ? _newPasswordController.text.trim()
-            : null,
-        profileImage: _pickedImage,
+        currentPassword: _changePassword
+    ? _currentPasswordController.text.trim()
+    : null,
+newPassword: _changePassword
+    ? _newPasswordController.text.trim()
+    : null,
+profileImage: _pickedImage,
       );
 
       if (!mounted) return;
@@ -244,10 +250,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         label: "Username",
                         controller:
                             _usernameController,
-                        validator: (v) =>
-                            v == null || v.trim().length < 3
-                                ? "Username must contain at least 3 characters."
-                                : null,
+                        validator: (v) {
+  if (v == null || v.trim().isEmpty) {
+    return "Username is required.";
+  }
+
+  if (v.trim().length < 4 || v.trim().length > 50) {
+    return "Username must contain 4-50 characters.";
+  }
+
+  return null;
+},
                       ),
                       const SizedBox(height: 18),
 
@@ -255,18 +268,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         label: "Phone number",
                         controller:
                             _phoneController,
-                        validator: (v) {
-                          if (v == null ||
-                              v.trim().isEmpty) {
-                            return "Phone number is required.";
-                          }
-                          if (!RegExp(
-                                  r'^[0-9]{6,15}$')
-                              .hasMatch(v.trim())) {
-                            return "Enter a valid phone number (6–15 digits).";
-                          }
-                          return null;
-                        },
+                       validator: (v) {
+  if (v == null || v.trim().isEmpty) {
+    return "Phone number is required.";
+  }
+
+  final regex = RegExp(r'^\+?[0-9 ]{8,15}$');
+
+  if (!regex.hasMatch(v.trim())) {
+    return "Phone number must contain 8-15 digits, optionally starting with +. Example: +387 61 123 456.";
+  }
+
+  return null;
+},
                       ),
                       const SizedBox(height: 18),
 
@@ -282,7 +296,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           if (!RegExp(
                                   r'^[^@]+@[^@]+\.[^@]+')
                               .hasMatch(v.trim())) {
-                            return "Enter a valid email address.";
+                            return "Email must be in a valid format, e.g. example@mail.com.";
                           }
                           return null;
                         },
@@ -313,18 +327,40 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       if (_changePassword) ...[
                         const SizedBox(height: 18),
                         _InputField(
+  label: "Current password",
+  controller: _currentPasswordController,
+  obscure: true,
+  validator: (v) {
+    if (_changePassword && (v == null || v.isEmpty)) {
+      return "Current password is required when changing your password.";
+    }
+
+    if (_changePassword && v!.length < 6) {
+      return "Current password must contain at least 6 characters.";
+    }
+
+    return null;
+  },
+),
+const SizedBox(height: 18),
+                        _InputField(
                           label: "New password",
                           controller:
                               _newPasswordController,
                           obscure: true,
                           validator: (v) {
-                            if (_changePassword &&
-                                (v == null ||
-                                    v.length < 6)) {
-                              return "Password must contain at least 6 characters.";
-                            }
-                            return null;
-                          },
+  if (_changePassword && (v == null || v.isEmpty)) {
+    return "Password is required.";
+  }
+
+  final regex = RegExp(r'^(?=.*[A-Z])(?=.*\d).{6,}$');
+
+  if (_changePassword && !regex.hasMatch(v!)) {
+    return "Password must contain at least 6 characters, one uppercase letter and one number.";
+  }
+
+  return null;
+},
                         ),
                         const SizedBox(height: 18),
                         _InputField(
@@ -431,6 +467,8 @@ class _InputField extends StatelessWidget {
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.white,
+            errorMaxLines: 3,
+errorStyle: const TextStyle(fontSize: 12),
             contentPadding:
                 const EdgeInsets.symmetric(
                     horizontal: 16,

@@ -62,6 +62,7 @@ Future<UserResponse> updateUserAdmin({
   required String phone,
   required bool isActive,
   int? roleId,
+  String? newPassword,
 }) async {
   final fields = {
     "FirstName": firstName,
@@ -75,6 +76,10 @@ Future<UserResponse> updateUserAdmin({
   if (roleId != null) {
     fields["RoleId"] = roleId.toString();
   }
+
+  if (newPassword != null && newPassword.trim().isNotEmpty) {
+  fields["Password"] = newPassword.trim();
+}
 
   final response = await api.multipartPut(
     "User/$userId",

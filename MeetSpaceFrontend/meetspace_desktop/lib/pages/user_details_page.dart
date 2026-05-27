@@ -379,6 +379,8 @@ _isBookingsLoading
     final firstNameCtrl = TextEditingController(text: user.firstName);
     final lastNameCtrl = TextEditingController(text: user.lastName);
     final emailCtrl = TextEditingController(text: user.email);
+    final passwordCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
  
     final result = await showDialog<String>(
       context: context,
@@ -395,6 +397,8 @@ _isBookingsLoading
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
               ),
+              child: Form(
+  key: formKey,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -405,14 +409,78 @@ _isBookingsLoading
  
                   const SizedBox(height: 20),
  
-                  _input(firstNameCtrl, "First name"),
+                  _input(
+  firstNameCtrl,
+  "First name",
+  validator: (value) {
+    if (value == null || value.trim().isEmpty) {
+      return "First name is required.";
+    }
+
+    if (value.trim().length < 2 || value.trim().length > 50) {
+      return "First name must contain 2-50 characters.";
+    }
+
+    return null;
+  },
+),
                   const SizedBox(height: 12),
  
-                  _input(lastNameCtrl, "Last name"),
+                  _input(
+  lastNameCtrl,
+  "Last name",
+  validator: (value) {
+    if (value == null || value.trim().isEmpty) {
+      return "Last name is required.";
+    }
+
+    if (value.trim().length < 2 || value.trim().length > 50) {
+      return "Last name must contain 2-50 characters.";
+    }
+
+    return null;
+  },
+),
                   const SizedBox(height: 12),
  
-                  _input(emailCtrl, "Email"),
+                  _input(
+  emailCtrl,
+  "Email",
+  validator: (value) {
+    if (value == null || value.trim().isEmpty) {
+      return "Email is required.";
+    }
+
+    final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+
+    if (!regex.hasMatch(value.trim())) {
+      return "Email must be in a valid format, e.g. example@mail.com.";
+    }
+
+    return null;
+  },
+),
                   const SizedBox(height: 12),
+
+                  _input(
+  passwordCtrl,
+  "New password (optional)",
+  obscure: true,
+  validator: (value) {
+    if (value == null || value.trim().isEmpty) {
+      return null;
+    }
+
+    final regex = RegExp(r'^(?=.*[A-Z])(?=.*\d).{6,}$');
+
+    if (!regex.hasMatch(value.trim())) {
+      return "Password must contain at least 6 characters, one uppercase letter and one number.";
+    }
+
+    return null;
+  },
+),
+const SizedBox(height: 12),
  
                   DropdownButtonFormField<String>(
                     value: localRole,
@@ -431,6 +499,7 @@ DropdownMenuItem(value: AppRoles.client, child: Text(AppRoles.client)),
                     height: 50,
                     child: ElevatedButton(
                       onPressed: () async {
+                        if (!formKey.currentState!.validate()) return;
                         try {
                           final auth = ctx.read<AuthProvider>();
                           await auth.userService.updateUserAdmin(
@@ -444,6 +513,9 @@ DropdownMenuItem(value: AppRoles.client, child: Text(AppRoles.client)),
                             roleId: localRole == AppRoles.admin
     ? RoleIds.admin
     : RoleIds.client,
+    newPassword: passwordCtrl.text.trim().isEmpty
+    ? null
+    : passwordCtrl.text.trim(),
                           );
                           // API ok → zatvori modal s "updated"
                           Navigator.pop(dialogContext, "updated");
@@ -463,6 +535,7 @@ DropdownMenuItem(value: AppRoles.client, child: Text(AppRoles.client)),
                 ],
               ),
             ),
+          ),
           ),
         );
       },
@@ -696,12 +769,19 @@ if (mounted) {
     }
   }
  
-  Widget _input(TextEditingController controller, String hint) {
-    return TextField(
-      controller: controller,
-      decoration: _inputDecoration(hint),
-    );
-  }
+Widget _input(
+  TextEditingController controller,
+  String hint, {
+  String? Function(String?)? validator,
+  bool obscure = false,
+}) {
+  return TextFormField(
+    controller: controller,
+    validator: validator,
+    obscureText: obscure,
+    decoration: _inputDecoration(hint),
+  );
+}
  
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(

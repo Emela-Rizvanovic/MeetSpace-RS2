@@ -230,6 +230,7 @@ Future<void> updateProfile({
   required String username,
   required String email,
   required String phone,
+  String? currentPassword,
   String? newPassword,
   XFile? profileImage,
 }) async {
@@ -242,6 +243,7 @@ Future<void> updateProfile({
     username: username,
     email: email,
     phone: phone,
+    currentPassword: currentPassword,
     newPassword: newPassword,
     profileImage: profileImage,
   );

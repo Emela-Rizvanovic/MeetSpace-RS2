@@ -59,13 +59,6 @@ class _AddAmenityDialogState extends State<AddAmenityDialog> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_categoryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Select category")),
-      );
-      return;
-    }
-
     setState(() => _loading = true);
 
     try {
@@ -151,7 +144,7 @@ class _AddAmenityDialogState extends State<AddAmenityDialog> {
                     )
                     .toList(),
                 onChanged: (v) => setState(() => _categoryId = v),
-                validator: (v) => v == null ? "Required" : null,
+                validator: (v) => v == null ? "Category is required. Select one category from the list." : null,
                 decoration: InputDecoration(
                   hintText: "Category",
                   filled: true,
@@ -195,17 +188,35 @@ class _AddAmenityDialogState extends State<AddAmenityDialog> {
       controller: controller,
       keyboardType:
           isNumber ? TextInputType.number : TextInputType.text,
-      validator: (v) {
-        if (v == null || v.trim().isEmpty) {
-          return "Required";
-        }
+   validator: (v) {
+  if (v == null || v.trim().isEmpty) {
+    return "$hint is required.";
+  }
 
-        if (isNumber && double.tryParse(v) == null) {
-          return "Enter valid number";
-        }
+  final value = v.trim();
 
-        return null;
-      },
+  if (isNumber) {
+    final number = double.tryParse(value);
+
+    if (number == null) {
+      return "$hint must be a valid number, e.g. 10.50.";
+    }
+
+    if (number < 0) {
+      return "$hint must be greater than or equal to 0.";
+    }
+  } else {
+    if (hint.toLowerCase().contains("name") && value.length < 2) {
+      return "Name must contain at least 2 characters.";
+    }
+
+    if (hint.toLowerCase().contains("description") && value.length > 500) {
+      return "Description can contain up to 500 characters.";
+    }
+  }
+
+  return null;
+},
       decoration: InputDecoration(
         hintText: hint,
         filled: true,

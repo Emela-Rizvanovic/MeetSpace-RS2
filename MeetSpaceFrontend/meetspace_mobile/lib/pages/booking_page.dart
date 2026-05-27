@@ -26,6 +26,8 @@ class _BookingPageState extends State<BookingPage> {
   int? _startHour;
   int? _endHour;
 
+  String? _timeError;
+
   Set<int> _bookedHours = {};
 
   List<AmenityResponse> _amenities = [];
@@ -97,27 +99,33 @@ class _BookingPageState extends State<BookingPage> {
       _baseTotal + _amenitiesTotal;
 
   Future<void> _book() async {
-    if (_startHour == null || _endHour == null) return;
+   if (_startHour == null || _endHour == null) {
+  setState(() {
+    _timeError = "Select both start time and end time.";
+  });
+  return;
+}
 
-    if (_endHour! <= _startHour!) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Invalid time range")),
-      );
-      return;
-    }
+if (_endHour! <= _startHour!) {
+  setState(() {
+    _timeError = "End time must be after start time.";
+  });
+  return;
+}
 
     // CHECK PREKLAPANJA
     for (int h = _startHour!; h < _endHour!; h++) {
-      if (_bookedHours.contains(h)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-                "Selected time overlaps with existing booking"),
-          ),
-        );
-        return;
-      }
+   if (_bookedHours.contains(h)) {
+  setState(() {
+    _timeError = "Selected time overlaps with an existing booking.";
+  });
+  return;
+}
     }
+
+    setState(() {
+  _timeError = null;
+});
 
     final start = DateTime(
       widget.selectedDate.year,
@@ -235,6 +243,19 @@ const SizedBox(height: 18),
                     const SizedBox(height: 10),
 
                     _buildHourSelector(isStart: false),
+
+                    if (_timeError != null) ...[
+  const SizedBox(height: 8),
+  Text(
+    _timeError!,
+    style: const TextStyle(
+      color: Colors.red,
+      fontSize: 13,
+      fontFamily: "Poppins",
+      fontWeight: FontWeight.w500,
+    ),
+  ),
+],
 
                     const SizedBox(height: 28),
 
@@ -374,6 +395,7 @@ final isPastHour =
               ? null
               : () {
                   setState(() {
+                    _timeError = null;
                     if (isStart) {
                       _startHour = hour;
                       if (_endHour != null &&

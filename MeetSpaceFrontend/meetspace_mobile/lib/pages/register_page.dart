@@ -102,6 +102,8 @@ Future.delayed(const Duration(seconds: 2), () {
         borderRadius: BorderRadius.circular(12),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      errorMaxLines: 3,
+errorStyle: const TextStyle(fontSize: 12),
     );
   }
 
@@ -170,7 +172,17 @@ Future.delayed(const Duration(seconds: 2), () {
                           controller: _firstNameController,
                           style: const TextStyle(color: Colors.white),
                           decoration: _darkField("First Name"),
-                          validator: (v) => v!.isEmpty ? "Enter first name" : null,
+                          validator: (v) {
+  if (v == null || v.trim().isEmpty) {
+    return "First name is required.";
+  }
+
+  if (v.trim().length < 2 || v.trim().length > 50) {
+    return "First name must contain 2-50 characters.";
+  }
+
+  return null;
+},
                         ),
                         const SizedBox(height: 16),
 
@@ -178,7 +190,17 @@ Future.delayed(const Duration(seconds: 2), () {
                           controller: _lastNameController,
                           style: const TextStyle(color: Colors.white),
                           decoration: _darkField("Last Name"),
-                          validator: (v) => v!.isEmpty ? "Enter last name" : null,
+                          validator: (v) {
+  if (v == null || v.trim().isEmpty) {
+    return "Last name is required.";
+  }
+
+  if (v.trim().length < 2 || v.trim().length > 50) {
+    return "Last name must contain 2-50 characters.";
+  }
+
+  return null;
+},
                         ),
                         const SizedBox(height: 16),
 
@@ -187,9 +209,9 @@ Future.delayed(const Duration(seconds: 2), () {
                           style: const TextStyle(color: Colors.white),
                           decoration: _darkField("Email"),
                           validator: (v) {
-                         if (v == null || v.isEmpty) return "Email is required";
+                         if (v == null || v.trim().isEmpty) return "Email is required.";
                           final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-                           if (!emailRegex.hasMatch(v)) return "Email must be in a valid format, e.g. example@mail.com";
+                           if (!emailRegex.hasMatch(v)) return "Email must be in a valid format, e.g. example@mail.com.";
                            return null;
                         },
                         ),
@@ -199,7 +221,17 @@ Future.delayed(const Duration(seconds: 2), () {
                           controller: _usernameController,
                           style: const TextStyle(color: Colors.white),
                           decoration: _darkField("Username"),
-                          validator: (v) => v!.isEmpty ? "Enter username" : null,
+                          validator: (v) {
+  if (v == null || v.trim().isEmpty) {
+    return "Username is required.";
+  }
+
+  if (v.trim().length < 4 || v.trim().length > 50) {
+    return "Username must contain 4-50 characters.";
+  }
+
+  return null;
+},
                         ),
                         const SizedBox(height: 16),
 
@@ -209,10 +241,10 @@ Future.delayed(const Duration(seconds: 2), () {
                           style: const TextStyle(color: Colors.white),
                           decoration: _darkField("Password"),
                           validator: (v) {
-  if (v == null || v.isEmpty) return "Enter password";
+if (v == null || v.isEmpty) return "Password is required.";
   final pwRegex = RegExp(r'^(?=.*[A-Z])(?=.*\d).{6,}$');
   if (!pwRegex.hasMatch(v)) {
-    return "Password must have at least 6 chars, 1 uppercase and 1 number";
+    return "Password must contain at least 6 characters, one uppercase letter and one number.";
   }
   return null;
 },
@@ -225,9 +257,9 @@ Future.delayed(const Duration(seconds: 2), () {
                           style: const TextStyle(color: Colors.white),
                           decoration: _darkField("Phone Number"),
                           validator: (v) {
-  if (v == null || v.isEmpty) return "Enter phone number";
+  if (v == null || v.trim().isEmpty) return "Phone number is required.";
   final phoneRegex = RegExp(r'^\+?[0-9 ]{8,15}$');
-  if (!phoneRegex.hasMatch(v)) return "Phone must contain only digits, min 8 max 15";
+  if (!phoneRegex.hasMatch(v)) return "Phone number must contain 8-15 digits, optionally starting with +. Example: +387 61 123 456.";
   return null;
 },
                         ),

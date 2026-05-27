@@ -132,7 +132,15 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
             entity.IsActive = request.IsActive.Value;
 
         if (!string.IsNullOrWhiteSpace(request.Password))
+        {
+            if (!string.IsNullOrWhiteSpace(request.CurrentPassword) &&
+                !_passwordHasher.Verify(request.CurrentPassword, entity.PasswordHash))
+            {
+                throw new BusinessException("Current password is incorrect.");
+            }
+
             entity.PasswordHash = _passwordHasher.Hash(request.Password);
+        }
 
         // Upload nove slike samo ako je zaista poslana (file != null && ima sadržaj)
         if (request.ProfileImageUrl != null && request.ProfileImageUrl.Length > 0)

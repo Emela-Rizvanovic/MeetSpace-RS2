@@ -126,8 +126,12 @@ class _LoginPageState extends State<LoginPage>
                             ),
                           ),
                           validator: (value) {
-                            if (value == null || value.isEmpty) return "Enter username";
-                            if (value.length < 4) return "Min 4 characters";
+                            if (value == null || value.trim().isEmpty) {
+  return "Username is required.";
+}
+                            if (value.trim().length < 4) {
+  return "Username must contain at least 4 characters.";
+}
                             return null;
                           },
                         ),
@@ -154,10 +158,13 @@ class _LoginPageState extends State<LoginPage>
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) return "Enter password";
-                            return null;
-                          },
+                        validator: (value) {
+  if (value == null || value.isEmpty) {
+    return "Password is required.";
+  }
+
+  return null;
+},
                         ),
 
                         const SizedBox(height: 30),

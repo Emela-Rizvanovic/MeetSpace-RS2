@@ -11,6 +11,7 @@ namespace MeetSpace.Models.Requests
 {
     public class UserInsertRequest
     {
+        [Range(1, int.MaxValue, ErrorMessage = "Role is required. Select a valid role.")]
         public int RoleId { get; set; }
 
         [Required(ErrorMessage = "First name is required.")]
@@ -39,7 +40,7 @@ namespace MeetSpace.Models.Requests
 
         [Phone(ErrorMessage = "Enter valid phone number.")]
         [RegularExpression(@"^\+?[0-9 ]{8,15}$",
-        ErrorMessage = "Phone must contain only digits, min 8 - max 15.")]
+        ErrorMessage = "Phone number must contain 8-15 digits, optionally starting with +. Example: +387 61 123 456.")]
         public string? PhoneNumber { get; set; }
         public IFormFile? ProfileImageUrl { get; set; }
 

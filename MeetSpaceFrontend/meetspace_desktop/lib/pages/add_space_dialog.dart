@@ -94,13 +94,6 @@ final api = auth.api;
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_facilityId == null || _spaceTypeId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Select facility & type")),
-      );
-      return;
-    }
-
     setState(() => _loading = true);
 
     try {
@@ -197,7 +190,7 @@ final spaceService = auth.spaceService;
                Row(
   children: [
     Expanded(
-      child: _input(_capacityController, "People", isNumber: true),
+      child: _input(_capacityController, "Capacity", isNumber: true),
     ),
     const SizedBox(width: 12),
     Expanded(
@@ -401,32 +394,39 @@ Widget _input(
   return TextFormField(
     controller: controller,
     keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-    validator: (v) {
-      if (v == null || v.trim().isEmpty) {
-        return "Required";
-      }
+  validator: (v) {
+  if (v == null || v.trim().isEmpty) {
+    return "$hint is required.";
+  }
 
-      final value = v.trim();
+  final value = v.trim();
 
-      if (!isNumber) {
-        if (minLength != null && value.length < minLength) {
-          return "Minimum $minLength characters";
-        }
-        if (maxLength != null && value.length > maxLength) {
-          return "Maximum $maxLength characters";
-        }
-      } else {
-        final number = double.tryParse(value);
-        if (number == null) {
-          return "Enter valid number";
-        }
-        if (number <= 0) {
-          return "Must be greater than 0";
-        }
-      }
+  if (!isNumber) {
+    if (minLength != null && value.length < minLength) {
+      return "$hint must contain at least $minLength characters.";
+    }
 
-      return null;
-    },
+    if (maxLength != null && value.length > maxLength) {
+      return "$hint can contain up to $maxLength characters.";
+    }
+  } else {
+    final number = double.tryParse(value);
+
+    if (number == null) {
+      return "$hint must be a valid number, e.g. 25.50.";
+    }
+
+    if (number <= 0) {
+      return "$hint must be greater than 0.";
+    }
+
+    if (hint.toLowerCase().contains("capacity") && number % 1 != 0) {
+      return "Capacity must be a whole number greater than 0, e.g. 10.";
+    }
+  }
+
+  return null;
+},
     decoration: InputDecoration(
       hintText: hint,
       filled: true,
@@ -456,7 +456,7 @@ Widget _input(
           )
           .toList(),
       onChanged: onChanged,
-      validator: (v) => v == null ? "Required" : null,
+      validator: (v) => v == null ? "$hint is required. Select a value from the list." : null,
       decoration: InputDecoration(
         hintText: hint,
         filled: true,

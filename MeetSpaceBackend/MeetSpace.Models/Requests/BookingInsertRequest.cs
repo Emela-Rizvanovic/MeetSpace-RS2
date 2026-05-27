@@ -1,35 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace MeetSpace.Models.Requests
 {
     public class BookingInsertRequest
     {
-        [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "Space is required. Select a valid space.")]
         public int SpaceId { get; set; }
 
-        [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "User is required. Select a valid user.")]
         public int UserId { get; set; }
 
-        [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "Booking status is required. Select a valid booking status.")]
         public int BookingStatusId { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Start time is required.")]
         public DateTime StartTime { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "End time is required.")]
         public DateTime EndTime { get; set; }
 
         public List<BookingAmenityInsertRequest>? Amenities { get; set; }
-
-        // Servis će ovo izračunati (Space.PricePerHour * trajanje)
-        //public decimal TotalPrice { get; set; }
     }
 }
-

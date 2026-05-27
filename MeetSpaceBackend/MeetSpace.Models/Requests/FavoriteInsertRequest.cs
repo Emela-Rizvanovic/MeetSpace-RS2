@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace MeetSpace.Models.Requests
 {
     public class FavoriteInsertRequest
     {
+        [Range(1, int.MaxValue, ErrorMessage = "User is required. Select a valid user.")]
         public int UserId { get; set; }
+
+        [Range(1, int.MaxValue, ErrorMessage = "Space is required. Select a valid space.")]
         public int SpaceId { get; set; }
     }
 }

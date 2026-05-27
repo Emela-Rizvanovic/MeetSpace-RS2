@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace MeetSpace.Models.Requests
 {
     public class SpaceTypeUpdateRequest
     {
-        public string? Name {  get; set; }
+        [StringLength(100, MinimumLength = 2, ErrorMessage = "Space type name must contain 2-100 characters.")]
+        public string? Name { get; set; }
     }
 }

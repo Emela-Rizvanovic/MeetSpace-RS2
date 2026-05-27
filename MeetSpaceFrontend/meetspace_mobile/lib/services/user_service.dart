@@ -62,6 +62,7 @@ class UserService {
     required String username,
     required String email,
     required String phone,
+    String? currentPassword,
     String? newPassword,
     XFile? profileImage,
   }) async {
@@ -75,6 +76,10 @@ class UserService {
     request.fields['Username'] = username;
     request.fields['Email'] = email;
     request.fields['PhoneNumber'] = phone;
+
+    if (currentPassword != null && currentPassword.trim().isNotEmpty) {
+  request.fields['CurrentPassword'] = currentPassword.trim();
+}
 
     if (newPassword != null && newPassword.trim().isNotEmpty) {
       request.fields['Password'] = newPassword.trim();

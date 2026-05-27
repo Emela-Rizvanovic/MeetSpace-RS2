@@ -142,32 +142,36 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                           style: const TextStyle(color: Colors.white),
                           keyboardType: TextInputType.emailAddress,
                           decoration: _input("Email"),
-                          validator: (v) {
-                            if (v == null || v.trim().isEmpty) {
-                              return "Enter email";
-                            }
-                            final emailRegex =
-                                RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-                            if (!emailRegex.hasMatch(v.trim())) {
-                              return "Enter a valid email";
-                            }
-                            return null;
-                          },
+                         validator: (v) {
+  if (v == null || v.trim().isEmpty) {
+    return "Email is required.";
+  }
+
+  final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+
+  if (!emailRegex.hasMatch(v.trim())) {
+    return "Email must be in a valid format, e.g. example@mail.com.";
+  }
+
+  return null;
+},
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _codeController,
                           style: const TextStyle(color: Colors.white),
                           decoration: _input("Reset code"),
-                          validator: (v) {
-                            if (v == null || v.trim().isEmpty) {
-                              return "Enter reset code";
-                            }
-                            if (v.trim().length > 10) {
-                              return "Max 10 characters";
-                            }
-                            return null;
-                          },
+                        validator: (v) {
+  if (v == null || v.trim().isEmpty) {
+    return "Reset code is required.";
+  }
+
+  if (v.trim().length < 4 || v.trim().length > 10) {
+    return "Reset code must contain 4-10 characters.";
+  }
+
+  return null;
+},
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
@@ -175,15 +179,19 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                           obscureText: true,
                           style: const TextStyle(color: Colors.white),
                           decoration: _input("New password"),
-                          validator: (v) {
-                            if (v == null || v.isEmpty) {
-                              return "Enter new password";
-                            }
-                            if (v.length < 6) {
-                              return "Minimum 6 characters";
-                            }
-                            return null;
-                          },
+                         validator: (v) {
+  if (v == null || v.isEmpty) {
+    return "New password is required.";
+  }
+
+  final regex = RegExp(r'^(?=.*[A-Z])(?=.*\d).{6,}$');
+
+  if (!regex.hasMatch(v)) {
+    return "New password must contain at least 6 characters, one uppercase letter and one number.";
+  }
+
+  return null;
+},
                         ),
                         const SizedBox(height: 24),
                         SizedBox(
