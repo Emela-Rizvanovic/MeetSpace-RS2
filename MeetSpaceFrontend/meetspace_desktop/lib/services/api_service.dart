@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:io';
 import '../main.dart';
+import 'package:http_parser/http_parser.dart';
 
 class ApiService {
   final String baseUrl;
@@ -117,10 +118,11 @@ if (listFields != null) {
   /// files
   for (var file in files) {
     request.files.add(
-      await http.MultipartFile.fromPath(
-        fileFieldName,
-        file.path,
-      ),
+     await http.MultipartFile.fromPath(
+  fileFieldName,
+  file.path,
+  contentType: _imageContentType(file.path),
+),
     );
   }
 
@@ -167,7 +169,11 @@ Future<http.Response> multipartPut(
   if (files != null) {
     for (var file in files) {
       request.files.add(
-        await http.MultipartFile.fromPath(fileFieldName, file.path),
+        await http.MultipartFile.fromPath(
+  fileFieldName,
+  file.path,
+  contentType: _imageContentType(file.path),
+),
       );
     }
   }
@@ -180,6 +186,20 @@ final response =
 _handleUnauthorized(response);
 
 return response;
+}
+
+MediaType _imageContentType(String path) {
+  final lower = path.toLowerCase();
+
+  if (lower.endsWith('.png')) {
+    return MediaType('image', 'png');
+  }
+
+  if (lower.endsWith('.webp')) {
+    return MediaType('image', 'webp');
+  }
+
+  return MediaType('image', 'jpeg');
 }
 
 }

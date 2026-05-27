@@ -4,6 +4,7 @@ import 'my_profile_page.dart';
 import 'login_page.dart';
 import 'package:provider/provider.dart';
 import '../providers/notification_provider.dart';
+import '../providers/auth_provider.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -190,14 +191,19 @@ class _SettingsPageState extends State<SettingsPage> {
                                 color: Colors.white,
                               ),
                             ),
-                            onTap: () {
-                              Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => const LoginPage()),
-                                (route) => false,
-                              );
-                            },
+                           onTap: () async {
+  await context.read<AuthProvider>().logout();
+
+  if (!context.mounted) return;
+
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const LoginPage(),
+    ),
+    (route) => false,
+  );
+},
                           ),
                         ],
                       ),

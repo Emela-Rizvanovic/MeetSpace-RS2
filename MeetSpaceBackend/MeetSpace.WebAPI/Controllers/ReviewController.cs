@@ -113,8 +113,7 @@ namespace MeetSpace.WebAPI.Controllers
             return await base.Get(search);
         }
 
-        // 🔹 Dodatni endpoint – Reviews za određeni prostor
-        [AllowAnonymous]
+        
         [HttpGet("space/{spaceId}")]
         public async Task<ActionResult<List<ReviewResponse>>> GetBySpace(int spaceId, CancellationToken ct)
         {
@@ -128,7 +127,6 @@ namespace MeetSpace.WebAPI.Controllers
             return Ok(result.Items);
         }
 
-        [AllowAnonymous]
         [HttpGet("space/{spaceId}/summary")]
         public async Task<ActionResult<ReviewSummaryResponse>> GetSummary(int spaceId)
         {

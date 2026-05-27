@@ -233,6 +233,29 @@ namespace MeetSpace.WebAPI.Controllers
             return Ok(user);
         }
 
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout(CancellationToken ct)
+        {
+            var jti = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Jti)?.Value;
+            var exp = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Exp)?.Value;
+
+            if (string.IsNullOrWhiteSpace(jti) || string.IsNullOrWhiteSpace(exp))
+                return Unauthorized();
+
+            var alreadyRevoked = await _userService.IsTokenRevokedAsync(jti, ct);
+
+            if (!alreadyRevoked)
+            {
+                var expiresAt = DateTimeOffset
+                    .FromUnixTimeSeconds(long.Parse(exp))
+                    .UtcDateTime;
+
+                await _userService.RevokeTokenAsync(jti, expiresAt, ct);
+            }
+
+            return Ok();
+        }
+
     }
 
 }

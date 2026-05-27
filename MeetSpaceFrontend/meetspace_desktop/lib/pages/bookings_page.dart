@@ -725,13 +725,45 @@ Future<void> _openDetails(BuildContext context) async {
   return;
 }
 
-  await context
-      .read<AuthProvider>()
-      .bookingService
-      .approve(booking.id);
+ await context
+    .read<AuthProvider>()
+    .bookingService
+    .approve(booking.id);
 
-  Navigator.pop(context);
-  widget.onRefresh();
+Navigator.pop(context);
+widget.onRefresh();
+
+if (!context.mounted) return;
+
+ScaffoldMessenger.of(context).showSnackBar(
+  SnackBar(
+    behavior: SnackBarBehavior.floating,
+    margin: const EdgeInsets.only(
+      bottom: 40,
+      left: 20,
+      right: 20,
+    ),
+    backgroundColor: const Color(0xFF4CAF50),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    ),
+    content: Row(
+      children: const [
+        Icon(Icons.check_circle, color: Colors.white),
+        SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            "Booking approved successfully",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+);
 },
                       ),
                     ),
@@ -804,12 +836,44 @@ Future<void> _openDetails(BuildContext context) async {
                           if (result == null) return;
 
                           await context
-                              .read<AuthProvider>()
-                              .bookingService
-                              .rejectWithReason(booking.id, result);
+    .read<AuthProvider>()
+    .bookingService
+    .rejectWithReason(booking.id, result);
 
-                          Navigator.pop(context);
-                          widget.onRefresh();
+Navigator.pop(context);
+widget.onRefresh();
+
+if (!context.mounted) return;
+
+ScaffoldMessenger.of(context).showSnackBar(
+  SnackBar(
+    behavior: SnackBarBehavior.floating,
+    margin: const EdgeInsets.only(
+      bottom: 40,
+      left: 20,
+      right: 20,
+    ),
+    backgroundColor: const Color(0xFFE53935),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    ),
+    content: Row(
+      children: const [
+        Icon(Icons.cancel, color: Colors.white),
+        SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            "Booking rejected successfully",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+);
                         },
                       ),
                     ),

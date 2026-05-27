@@ -5,6 +5,9 @@ import 'amenities_page.dart';
 import 'revenue_page.dart';
 import 'users_page.dart';
 import 'reviews_page.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
+import 'login_page.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -19,14 +22,42 @@ class DashboardPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /// LOGO
-            const Text(
-              "MEETSPACE",
-              style: TextStyle(
-                color: Colors.white70,
-                letterSpacing: 4,
-                fontSize: 18,
-              ),
-            ),
+           Row(
+  children: [
+    const Text(
+      "MEETSPACE",
+      style: TextStyle(
+        color: Colors.white70,
+        letterSpacing: 4,
+        fontSize: 18,
+      ),
+    ),
+    const Spacer(),
+    TextButton.icon(
+      onPressed: () async {
+        await context.read<AuthProvider>().logout();
+
+        if (!context.mounted) return;
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const LoginPage(),
+          ),
+          (route) => false,
+        );
+      },
+      icon: const Icon(
+        Icons.logout,
+        color: Colors.redAccent,
+      ),
+      label: const Text(
+        "Logout",
+        style: TextStyle(color: Colors.white),
+      ),
+    ),
+  ],
+),
 
             const SizedBox(height: 40),
 

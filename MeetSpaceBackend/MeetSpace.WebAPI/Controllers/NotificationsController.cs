@@ -4,6 +4,8 @@ using MeetSpace.Models.Responses;
 using MeetSpace.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 [ApiController]
 [Route("api/notifications")]
@@ -66,23 +68,36 @@ public class NotificationsController : ControllerBase
         return Ok();
     }
 
+    [Authorize]
     [HttpGet]
     public async Task<ActionResult<List<NotificationResponse>>> GetNotifications(
-        [FromQuery] int userId,
-        CancellationToken ct)
+     CancellationToken ct)
     {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+        if (userIdClaim == null)
+            return Unauthorized();
+
+        int currentUserId = int.Parse(userIdClaim.Value);
+
         var notifications =
-            await _notificationService.GetByUserAsync(userId, ct);
+            await _notificationService.GetByUserAsync(currentUserId, ct);
 
         return Ok(notifications);
     }
 
+    [Authorize]
     [HttpPut("mark-all-read")]
-    public async Task<IActionResult> MarkAllRead(
-      [FromQuery] int userId,
-      CancellationToken ct)
+    public async Task<IActionResult> MarkAllRead(CancellationToken ct)
     {
-        await _notificationService.MarkAllAsReadAsync(userId, ct);
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+        if (userIdClaim == null)
+            return Unauthorized();
+
+        int currentUserId = int.Parse(userIdClaim.Value);
+
+        await _notificationService.MarkAllAsReadAsync(currentUserId, ct);
 
         return Ok();
     }

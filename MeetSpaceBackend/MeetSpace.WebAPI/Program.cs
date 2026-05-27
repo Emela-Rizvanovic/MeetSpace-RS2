@@ -15,6 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json;
+using System.IdentityModel.Tokens.Jwt;
 
 internal class Program
 {
@@ -100,6 +101,33 @@ internal class Program
                 ValidAudience = jwtAudience,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
                 ClockSkew = TimeSpan.Zero
+            };
+
+            options.Events = new JwtBearerEvents
+            {
+                OnTokenValidated = async context =>
+                {
+                    var jti = context.Principal?
+                        .FindFirst(JwtRegisteredClaimNames.Jti)?
+                        .Value;
+
+                    if (string.IsNullOrWhiteSpace(jti))
+                    {
+                        context.Fail("Token is missing jti.");
+                        return;
+                    }
+
+                    var db = context.HttpContext.RequestServices
+                        .GetRequiredService<MeetSpaceDbContext>();
+
+                    var isRevoked = await db.RevokedTokens
+                        .AnyAsync(x => x.Jti == jti && x.ExpiresAt > DateTime.UtcNow);
+
+                    if (isRevoked)
+                    {
+                        context.Fail("Token has been revoked.");
+                    }
+                }
             };
         });
 

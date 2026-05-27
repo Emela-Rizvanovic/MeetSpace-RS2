@@ -19,6 +19,8 @@ namespace MeetSpace.Services.Interfaces
         Task<ForgotPasswordResponse> RequestPasswordResetAsync(ForgotPasswordRequest request, CancellationToken ct = default);
         Task<ForgotPasswordResponse> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken ct = default);
         Task<User?> GetEntityByUsername(string username, CancellationToken ct);
+        Task<bool> IsTokenRevokedAsync(string jti, CancellationToken ct = default);
+        Task RevokeTokenAsync(string jti, DateTime expiresAt, CancellationToken ct = default);
 
     }
 }

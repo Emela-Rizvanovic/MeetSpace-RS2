@@ -117,7 +117,20 @@ await _secureStorage.write(
 }
   }
 
-  Future<void> logout() async {
+Future<void> logout() async {
+  final tokenToRevoke = _token;
+
+  if (tokenToRevoke != null) {
+    try {
+      await ApiService(
+        baseUrl: baseUrl,
+        token: tokenToRevoke,
+      ).post("User/logout", {});
+    } catch (_) {
+      // Local logout should still continue.
+    }
+  }
+
   _token = null;
   user = null;
 

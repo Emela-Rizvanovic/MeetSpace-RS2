@@ -21,14 +21,12 @@ namespace MeetSpace.WebAPI.Controllers
             _spaceService = service;
         }
 
-        [AllowAnonymous]
         [HttpGet]
         public override Task<PagedResult<SpaceResponse>> Get([FromQuery] SpaceSearchObject search)
         {
             return base.Get(search);
         }
 
-        [AllowAnonymous]
         [HttpGet("{id}")]
         public override Task<SpaceResponse?> GetById(int id)
         {
@@ -59,5 +57,12 @@ namespace MeetSpace.WebAPI.Controllers
             return Ok(result);
         }
 
-}
+        [Authorize(Roles = Roles.Admin)]
+        [HttpDelete("{id}")]
+        public override Task<bool> Delete(int id)
+        {
+            return base.Delete(id);
+        }
+
+    }
 }

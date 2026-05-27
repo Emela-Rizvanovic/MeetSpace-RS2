@@ -34,6 +34,7 @@ namespace MeetSpace.Services.Database
         public DbSet<Review> Reviews { get; set; }
         public DbSet<RecommendationLog> RecommendationLogs { get; set; }
         public DbSet<PasswordReset> PasswordResets { get; set; }
+        public DbSet<RevokedToken> RevokedTokens { get; set; }
         public DbSet<BookingAuditLog> BookingAuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -145,6 +146,10 @@ namespace MeetSpace.Services.Database
             t.HasCheckConstraint(
             "CK_Review_Rating",
             "[Rating] >= 1 AND [Rating] <= 5"));
+
+            modelBuilder.Entity<RevokedToken>()
+    .HasIndex(x => x.Jti)
+    .IsUnique();
 
         }
 

@@ -37,7 +37,9 @@ namespace MeetSpace.Services.Security
         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
         new Claim(ClaimTypes.Name, user.Username),
         new Claim(ClaimTypes.Email, user.Email),
-        new Claim(ClaimTypes.Role, user.Role?.Name ?? "")
+        new Claim(ClaimTypes.Role, user.Role?.Name ?? ""),
+
+    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
     };
 
             var token = new JwtSecurityToken(

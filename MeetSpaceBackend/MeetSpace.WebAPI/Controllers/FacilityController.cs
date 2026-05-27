@@ -22,14 +22,12 @@ namespace MeetSpace.WebAPI.Controllers
             _facilityService = service;
         }
 
-        [AllowAnonymous]
         [HttpGet]
         public override Task<PagedResult<FacilityResponse>> Get([FromQuery] FacilitySearchObject search)
         {
             return base.Get(search);
         }
 
-        [AllowAnonymous]
         [HttpGet("{id}")]
         public override Task<FacilityResponse?> GetById(int id)
         {

@@ -64,6 +64,11 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
         if (existing != null)
             throw new BusinessException("Email already exists.");
 
+        if (!request.RoleId.HasValue)
+            throw new BusinessException("Role is required. Select a valid role.");
+
+        entity.RoleId = request.RoleId.Value;
+
         entity.PasswordHash = _passwordHasher.Hash(request.Password);
         entity.CreatedAt = DateTime.UtcNow;
 
@@ -220,16 +225,27 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
 
     public async Task<UserResponse> RegisterAsync(UserInsertRequest request, CancellationToken ct)
     {
-        // provjera username i email
-        bool usernameExists = await _context.Users.AnyAsync(u => u.Username == request.Username, ct);
+        bool usernameExists = await _context.Users
+            .AnyAsync(u => u.Username == request.Username, ct);
+
         if (usernameExists)
-            throw new ArgumentException("Username already exists.");
+            throw new BusinessException("Username already exists.");
 
-        bool emailExists = await _context.Users.AnyAsync(u => u.Email == request.Email, ct);
+        bool emailExists = await _context.Users
+            .AnyAsync(u => u.Email == request.Email, ct);
+
         if (emailExists)
-            throw new ArgumentException("Email already exists.");
+            throw new BusinessException("Email already exists.");
 
-        // direktno koristi već postojeći CreateAsync
+        var clientRole = await _context.Roles
+            .FirstOrDefaultAsync(r => r.Name == Roles.Client, ct);
+
+        if (clientRole == null)
+            throw new BusinessException("Client role is not configured.");
+
+        request.RoleId = clientRole.Id;
+        request.IsActive = true;
+
         return await CreateAsync(request, ct);
     }
 
@@ -344,6 +360,23 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
     {
         var random = new Random();
         return random.Next(100000, 999999).ToString(); // 6-digit code
+    }
+
+    public async Task<bool> IsTokenRevokedAsync(string jti, CancellationToken ct = default)
+    {
+        return await _context.RevokedTokens
+            .AnyAsync(x => x.Jti == jti && x.ExpiresAt > DateTime.UtcNow, ct);
+    }
+
+    public async Task RevokeTokenAsync(string jti, DateTime expiresAt, CancellationToken ct = default)
+    {
+        _context.RevokedTokens.Add(new RevokedToken
+        {
+            Jti = jti,
+            ExpiresAt = expiresAt
+        });
+
+        await _context.SaveChangesAsync(ct);
     }
 
 

@@ -12,7 +12,7 @@ namespace MeetSpace.Models.Requests
     public class UserInsertRequest
     {
         [Range(1, int.MaxValue, ErrorMessage = "Role is required. Select a valid role.")]
-        public int RoleId { get; set; }
+        public int? RoleId { get; set; }
 
         [Required(ErrorMessage = "First name is required.")]
         [MinLength(2, ErrorMessage = "First name must have at least 2 characters.")]

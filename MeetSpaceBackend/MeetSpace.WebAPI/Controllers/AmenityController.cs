@@ -22,14 +22,12 @@ namespace MeetSpace.WebAPI.Controllers
             _amenityService = service;
         }
 
-        [AllowAnonymous]
         [HttpGet]
         public override Task<PagedResult<AmenityResponse>> Get([FromQuery] AmenitySearchObject search)
         {
             return base.Get(search);
         }
 
-        [AllowAnonymous]
         [HttpGet("{id}")]
         public override Task<AmenityResponse?> GetById(int id)
         {
@@ -48,6 +46,13 @@ namespace MeetSpace.WebAPI.Controllers
         public override Task<AmenityResponse?> Update(int id, AmenityUpdateRequest request)
         {
             return base.Update(id, request);
+        }
+
+        [Authorize(Roles = Roles.Admin)]
+        [HttpDelete("{id}")]
+        public override Task<bool> Delete(int id)
+        {
+            return base.Delete(id);
         }
     }
 }

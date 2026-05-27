@@ -181,7 +181,7 @@ namespace MeetSpace.WebAPI.Controllers
             });
         }
 
-
+        [Authorize(Roles = Roles.Admin)]
         [HttpPost("{id}/send-reminder")]
         public async Task<IActionResult> SendReminder(int id)
         {
