@@ -61,9 +61,35 @@ Future<void> _loadDropdowns() async {
   final auth = context.read<AuthProvider>();
 final api = auth.api;
 
-  final fRes = await api.get("Facility");
-  final tRes = await api.get("SpaceType");
-  final aRes = await api.get("Amenity");
+ final fRes = await api.get(
+  "Facility",
+  queryParameters: {
+    "Page": "0",
+    "PageSize": "1000",
+    "SortBy": "Id",
+    "Desc": "true",
+  },
+);
+
+final tRes = await api.get(
+  "SpaceType",
+  queryParameters: {
+    "Page": "0",
+    "PageSize": "1000",
+    "SortBy": "Id",
+    "Desc": "true",
+  },
+);
+
+final aRes = await api.get(
+  "Amenity",
+  queryParameters: {
+    "Page": "0",
+    "PageSize": "1000",
+    "SortBy": "Id",
+    "Desc": "true",
+  },
+);
 
   final fDecoded = jsonDecode(fRes.body);
   final tDecoded = jsonDecode(tRes.body);
@@ -151,14 +177,29 @@ final spaceService = auth.spaceService;
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                Text(widget.space == null ? "Add new space" : "Edit space",
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+       child: Form(
+  key: _formKey,
+  child: SingleChildScrollView(
+    child: Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                widget.space == null ? "Add new space" : "Edit space",
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
                 ),
+              ),
+            ),
+            IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.close),
+              tooltip: "Close",
+            ),
+          ],
+        ),
                 const SizedBox(height: 20),
 
                 /// NAME + FACILITY

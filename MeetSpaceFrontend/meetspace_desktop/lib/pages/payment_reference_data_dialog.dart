@@ -126,22 +126,31 @@ class _PaymentReferenceDataDialogState
                   const SizedBox(
                       height: 30),
 
-                  const Text(
-                    "PAYMENT DATA",
+                 Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 16),
+  child: Row(
+    children: [
+      const Expanded(
+        child: Text(
+          "PAYMENT DATA",
+          style: TextStyle(
+            color: Colors.white70,
+            letterSpacing: 2,
+            fontSize: 16,
+          ),
+        ),
+      ),
+      IconButton(
+        onPressed: () => Navigator.pop(context),
+        icon: const Icon(Icons.close, color: Colors.white70),
+        tooltip: "Close",
+      ),
+    ],
+  ),
+),
 
-                    style: TextStyle(
-                      color:
-                          Colors.white70,
-
-                      letterSpacing:
-                          2,
-
-                      fontSize: 16,
-                    ),
-                  ),
-
-                  const SizedBox(
-                      height: 40),
+const SizedBox(
+    height: 40),
 
                   _buildMenuItem(
                     "Payment statuses",
@@ -464,16 +473,23 @@ class _PaymentReferenceDataDialogState
                     20),
           ),
 
-          title: Text(
-            status == null
-                ? "Add payment status"
-                : "Edit payment status",
-
-            style:
-                const TextStyle(
-              color: Colors.white,
-            ),
-          ),
+         title: Row(
+  children: [
+    Expanded(
+      child: Text(
+        status == null ? "Add payment status" : "Edit payment status",
+        style: const TextStyle(
+          color: Colors.white,
+        ),
+      ),
+    ),
+    IconButton(
+      onPressed: () => Navigator.pop(context),
+      icon: const Icon(Icons.close, color: Colors.white70),
+      tooltip: "Close",
+    ),
+  ],
+),
 
           content: SizedBox(
             width: 400,
@@ -592,7 +608,8 @@ class _PaymentReferenceDataDialogState
     );
 
     if (result == true) {
-      await _loadPaymentStatuses();
+  _paymentStatusPage = 0;
+  await _loadPaymentStatuses();
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -641,16 +658,23 @@ class _PaymentReferenceDataDialogState
                     20),
           ),
 
-          title: Text(
-            method == null
-                ? "Add payment method"
-                : "Edit payment method",
-
-            style:
-                const TextStyle(
-              color: Colors.white,
-            ),
-          ),
+         title: Row(
+  children: [
+    Expanded(
+      child: Text(
+        method == null ? "Add payment method" : "Edit payment method",
+        style: const TextStyle(
+          color: Colors.white,
+        ),
+      ),
+    ),
+    IconButton(
+      onPressed: () => Navigator.pop(context),
+      icon: const Icon(Icons.close, color: Colors.white70),
+      tooltip: "Close",
+    ),
+  ],
+),
 
           content: SizedBox(
             width: 400,
@@ -769,7 +793,8 @@ class _PaymentReferenceDataDialogState
     );
 
     if (result == true) {
-      await _loadPaymentMethods();
+  _paymentMethodPage = 0;
+  await _loadPaymentMethods();
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -949,6 +974,9 @@ class _PaymentReferenceDataDialogState
 
         name:
             _paymentStatusSearch,
+
+        sortBy: "Id",
+desc: true,
       );
 
       final items =
@@ -1008,6 +1036,9 @@ class _PaymentReferenceDataDialogState
 
         name:
             _paymentMethodSearch,
+
+        sortBy: "Id",
+desc: true,
       );
 
       final items =

@@ -34,7 +34,7 @@ final _minCapacityController =
 final _maxCapacityController =
     TextEditingController();
 
-  String _sort = "Price ↑";
+  String _sort = "Newest first";
 
   int _page = 0;
 final int _pageSize = 6;
@@ -101,24 +101,28 @@ maxCapacity:
   String? sortBy;
   bool desc = false;
 
-  switch (_sort) {
-    case "Price ↑":
-      sortBy = "PricePerHour";
-      desc = false;
-      break;
-    case "Price ↓":
-      sortBy = "PricePerHour";
-      desc = true;
-      break;
-    case "Capacity ↑":
-      sortBy = "Capacity";
-      desc = false;
-      break;
-    case "Capacity ↓":
-      sortBy = "Capacity";
-      desc = true;
-      break;
-  }
+switch (_sort) {
+    case "Newest first":
+    sortBy = "Id";
+    desc = true;
+    break;
+  case "Price ↑":
+    sortBy = "PricePerHour";
+    desc = false;
+    break;
+  case "Price ↓":
+    sortBy = "PricePerHour";
+    desc = true;
+    break;
+  case "Capacity ↑":
+    sortBy = "Capacity";
+    desc = false;
+    break;
+  case "Capacity ↓":
+    sortBy = "Capacity";
+    desc = true;
+    break;
+}
 
   return {
     "sortBy": sortBy,
@@ -188,12 +192,47 @@ Row(
     /// ADD BUTTON
     ElevatedButton(
       onPressed: () async {
-        final result = await showDialog(
-          context: context,
-          builder: (_) => const AddSpaceDialog(),
-        );
+  final auth = context.read<AuthProvider>();
+
+  final facilitiesResult = await auth.facilityService.getPaged(
+    page: 0,
+    pageSize: 1,
+  );
+
+  final spaceTypesResult = await auth.spaceTypeService.getPaged(
+    page: 0,
+    pageSize: 1,
+  );
+
+  final hasFacilities =
+      (facilitiesResult["items"] as List).isNotEmpty;
+
+  final hasSpaceTypes =
+      (spaceTypesResult["items"] as List).isNotEmpty;
+
+  if (!hasFacilities || !hasSpaceTypes) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          "Add at least one facility and one space type before creating a space.",
+        ),
+        backgroundColor: Colors.orange,
+      ),
+    );
+    return;
+  }
+
+  final result = await showDialog(
+    context: context,
+    builder: (_) => const AddSpaceDialog(),
+  );
 
         if (result == "created") {
+          setState(() {
+  _sort = "Newest first";
+  _page = 0;
+});
+
           await _loadSpaces();
 
           ScaffoldMessenger.of(context).showSnackBar(
@@ -268,6 +307,7 @@ Row(
           value: _sort,
           icon: const Icon(Icons.keyboard_arrow_down),
           items: const [
+            DropdownMenuItem(value: "Newest first", child: Text("Newest first")),
             DropdownMenuItem(
               value: "Price ↑",
               child: Text("Price ↑"),

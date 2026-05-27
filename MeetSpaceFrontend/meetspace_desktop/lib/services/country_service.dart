@@ -10,6 +10,8 @@ class CountryService {
     int page = 0,
     int pageSize = 10,
     String? name,
+    String? sortBy,
+bool desc = false,
   }) async {
     final query = {
       "Page": page.toString(),
@@ -19,6 +21,11 @@ class CountryService {
     if (name != null && name.isNotEmpty) {
       query["Name"] = name;
     }
+
+    if (sortBy != null && sortBy.isNotEmpty) {
+  query["SortBy"] = sortBy;
+  query["Desc"] = desc.toString();
+}
 
     final response = await api.get(
       "Countries",

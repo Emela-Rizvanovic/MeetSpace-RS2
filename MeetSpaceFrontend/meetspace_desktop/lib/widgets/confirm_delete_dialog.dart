@@ -24,12 +24,23 @@ class ConfirmDeleteDialog
             BorderRadius.circular(20),
       ),
 
-      title: Text(
+      title: Row(
+  children: [
+    Expanded(
+      child: Text(
         title,
         style: const TextStyle(
           color: Colors.white,
         ),
       ),
+    ),
+    IconButton(
+      onPressed: () => Navigator.pop(context, false),
+      icon: const Icon(Icons.close, color: Colors.white70),
+      tooltip: "Close",
+    ),
+  ],
+),
 
       content: Text(
         message,

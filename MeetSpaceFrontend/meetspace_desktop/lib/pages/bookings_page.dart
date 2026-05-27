@@ -386,15 +386,15 @@ class _BookingCardState extends State<BookingCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               /// TITLE
-              Text(
-                booking.spaceName ?? "Space",
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+Text(
+  booking.spaceName ?? "Space",
+  style: const TextStyle(
+    fontSize: 22,
+    fontWeight: FontWeight.bold,
+  ),
+),
 
-              const SizedBox(height: 6),
+const SizedBox(height: 6),
 
               /// IMAGE
               ClipRRect(
@@ -487,6 +487,93 @@ class _BookingCardState extends State<BookingCard> {
   
 }
 
+Future<bool> _confirmSendReminder(BuildContext context) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    barrierColor: Colors.black54,
+    builder: (context) => Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        width: 420,
+        padding: const EdgeInsets.all(28),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2E2E2E),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFA56E09).withOpacity(0.16),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.notifications_active_outlined,
+                color: Color(0xFFA56E09),
+                size: 28,
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              "Send reminder?",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              "The user will receive a booking reminder notification.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white70, height: 1.5),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white70,
+                      side: const BorderSide(color: Colors.white24),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text("Cancel"),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFA56E09),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text("Send"),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  return confirmed == true;
+}
+
   /// 🔥 MODAL FIX (NO OVERFLOW)
 Future<void> _openDetails(BuildContext context) async {
   final booking = widget.booking;
@@ -495,6 +582,21 @@ Future<void> _openDetails(BuildContext context) async {
     booking.bookingStatusId == BookingStatusIds.approved &&
     booking.startTime.isAfter(DateTime.now());
   await _loadConflict();
+
+  final isPaymentCompleted =
+    booking.paymentStatusName?.toLowerCase() == "completed";
+
+String? approveDisabledReason;
+
+if (!isPaymentCompleted) {
+  approveDisabledReason =
+      "Payment must be completed before approval.";
+} else if (hasConflict == true) {
+  approveDisabledReason =
+      "Cannot approve because this time slot is already booked.";
+}
+
+final canApprove = isPending && approveDisabledReason == null;
 
   showDialog(
     context: context,
@@ -522,20 +624,34 @@ Future<void> _openDetails(BuildContext context) async {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        booking.spaceName ?? "Space",
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      Row(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    Expanded(
+      child: Text(
+        booking.spaceName ?? "Space",
+        style: const TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+    IconButton(
+      onPressed: () => Navigator.pop(context),
+      icon: const Icon(Icons.close),
+      tooltip: "Close",
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(),
+    ),
+  ],
+),
 
-                      const SizedBox(height: 6),
+const SizedBox(height: 6),
 
-                      Text(
-                        booking.facilityAddress ?? "",
-                        style: const TextStyle(color: Colors.black54),
-                      ),
+Text(
+  booking.facilityAddress ?? "",
+  style: const TextStyle(color: Colors.black54),
+),
 
                       const SizedBox(height: 18),
 
@@ -671,59 +787,8 @@ Future<void> _openDetails(BuildContext context) async {
                       child: _mainButton(
                         text: "Approve",
                         color: const Color(0xFF4CAF50),
-                       onTap: () async {
-  if (booking.paymentStatusName?.toLowerCase() != "completed") {
-    ScaffoldMessenger.of(context).showSnackBar(
-  SnackBar(
-    behavior: SnackBarBehavior.floating,
-    margin: const EdgeInsets.only(bottom: 40, left: 20, right: 20),
-    backgroundColor: const Color(0xFFE53935),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-    ),
-    content: Row(
-      children: const [
-        Icon(Icons.warning_amber_rounded, color: Colors.white),
-        SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            "Payment must be completed before approval",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-          ),
-        ),
-      ],
-    ),
-    duration: const Duration(seconds: 3),
-  ),
-);
-    return;
-  }
-
-  if (hasConflict == true) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      behavior: SnackBarBehavior.floating,
-      margin: const EdgeInsets.only(bottom: 40, left: 20, right: 20),
-      backgroundColor: const Color(0xFFE53935),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      content: Row(
-        children: const [
-          Icon(Icons.warning_amber_rounded, color: Colors.white),
-          SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              "Cannot approve due to time conflict",
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-  return;
-}
+                       onTap: canApprove
+    ? () async {
 
  await context
     .read<AuthProvider>()
@@ -764,7 +829,8 @@ ScaffoldMessenger.of(context).showSnackBar(
     ),
   ),
 );
-},
+}
+      : null,
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -783,13 +849,24 @@ ScaffoldMessenger.of(context).showSnackBar(
   shape: RoundedRectangleBorder(
     borderRadius: BorderRadius.circular(20),
   ),
-  title: const Text(
-    "Reject booking",
-    style: TextStyle(
-      fontWeight: FontWeight.bold,
-      color: Color(0xFFA56E09),
+title: Row(
+  children: [
+    const Expanded(
+      child: Text(
+        "Reject booking",
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Color(0xFFA56E09),
+        ),
+      ),
     ),
-  ),
+    IconButton(
+      onPressed: () => Navigator.pop(context),
+      icon: const Icon(Icons.close),
+      tooltip: "Close",
+    ),
+  ],
+),
   content: TextField(
     controller: controller,
     maxLines: 3,
@@ -879,6 +956,21 @@ ScaffoldMessenger.of(context).showSnackBar(
                     ),
                   ],
                 ),
+
+                if (approveDisabledReason != null) ...[
+  const SizedBox(height: 8),
+  Align(
+    alignment: Alignment.centerLeft,
+    child: Text(
+      approveDisabledReason,
+      style: const TextStyle(
+        color: Color(0xFFE53935),
+        fontSize: 13,
+        fontStyle: FontStyle.italic,
+      ),
+    ),
+  ),
+],
                 const SizedBox(height: 12),
               ],
 
@@ -887,6 +979,8 @@ ScaffoldMessenger.of(context).showSnackBar(
                 _secondaryButton(
                   text: "Send reminder",
                  onTap: () async {
+                  final confirmed = await _confirmSendReminder(context);
+if (!confirmed) return;
   await context
       .read<AuthProvider>()
       .bookingService
@@ -983,28 +1077,32 @@ ScaffoldMessenger.of(context).showSnackBar(
     );
   }
 
-  Widget _mainButton({
-    required String text,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(30),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          text,
-          style: const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.bold),
+Widget _mainButton({
+  required String text,
+  required Color color,
+  required VoidCallback? onTap,
+}) {
+  final isDisabled = onTap == null;
+
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(
+        color: isDisabled ? color.withOpacity(0.35) : color,
+        borderRadius: BorderRadius.circular(30),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        text,
+        style: TextStyle(
+          color: Colors.white.withOpacity(isDisabled ? 0.75 : 1),
+          fontWeight: FontWeight.bold,
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
  Widget _secondaryButton({
   required String text,

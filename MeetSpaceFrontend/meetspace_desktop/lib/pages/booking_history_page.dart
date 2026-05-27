@@ -476,16 +476,41 @@ const SizedBox(height: 20),
                                           Row(
                                         children: [
 
-                                          Expanded(
-                                            flex:
-                                                2,
-
-                                            child:
-                                                Text(
-                                              b.spaceName ??
-                                                  "-",
-                                            ),
-                                          ),
+                                         Expanded(
+  flex: 2,
+  child: Row(
+    children: [
+      ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: SizedBox(
+          width: 52,
+          height: 40,
+          child: b.spaceImageUrl == null ||
+                  b.spaceImageUrl!.isEmpty
+              ? Container(
+                  color: Colors.grey.shade300,
+                  child: const Icon(
+                    Icons.image_not_supported,
+                    size: 18,
+                    color: Colors.black45,
+                  ),
+                )
+              : Image.network(
+                  b.spaceImageUrl!,
+                  fit: BoxFit.cover,
+                ),
+        ),
+      ),
+      const SizedBox(width: 10),
+      Expanded(
+        child: Text(
+          b.spaceName ?? "-",
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    ],
+  ),
+),
 
                                           Expanded(
                                             child:

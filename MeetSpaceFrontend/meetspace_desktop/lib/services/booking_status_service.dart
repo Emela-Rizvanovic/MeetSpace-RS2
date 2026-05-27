@@ -10,6 +10,8 @@ class BookingStatusService {
     int page = 0,
     int pageSize = 10,
     String? name,
+    String? sortBy,
+bool desc = false,
   }) async {
     final query = {
       "Page": page.toString(),
@@ -20,6 +22,11 @@ class BookingStatusService {
         name.isNotEmpty) {
       query["Name"] = name;
     }
+
+    if (sortBy != null && sortBy.isNotEmpty) {
+  query["SortBy"] = sortBy;
+  query["Desc"] = desc.toString();
+}
 
     final response = await api.get(
       "BookingStatus",

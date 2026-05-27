@@ -72,11 +72,33 @@ class _BookingStatusesDialogState
               const EdgeInsets.all(30),
 
           child: Column(
-            children: [
+  children: [
+    Row(
+      children: [
+        const Expanded(
+          child: Text(
+            "BOOKING STATUSES",
+            style: TextStyle(
+              color: Colors.white70,
+              letterSpacing: 2,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.close, color: Colors.white70),
+          tooltip: "Close",
+        ),
+      ],
+    ),
 
-              Expanded(
-                child:
-                    BookingStatusesSection(
+    const SizedBox(height: 20),
+
+    Expanded(
+      child:
+          BookingStatusesSection(
                   bookingStatuses:
                       _bookingStatuses,
 
@@ -207,16 +229,23 @@ class _BookingStatusesDialogState
                     20),
           ),
 
-          title: Text(
-            status == null
-                ? "Add booking status"
-                : "Edit booking status",
-
-            style:
-                const TextStyle(
-              color: Colors.white,
-            ),
-          ),
+          title: Row(
+  children: [
+    Expanded(
+      child: Text(
+        status == null ? "Add booking status" : "Edit booking status",
+        style: const TextStyle(
+          color: Colors.white,
+        ),
+      ),
+    ),
+    IconButton(
+      onPressed: () => Navigator.pop(context),
+      icon: const Icon(Icons.close, color: Colors.white70),
+      tooltip: "Close",
+    ),
+  ],
+),
 
           content: SizedBox(
             width: 400,
@@ -335,7 +364,8 @@ class _BookingStatusesDialogState
     );
 
     if (result == true) {
-      await _loadBookingStatuses();
+  _bookingStatusPage = 0;
+  await _loadBookingStatuses();
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -437,17 +467,20 @@ class _BookingStatusesDialogState
               AuthProvider>();
 
       final result =
-          await auth
-              .bookingStatusService
-              .getPaged(
-        page: _bookingStatusPage,
+         await auth
+    .bookingStatusService
+    .getPaged(
+  page: _bookingStatusPage,
 
-        pageSize:
-            _bookingStatusPageSize,
+  pageSize:
+      _bookingStatusPageSize,
 
-        name:
-            _bookingStatusSearch,
-      );
+  name:
+      _bookingStatusSearch,
+
+  sortBy: "Id",
+  desc: true,
+);
 
       final items =
           result["items"]

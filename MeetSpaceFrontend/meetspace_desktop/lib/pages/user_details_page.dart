@@ -401,13 +401,27 @@ _isBookingsLoading
   key: formKey,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    "Edit user",
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                  ),
- 
-                  const SizedBox(height: 20),
+               children: [
+  Row(
+    children: [
+      const Expanded(
+        child: Text(
+          "Edit user",
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+      IconButton(
+        onPressed: () => Navigator.pop(dialogContext),
+        icon: const Icon(Icons.close),
+        tooltip: "Close",
+      ),
+    ],
+  ),
+
+  const SizedBox(height: 20),
  
                   _input(
   firstNameCtrl,

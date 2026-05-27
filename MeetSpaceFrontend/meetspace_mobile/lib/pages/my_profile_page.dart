@@ -364,8 +364,8 @@ class _BookingCardFromApi extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final title = (booking.spaceName ?? "").trim().isEmpty
-        ? "Space #${booking.spaceId}"
-        : booking.spaceName!.trim();
+    ? "Booked space"
+    : booking.spaceName!.trim();
 
     final address = (booking.facilityAddress ?? "").trim();
     final status = (booking.statusName ?? "").trim();

@@ -37,8 +37,104 @@ class _PaymentPageState extends State<PaymentPage> {
 
   String _method = "card"; 
 
+Future<bool> _confirmPayment(String method) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    barrierColor: Colors.black.withOpacity(0.55),
+    builder: (context) => Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        width: 360,
+        padding: const EdgeInsets.all(26),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2E2E2E),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFA56E09).withOpacity(0.16),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.payments_outlined,
+                color: Color(0xFFA56E09),
+                size: 30,
+              ),
+            ),
+            const SizedBox(height: 18),
+            const Text(
+              "Confirm payment",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: "Poppins",
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              "Are you sure you want to continue with $method payment?",
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontFamily: "Poppins",
+                fontSize: 14,
+                color: Colors.white70,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white70,
+                      side: const BorderSide(color: Colors.white24),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: const Text("Cancel"),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFA56E09),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: const Text("Confirm"),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  return confirmed == true;
+}
+
   // ---------------- STRIPE ----------------
   Future<void> _pay() async {
+
+    final confirmed = await _confirmPayment("card");
+if (!confirmed) return;
  
     if (_card == null || !_card!.complete) {
       _snack("Enter valid card");
@@ -120,6 +216,10 @@ Navigator.pushReplacement(
 
   // ---------------- PAYPAL ----------------
 Future<void> _payWithPaypal() async {
+
+  final confirmed = await _confirmPayment("PayPal");
+if (!confirmed) return;
+
   setState(() => _loading = true);
 
   try {

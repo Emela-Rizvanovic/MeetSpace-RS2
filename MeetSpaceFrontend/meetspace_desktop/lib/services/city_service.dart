@@ -11,6 +11,8 @@ class CityService {
     int pageSize = 10,
     String? name,
     int? countryId,
+    String? sortBy,
+bool desc = false,
   }) async {
     final query = {
       "Page": page.toString(),
@@ -25,6 +27,11 @@ class CityService {
       query["CountryId"] =
           countryId.toString();
     }
+
+    if (sortBy != null && sortBy.isNotEmpty) {
+  query["SortBy"] = sortBy;
+  query["Desc"] = desc.toString();
+}
 
     final response = await api.get(
       "Cities",

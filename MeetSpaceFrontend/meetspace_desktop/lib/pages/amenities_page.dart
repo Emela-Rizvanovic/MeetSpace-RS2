@@ -21,7 +21,7 @@ class _AmenitiesPageState extends State<AmenitiesPage> {
   bool _isLoading = true;
 
   String _search = "";
-  String _sort = "Name ↑";
+  String _sort = "Newest first";
 
   int _page = 0;
 final int _pageSize = 10; 
@@ -66,6 +66,10 @@ final result = await auth.amenityService.getPaged(
   bool desc = false;
 
   switch (_sort) {
+    case "Newest first":
+  sortBy = "Id";
+  desc = true;
+  break;
     case "Name ↑":
       sortBy = "Name";
       desc = false;
@@ -273,16 +277,44 @@ Row(
                   children: [
                     /// ADD BUTTON
                     ElevatedButton(
-                      onPressed: () async {
+                  onPressed: () async {
+  final auth = context.read<AuthProvider>();
+
+  final categoriesResult =
+      await auth.amenityCategoryService.getPaged(
+    page: 0,
+    pageSize: 1,
+  );
+
+  final hasCategories =
+      (categoriesResult["items"] as List).isNotEmpty;
+
+  if (!hasCategories) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          "Add at least one amenity category before creating an amenity.",
+        ),
+        backgroundColor: Colors.orange,
+      ),
+    );
+    return;
+  }
+
   final result = await showDialog(
     context: context,
     builder: (_) => const AddAmenityDialog(),
   );
 
   if (result == "created") {
-    await _loadAmenities();
+  setState(() {
+    _sort = "Newest first";
+    _page = 0;
+  });
 
-    ScaffoldMessenger.of(context).showSnackBar(
+  await _loadAmenities();
+
+  ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text("Amenity added successfully"),
         backgroundColor: Colors.green,
@@ -345,6 +377,7 @@ OutlinedButton.icon(
                         underline: const SizedBox(),
                         icon: const Icon(Icons.keyboard_arrow_down),
                         items: const [
+                          DropdownMenuItem(value: "Newest first", child: Text("Newest first")),
                           DropdownMenuItem(value: "Name ↑", child: Text("Name ↑")),
                           DropdownMenuItem(value: "Name ↓", child: Text("Name ↓")),
                           DropdownMenuItem(value: "Price ↑", child: Text("Price ↑")),

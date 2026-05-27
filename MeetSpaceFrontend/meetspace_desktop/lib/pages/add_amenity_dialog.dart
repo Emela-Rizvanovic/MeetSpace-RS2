@@ -41,8 +41,15 @@ class _AddAmenityDialogState extends State<AddAmenityDialog> {
   Future<void> _loadCategories() async {
     try {
       final auth = context.read<AuthProvider>();
-      final res = await auth.api.get("AmenityCategory");
-
+      final res = await auth.api.get(
+  "AmenityCategory",
+  queryParameters: {
+    "Page": "0",
+    "PageSize": "1000",
+    "SortBy": "Id",
+    "Desc": "true",
+  },
+);
       final decoded = jsonDecode(res.body);
 
       setState(() {
@@ -111,17 +118,28 @@ class _AddAmenityDialogState extends State<AddAmenityDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                widget.amenity == null
-                    ? "Add new amenity"
-                    : "Edit amenity",
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+  Row(
+    children: [
+      Expanded(
+        child: Text(
+          widget.amenity == null
+              ? "Add new amenity"
+              : "Edit amenity",
+          style: const TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+      IconButton(
+        onPressed: () => Navigator.pop(context),
+        icon: const Icon(Icons.close),
+        tooltip: "Close",
+      ),
+    ],
+  ),
 
-              const SizedBox(height: 20),
+  const SizedBox(height: 20),
 
               _input(_nameController, "Name"),
               const SizedBox(height: 12),

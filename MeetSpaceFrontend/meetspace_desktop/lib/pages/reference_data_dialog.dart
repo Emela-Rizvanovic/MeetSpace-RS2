@@ -93,16 +93,30 @@ void initState() {
 
                   const SizedBox(height: 30),
 
-                  const Text(
-                    "REFERENCE DATA",
-                    style: TextStyle(
-                      color: Colors.white70,
-                      letterSpacing: 2,
-                      fontSize: 16,
-                    ),
-                  ),
+                  Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 16),
+  child: Row(
+    children: [
+      const Expanded(
+        child: Text(
+          "REFERENCE DATA",
+          style: TextStyle(
+            color: Colors.white70,
+            letterSpacing: 2,
+            fontSize: 16,
+          ),
+        ),
+      ),
+      IconButton(
+        onPressed: () => Navigator.pop(context),
+        icon: const Icon(Icons.close, color: Colors.white70),
+        tooltip: "Close",
+      ),
+    ],
+  ),
+),
 
-                  const SizedBox(height: 40),
+const SizedBox(height: 40),
 
                   _buildMenuItem("Countries"),
                   _buildMenuItem("Cities"),
@@ -277,9 +291,31 @@ case "Cities":
       _loadCities();
     },
 
-    onAdd: () async {
-      await _showCityDialog();
-    },
+   onAdd: () async {
+  final auth = context.read<AuthProvider>();
+
+  final countriesResult = await auth.countryService.getPaged(
+    page: 0,
+    pageSize: 1,
+  );
+
+  final hasCountries =
+      (countriesResult["items"] as List).isNotEmpty;
+
+  if (!hasCountries) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          "Add at least one country before creating a city.",
+        ),
+        backgroundColor: Colors.orange,
+      ),
+    );
+    return;
+  }
+
+  await _showCityDialog();
+},
 
     onEdit: (city) async {
       await _showCityDialog(
@@ -345,8 +381,30 @@ case "Cities":
     },
 
     onAdd: () async {
-      await _showFacilityDialog();
-    },
+  final auth = context.read<AuthProvider>();
+
+  final citiesResult = await auth.cityService.getPaged(
+    page: 0,
+    pageSize: 1,
+  );
+
+  final hasCities =
+      (citiesResult["items"] as List).isNotEmpty;
+
+  if (!hasCities) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          "Add at least one city before creating a facility.",
+        ),
+        backgroundColor: Colors.orange,
+      ),
+    );
+    return;
+  }
+
+  await _showFacilityDialog();
+},
 
     onEdit: (facility) async {
       await _showFacilityDialog(
@@ -485,14 +543,23 @@ Future<void> _showCountryDialog({
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        title: Text(
-          country == null
-              ? "Add country"
-              : "Edit country",
-          style: const TextStyle(
-            color: Colors.white,
-          ),
+       title: Row(
+  children: [
+    Expanded(
+      child: Text(
+        country == null ? "Add country" : "Edit country",
+        style: const TextStyle(
+          color: Colors.white,
         ),
+      ),
+    ),
+    IconButton(
+      onPressed: () => Navigator.pop(context),
+      icon: const Icon(Icons.close, color: Colors.white70),
+      tooltip: "Close",
+    ),
+  ],
+),
        content: SizedBox(
   width: 400,
   child: Form(
@@ -570,8 +637,9 @@ Future<void> _showCountryDialog({
     },
   );
 
-  if (result == true) {
-    await _loadCountries();
+if (result == true) {
+  _countryPage = 0;
+  await _loadCountries();
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -641,14 +709,27 @@ Future<void> _showCityDialog({
   final formKey = GlobalKey<FormState>();
 
   final controller = TextEditingController(
-    text: city?.name ?? "",
-  );
+  text: city?.name ?? "",
+);
 
-  int? selectedCountryId =
-      city?.countryId ??
-      (_countries.isNotEmpty
-          ? _countries.first.id
-          : null);
+final auth = context.read<AuthProvider>();
+
+final countriesResult = await auth.countryService.getPaged(
+  page: 0,
+  pageSize: 1000,
+  sortBy: "Id",
+  desc: true,
+);
+
+final countryOptions = (countriesResult["items"] as List)
+    .map((e) => Country.fromJson(e))
+    .toList();
+
+int? selectedCountryId =
+    city?.countryId ??
+    (countryOptions.isNotEmpty
+        ? countryOptions.first.id
+        : null);
 
   final result = await showDialog<bool>(
     context: context,
@@ -661,14 +742,23 @@ Future<void> _showCityDialog({
               borderRadius:
                   BorderRadius.circular(20),
             ),
-            title: Text(
-              city == null
-                  ? "Add city"
-                  : "Edit city",
-              style: const TextStyle(
-                color: Colors.white,
-              ),
-            ),
+            title: Row(
+  children: [
+    Expanded(
+      child: Text(
+        city == null ? "Add city" : "Edit city",
+        style: const TextStyle(
+          color: Colors.white,
+        ),
+      ),
+    ),
+    IconButton(
+      onPressed: () => Navigator.pop(context),
+      icon: const Icon(Icons.close, color: Colors.white70),
+      tooltip: "Close",
+    ),
+  ],
+),
             content: SizedBox(
               width: 400,
               child: Form(
@@ -720,7 +810,7 @@ decoration:
                             BorderSide.none,
                       ),
                     ),
-                    items: _countries.map((c) {
+                    items: countryOptions.map((c) {
                       return DropdownMenuItem(
                         value: c.id,
                         child: Text(c.name),
@@ -802,7 +892,8 @@ decoration:
   );
 
   if (result == true) {
-    await _loadCities();
+  _cityPage = 0;
+  await _loadCities();
 
     if (mounted) {
       ScaffoldMessenger.of(context)
@@ -903,16 +994,29 @@ Future<void> _showFacilityDialog({
   );
 
   final descriptionController =
-      TextEditingController(
-    text:
-        facility?.description ?? "",
-  );
+    TextEditingController(
+  text:
+      facility?.description ?? "",
+);
 
-  int? selectedCityId =
-      facility?.cityId ??
-      (_cities.isNotEmpty
-          ? _cities.first.id
-          : null);
+final auth = context.read<AuthProvider>();
+
+final citiesResult = await auth.cityService.getPaged(
+  page: 0,
+  pageSize: 1000,
+  sortBy: "Id",
+  desc: true,
+);
+
+final cityOptions = (citiesResult["items"] as List)
+    .map((e) => City.fromJson(e))
+    .toList();
+
+int? selectedCityId =
+    facility?.cityId ??
+    (cityOptions.isNotEmpty
+        ? cityOptions.first.id
+        : null);
 
   final result =
       await showDialog<bool>(
@@ -930,15 +1034,23 @@ Future<void> _showFacilityDialog({
                   BorderRadius.circular(
                       20),
             ),
-            title: Text(
-              facility == null
-                  ? "Add facility"
-                  : "Edit facility",
-              style:
-                  const TextStyle(
-                color: Colors.white,
-              ),
-            ),
+            title: Row(
+  children: [
+    Expanded(
+      child: Text(
+        facility == null ? "Add facility" : "Edit facility",
+        style: const TextStyle(
+          color: Colors.white,
+        ),
+      ),
+    ),
+    IconButton(
+      onPressed: () => Navigator.pop(context),
+      icon: const Icon(Icons.close, color: Colors.white70),
+      tooltip: "Close",
+    ),
+  ],
+),
             content: SizedBox(
               width: 500,
               child: SingleChildScrollView(
@@ -1029,7 +1141,7 @@ decoration:
                         ),
                       ),
                       items:
-                          _cities.map((c) {
+    cityOptions.map((c) {
                         return DropdownMenuItem(
                           value: c.id,
                           child:
@@ -1192,7 +1304,8 @@ decoration:
   );
 
   if (result == true) {
-    await _loadFacilities();
+  _facilityPage = 0;
+  await _loadFacilities();
 
     if (mounted) {
       ScaffoldMessenger.of(context)
@@ -1288,14 +1401,23 @@ Future<void> _showSpaceTypeDialog({
               BorderRadius.circular(
                   20),
         ),
-        title: Text(
-          type == null
-              ? "Add space type"
-              : "Edit space type",
-          style: const TextStyle(
-            color: Colors.white,
-          ),
+        title: Row(
+  children: [
+    Expanded(
+      child: Text(
+        type == null ? "Add space type" : "Edit space type",
+        style: const TextStyle(
+          color: Colors.white,
         ),
+      ),
+    ),
+    IconButton(
+      onPressed: () => Navigator.pop(context),
+      icon: const Icon(Icons.close, color: Colors.white70),
+      tooltip: "Close",
+    ),
+  ],
+),
 content: SizedBox(
   width: 400,
   child: Form(
@@ -1385,7 +1507,8 @@ content: SizedBox(
   );
 
   if (result == true) {
-    await _loadSpaceTypes();
+  _spaceTypePage = 0;
+  await _loadSpaceTypes();
 
     if (mounted) {
       ScaffoldMessenger.of(context)
@@ -1466,12 +1589,14 @@ Future<void> _deleteSpaceType(
     final auth =
         context.read<AuthProvider>();
 
-    final result =
-        await auth.countryService.getPaged(
-      page: _countryPage,
-      pageSize: _countryPageSize,
-      name: _countrySearch,
-    );
+   final result =
+    await auth.countryService.getPaged(
+  page: _countryPage,
+  pageSize: _countryPageSize,
+  name: _countrySearch,
+  sortBy: "Id",
+  desc: true,
+);
 
     final items = result["items"] as List;
 
@@ -1502,12 +1627,14 @@ Future<void> _loadCities() async {
     final auth =
         context.read<AuthProvider>();
 
-    final result =
-        await auth.cityService.getPaged(
-      page: _cityPage,
-      pageSize: _cityPageSize,
-      name: _citySearch,
-    );
+   final result =
+    await auth.cityService.getPaged(
+  page: _cityPage,
+  pageSize: _cityPageSize,
+  name: _citySearch,
+  sortBy: "Id",
+  desc: true,
+);
 
     final items = result["items"] as List;
 
@@ -1538,12 +1665,14 @@ Future<void> _loadFacilities() async {
     final auth =
         context.read<AuthProvider>();
 
-    final result =
-        await auth.facilityService.getPaged(
-      page: _facilityPage,
-      pageSize: _facilityPageSize,
-      name: _facilitySearch,
-    );
+   final result =
+    await auth.facilityService.getPaged(
+  page: _facilityPage,
+  pageSize: _facilityPageSize,
+  name: _facilitySearch,
+  sortBy: "Id",
+  desc: true,
+);
 
     final items = result["items"] as List;
 
@@ -1576,13 +1705,15 @@ Future<void> _loadSpaceTypes() async {
         context.read<AuthProvider>();
 
     final result = await auth
-        .spaceTypeService
-        .getPaged(
-      page: _spaceTypePage,
-      pageSize:
-          _spaceTypePageSize,
-      name: _spaceTypeSearch,
-    );
+    .spaceTypeService
+    .getPaged(
+  page: _spaceTypePage,
+  pageSize:
+      _spaceTypePageSize,
+  name: _spaceTypeSearch,
+  sortBy: "Id",
+  desc: true,
+);
 
     final items =
         result["items"] as List;

@@ -72,11 +72,33 @@ class _AmenityCategoriesDialogState
       const EdgeInsets.all(30),
 
   child: Column(
-    children: [
+  children: [
+    Row(
+      children: [
+        const Expanded(
+          child: Text(
+            "AMENITY CATEGORIES",
+            style: TextStyle(
+              color: Colors.white70,
+              letterSpacing: 2,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.close, color: Colors.white70),
+          tooltip: "Close",
+        ),
+      ],
+    ),
 
-      Expanded(
-        child:
-            AmenityCategoriesSection(
+    const SizedBox(height: 20),
+
+    Expanded(
+      child:
+          AmenityCategoriesSection(
           categories:
               _categories,
 
@@ -207,16 +229,23 @@ class _AmenityCategoriesDialogState
                     20),
           ),
 
-          title: Text(
-            category == null
-                ? "Add category"
-                : "Edit category",
-
-            style:
-                const TextStyle(
-              color: Colors.white,
-            ),
-          ),
+         title: Row(
+  children: [
+    Expanded(
+      child: Text(
+        category == null ? "Add category" : "Edit category",
+        style: const TextStyle(
+          color: Colors.white,
+        ),
+      ),
+    ),
+    IconButton(
+      onPressed: () => Navigator.pop(context),
+      icon: const Icon(Icons.close, color: Colors.white70),
+      tooltip: "Close",
+    ),
+  ],
+),
 
           content: SizedBox(
             width: 400,
@@ -335,7 +364,8 @@ class _AmenityCategoriesDialogState
     );
 
     if (result == true) {
-      await _loadCategories();
+  _categoryPage = 0;
+  await _loadCategories();
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -447,6 +477,9 @@ class _AmenityCategoriesDialogState
 
         name:
             _categorySearch,
+
+        sortBy: "Id",
+desc: true,
       );
 
       final items =
