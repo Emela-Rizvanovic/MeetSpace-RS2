@@ -72,6 +72,11 @@ namespace MeetSpace.Services.Database
                 .Property(p => p.Amount)
                 .HasPrecision(18, 2);
 
+            modelBuilder.Entity<Payment>()
+    .HasIndex(p => p.ExternalTransactionId)
+    .IsUnique()
+    .HasFilter("[ExternalTransactionId] IS NOT NULL");
+
             modelBuilder.Entity<PaymentIntent>()
                 .Property(pi => pi.Amount)
                 .HasPrecision(18, 2);

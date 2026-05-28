@@ -502,6 +502,8 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
         {
             var response = _mapper.Map<BookingResponse>(entity);
 
+            response.IsPaid = entity.PaymentStatusId == (int)PaymentStatusEnum.Completed;
+
             var lastLog = _context.BookingAuditLogs
                 .Where(x => x.BookingId == entity.Id)
                 .OrderByDescending(x => x.CreatedAt)

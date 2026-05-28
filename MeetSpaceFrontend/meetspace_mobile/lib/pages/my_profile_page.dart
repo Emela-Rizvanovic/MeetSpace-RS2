@@ -711,6 +711,25 @@ const _BookingCardFromApi({
                 ),
             ],
           ),
+          if (booking.isPaid) ...[
+  const SizedBox(height: 8),
+  Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: const Color(0xFFE8F5E9),
+      borderRadius: BorderRadius.circular(999),
+    ),
+    child: const Text(
+      "Paid",
+      style: TextStyle(
+        fontFamily: "Poppins",
+        color: Color(0xFF2E7D32),
+        fontWeight: FontWeight.w600,
+        fontSize: 12,
+      ),
+    ),
+  ),
+],
          if ((status.toLowerCase() == "rejected" ||
         status.toLowerCase() == "cancelled") &&
     booking.rejectionReason != null &&

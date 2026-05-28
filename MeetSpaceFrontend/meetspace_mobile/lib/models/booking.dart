@@ -11,6 +11,7 @@ class BookingResponse {
   final String? statusName;
   final String? facilityAddress;
   final String? rejectionReason;
+  final bool isPaid;
 
   BookingResponse({
     required this.id,
@@ -24,6 +25,7 @@ class BookingResponse {
     this.statusName,
     this.facilityAddress,
     this.rejectionReason,
+    required this.isPaid,
   });
 
   factory BookingResponse.fromJson(Map<String, dynamic> json) {
@@ -41,6 +43,7 @@ class BookingResponse {
       statusName: json['statusName']?.toString(),
       facilityAddress: json['facilityAddress']?.toString(),
       rejectionReason: json['rejectionReason']?.toString(),
+      isPaid: json['isPaid'] == true,
     );
   }
 }

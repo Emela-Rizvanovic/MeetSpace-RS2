@@ -23,6 +23,7 @@ namespace MeetSpace.Models.Responses
         public string? UserPhone { get; set; }
         public string? RejectionReason { get; set; }
         public string? PaymentStatusName { get; set; }
+        public bool IsPaid { get; set; }
 
         public string? LastAction { get; set; }
         public string? LastAdminName { get; set; }

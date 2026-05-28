@@ -1,15 +1,17 @@
 ﻿using MeetSpace.Models.Entities;
 using MeetSpace.Models.Enums;
+using MeetSpace.Models.Exceptions;
 using MeetSpace.Models.Requests;
 using MeetSpace.Models.Responses;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Globalization;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
-using MeetSpace.Models.Exceptions;
-using System.Net.Http;
 
 namespace MeetSpace.Services.Services
 {
@@ -109,6 +111,17 @@ namespace MeetSpace.Services.Services
             int currentUserId,
             CancellationToken ct = default)
         {
+            var existingPayment = await _context.Payments
+    .FirstOrDefaultAsync(x => x.ExternalTransactionId == request.OrderId, ct);
+
+            if (existingPayment != null)
+            {
+                return new PayPalCaptureResponse
+                {
+                    BookingId = existingPayment.BookingId
+                };
+            }
+
             var client = _httpClientFactory.CreateClient();
 
             var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(
@@ -146,6 +159,25 @@ namespace MeetSpace.Services.Services
             if (captureStatus != "COMPLETED")
                 throw new BusinessException("Payment not completed");
 
+            var expectedAmount = await CalculateExpectedAmountAsync(
+    request.SpaceId,
+    request.StartTime,
+    request.EndTime,
+    request.Amenities,
+    ct);
+
+            var expectedEurAmount = Math.Round(expectedAmount / 1.95583m, 2);
+
+            var capturedAmountValue = captureData["purchase_units"]?[0]?["payments"]?["captures"]?[0]?["amount"]?["value"]?.ToString();
+            var capturedCurrency = captureData["purchase_units"]?[0]?["payments"]?["captures"]?[0]?["amount"]?["currency_code"]?.ToString();
+
+            if (capturedCurrency != "EUR" ||
+                !decimal.TryParse(capturedAmountValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var capturedAmount) ||
+                capturedAmount != expectedEurAmount)
+            {
+                throw new BusinessException("Paid amount does not match booking price.");
+            }
+
             await using var transaction = await _context.Database.BeginTransactionAsync(ct);
 
             var bookingRequest = new BookingInsertRequest
@@ -172,6 +204,7 @@ namespace MeetSpace.Services.Services
             {
                 BookingId = bookingResponse.Id,
                 UserId = currentUserId,
+                ExternalTransactionId = request.OrderId,
                 PaymentMethodId = (int)PaymentMethodEnum.PayPal,
                 PaymentStatusId = (int)PaymentStatusEnum.Completed,
                 Amount = bookingResponse.TotalPrice,
@@ -188,6 +221,40 @@ namespace MeetSpace.Services.Services
             {
                 BookingId = bookingResponse.Id
             };
+        }
+
+        private async Task<decimal> CalculateExpectedAmountAsync(
+    int spaceId,
+    DateTime startTime,
+    DateTime endTime,
+    List<BookingAmenityInsertRequest> amenities,
+    CancellationToken ct)
+        {
+            if (endTime <= startTime)
+                throw new BusinessException("EndTime must be greater than StartTime.");
+
+            var space = await _context.Spaces
+                .FirstOrDefaultAsync(x => x.Id == spaceId, ct);
+
+            if (space == null)
+                throw new NotFoundException("Space not found.");
+
+            var hours = (decimal)(endTime - startTime).TotalHours;
+            var total = Math.Round(hours * space.PricePerHour, 2);
+
+            foreach (var item in amenities)
+            {
+                var amenity = await _context.Amenities
+                    .FirstOrDefaultAsync(x => x.Id == item.AmenityId, ct);
+
+                if (amenity == null)
+                    throw new NotFoundException($"Amenity {item.AmenityId} not found.");
+
+                var quantity = item.Quantity <= 0 ? 1 : item.Quantity;
+                total += Math.Round(amenity.Price * quantity, 2);
+            }
+
+            return Math.Round(total, 2);
         }
     }
 }

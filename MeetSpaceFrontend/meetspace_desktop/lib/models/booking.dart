@@ -20,6 +20,7 @@ final String? paymentStatusName;
 String? lastAction;
 String? lastAdminName;
 DateTime? lastActionAt;
+final bool isPaid;
 
   BookingResponse({
     required this.id,
@@ -41,7 +42,8 @@ DateTime? lastActionAt;
     this.paymentStatusName,
     this.lastAction,
     this.lastAdminName,
-    this.lastActionAt
+    this.lastActionAt,
+    required this.isPaid,
   });
 
   factory BookingResponse.fromJson(Map<String, dynamic> json) {
@@ -67,6 +69,7 @@ rejectionReason: json['rejectionReason'],
 paymentStatusName: json['paymentStatusName'],
 lastAction: json['lastAction'],
 lastAdminName: json['lastAdminName'],
+isPaid: json['isPaid'] == true,
 lastActionAt : json['lastActionAt'] != null
     ? DateTime.parse(json['lastActionAt'])
     : null

@@ -70,11 +70,43 @@ namespace MeetSpace.Services.Services
             if (paymentIntent == null)
                 throw new NotFoundException("Payment intent not found");
 
+            if (paymentIntent.IsCompleted)
+            {
+                var existingPayment = await _context.Payments
+                    .FirstOrDefaultAsync(x => x.PaymentIntentId == paymentIntent.Id, ct);
+
+                if (existingPayment == null)
+                    throw new BusinessException("Payment is completed, but booking record was not found.");
+
+                return new ConfirmPaymentResponse
+                {
+                    BookingId = existingPayment.BookingId
+                };
+            }
+
             var service = new PaymentIntentService();
             var stripeIntent = await service.GetAsync(paymentIntent.StripePaymentIntentId);
 
             if (stripeIntent.Status != "succeeded")
                 throw new BusinessException("Payment not completed");
+
+            var expectedAmount = await CalculateExpectedAmountAsync(
+    request.SpaceId,
+    request.StartTime,
+    request.EndTime,
+    request.Amenities
+        .Select(x => new BookingAmenityInsertRequest
+        {
+            AmenityId = x.AmenityId,
+            Quantity = x.Quantity
+        })
+        .ToList(),
+    ct);
+
+            var receivedAmount = Math.Round((decimal)stripeIntent.AmountReceived / 100m, 2);
+
+            if (paymentIntent.Amount != expectedAmount || receivedAmount != expectedAmount)
+                throw new BusinessException("Paid amount does not match booking price.");
 
             await using var transaction = await _context.Database.BeginTransactionAsync(ct);
 
@@ -122,5 +154,40 @@ namespace MeetSpace.Services.Services
                 BookingId = bookingResponse.Id
             };
         }
+
+        private async Task<decimal> CalculateExpectedAmountAsync(
+    int spaceId,
+    DateTime startTime,
+    DateTime endTime,
+    List<BookingAmenityInsertRequest> amenities,
+    CancellationToken ct)
+        {
+            if (endTime <= startTime)
+                throw new BusinessException("EndTime must be greater than StartTime.");
+
+            var space = await _context.Spaces
+                .FirstOrDefaultAsync(x => x.Id == spaceId, ct);
+
+            if (space == null)
+                throw new NotFoundException("Space not found.");
+
+            var hours = (decimal)(endTime - startTime).TotalHours;
+            var total = Math.Round(hours * space.PricePerHour, 2);
+
+            foreach (var item in amenities)
+            {
+                var amenity = await _context.Amenities
+                    .FirstOrDefaultAsync(x => x.Id == item.AmenityId, ct);
+
+                if (amenity == null)
+                    throw new NotFoundException($"Amenity {item.AmenityId} not found.");
+
+                var quantity = item.Quantity <= 0 ? 1 : item.Quantity;
+                total += Math.Round(amenity.Price * quantity, 2);
+            }
+
+            return Math.Round(total, 2);
+        }
     }
+
 }
