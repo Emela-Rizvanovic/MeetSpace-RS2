@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/space.dart';
 import '../providers/auth_provider.dart';
 import 'booking_page.dart';
+import '../constants/app_constants.dart';
 
 class CalendarPage extends StatefulWidget {
   final SpaceResponse space;
@@ -38,6 +39,12 @@ class _CalendarPageState extends State<CalendarPage> {
   final Map<DateTime, Set<int>> bookedMap = {};
 
   for (var b in bookings) {
+    final blocksAvailability =
+    b.bookingStatusId == BookingStatusIds.pending ||
+    b.bookingStatusId == BookingStatusIds.approved;
+
+if (!blocksAvailability) continue;
+
     final date = DateTime(
       b.startTime.year,
       b.startTime.month,

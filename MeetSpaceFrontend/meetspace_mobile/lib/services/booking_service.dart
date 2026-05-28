@@ -47,4 +47,15 @@ class BookingService {
       throw Exception("Booking failed");
     }
   }
+
+  Future<void> cancelWithReason(int id, String reason) async {
+  final response = await api.put(
+    "Booking/$id/cancel",
+    {"reason": reason},
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception("Cancel failed");
+  }
+}
 }

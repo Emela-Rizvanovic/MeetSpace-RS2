@@ -8,6 +8,7 @@ using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using MeetSpace.Models.Exceptions;
+using MeetSpace.Models.Enums;
 
 namespace MeetSpace.Services.Services
 {
@@ -85,11 +86,12 @@ namespace MeetSpace.Services.Services
             var now = DateTime.UtcNow;
 
             var hasCompletedBooking = await _context.Bookings
-                .AnyAsync(b =>
-                    b.UserId == entity.UserId &&
-                    b.SpaceId == request.SpaceId &&
-                    b.EndTime <= now,
-                    cancellationToken);
+    .AnyAsync(b =>
+        b.UserId == entity.UserId &&
+        b.SpaceId == request.SpaceId &&
+        b.BookingStatusId == (int)BookingStatusEnum.Approved &&
+        b.EndTime <= now,
+        cancellationToken);
 
             if (!hasCompletedBooking)
             {

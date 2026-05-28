@@ -16,6 +16,7 @@ namespace MeetSpace.Services.Interfaces
         Task<List<BookingResponse>> GetBySpaceIdAsync(int spaceId, CancellationToken ct = default);
         Task ApproveAsync(int id, CancellationToken ct = default);
         Task RejectAsync(int id, string reason, CancellationToken ct = default);
+        Task CancelAsync(int id, string reason, CancellationToken ct = default);
         Task<bool> HasConflict(int spaceId, DateTime start, DateTime end, int? ignoreId = null);
         Task SendReminderAsync(int bookingId, CancellationToken ct = default);
     }

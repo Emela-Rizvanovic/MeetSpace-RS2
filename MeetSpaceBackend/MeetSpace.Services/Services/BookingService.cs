@@ -18,6 +18,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Storage;
 using MeetSpace.Models.Exceptions;
+using MeetSpace.Models.Constants;
 
 namespace MeetSpace.Services.Services
 {
@@ -88,10 +89,14 @@ namespace MeetSpace.Services.Services
             if (request.EndTime <= request.StartTime)
                 throw new BusinessException("EndTime must be greater than StartTime.");
 
+            if (request.StartTime <= DateTime.UtcNow)
+                throw new BusinessException("Booking start time must be in the future.");
+
             var hasConflict = await _context.Bookings
     .AnyAsync(b =>
         b.SpaceId == request.SpaceId &&
-        b.BookingStatusId != (int)BookingStatusEnum.Rejected && // ignore rejected
+        b.BookingStatusId != (int)BookingStatusEnum.Rejected &&
+b.BookingStatusId != (int)BookingStatusEnum.Cancelled && // ignore rejected
         request.StartTime < b.EndTime &&
         request.EndTime > b.StartTime
     );
@@ -161,11 +166,27 @@ namespace MeetSpace.Services.Services
             if (end <= start)
                 throw new BusinessException("EndTime must be greater than StartTime.");
 
+            if (start <= DateTime.UtcNow)
+                throw new BusinessException("Booking start time must be in the future.");
+
             var spaceId = request.SpaceId ?? entity.SpaceId;
 
             var space = await _context.Spaces.FirstOrDefaultAsync(s => s.Id == spaceId, cancellationToken);
             if (space == null)
                 throw new NotFoundException("Space not found.");
+
+            var hasConflict = await _context.Bookings
+    .AnyAsync(b =>
+        b.Id != entity.Id &&
+        b.SpaceId == spaceId &&
+        b.BookingStatusId != (int)BookingStatusEnum.Rejected &&
+b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
+        start < b.EndTime &&
+        end > b.StartTime,
+        cancellationToken);
+
+            if (hasConflict)
+                throw new BusinessException("Time slot already booked.");
 
             var hours = (decimal)(end - start).TotalHours;
             if (hours <= 0)
@@ -308,6 +329,11 @@ namespace MeetSpace.Services.Services
             if (entity == null)
                 throw new NotFoundException("Booking not found");
 
+            ValidateStatusTransition(
+    entity.BookingStatusId,
+    BookingStatusEnum.Approved
+);
+
             entity.BookingStatusId = (int)BookingStatusEnum.Approved; // Approved
 
             var userId = int.Parse(
@@ -319,6 +345,7 @@ namespace MeetSpace.Services.Services
                 BookingId = entity.Id,
                 AdminId = userId,
                 Action = "Approved",
+                Comment = "Booking approved by administrator.",
                 CreatedAt = DateTime.UtcNow
             });
 
@@ -342,6 +369,11 @@ namespace MeetSpace.Services.Services
 
             if (entity == null)
                 throw new NotFoundException("Booking not found");
+
+            ValidateStatusTransition(
+    entity.BookingStatusId,
+    BookingStatusEnum.Rejected
+);
 
             entity.BookingStatusId = (int)BookingStatusEnum.Rejected; //Rejected
             entity.RejectionReason = reason;
@@ -372,16 +404,98 @@ namespace MeetSpace.Services.Services
             }, "meetspace.booking-status");
         }
 
+        public async Task CancelAsync(int id, string reason, CancellationToken ct = default)
+        {
+            var entity = await _context.Bookings
+                .Include(b => b.User)
+                .Include(b => b.Space)
+                .FirstOrDefaultAsync(b => b.Id == id, ct);
+
+            if (entity == null)
+                throw new NotFoundException("Booking not found");
+
+            var userId = int.Parse(
+                _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value
+            );
+
+            var role = _httpContextAccessor.HttpContext.User
+                .FindFirst(ClaimTypes.Role)?.Value;
+
+            if (role != Roles.Admin && entity.UserId != userId)
+                throw new UnauthorizedAccessException("You cannot cancel this booking.");
+
+            if (entity.StartTime <= DateTime.UtcNow)
+                throw new BusinessException("Only future bookings can be cancelled.");
+
+            ValidateStatusTransition(
+                entity.BookingStatusId,
+                BookingStatusEnum.Cancelled
+            );
+
+            entity.BookingStatusId = (int)BookingStatusEnum.Cancelled;
+            entity.RejectionReason = reason;
+
+            _context.BookingAuditLogs.Add(new BookingAuditLog
+            {
+                BookingId = entity.Id,
+                AdminId = userId,
+                Action = role == Roles.Admin ? "Cancelled by admin" : "Cancelled by user",
+                Comment = reason,
+                CreatedAt = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync(ct);
+
+            if (role == Roles.Admin)
+            {
+                await _rabbitMq.PublishAsync(new BookingStatusChangedMessage
+                {
+                    UserId = entity.UserId,
+                    SpaceName = entity.Space.Name,
+                    StartTime = entity.StartTime,
+                    IsApproved = false,
+                    IsCancellation = true,
+                    Reason = reason
+                }, "meetspace.booking-status");
+            }
+        }
+
         public async Task<bool> HasConflict(int spaceId, DateTime start, DateTime end, int? ignoreId = null)
         {
             return await _context.Bookings
                 .AnyAsync(b =>
                     b.SpaceId == spaceId &&
                     b.BookingStatusId != (int)BookingStatusEnum.Rejected &&
+b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
                     (ignoreId == null || b.Id != ignoreId) &&
                     start < b.EndTime &&
                     end > b.StartTime
                 );
+        }
+
+        private void ValidateStatusTransition(
+    int currentStatusId,
+    BookingStatusEnum newStatus)
+        {
+            var currentStatus = (BookingStatusEnum)currentStatusId;
+
+            var isAllowed =
+     currentStatus == BookingStatusEnum.Pending &&
+     (
+         newStatus == BookingStatusEnum.Approved ||
+         newStatus == BookingStatusEnum.Rejected ||
+         newStatus == BookingStatusEnum.Cancelled
+     )
+     ||
+     currentStatus == BookingStatusEnum.Approved &&
+     newStatus == BookingStatusEnum.Cancelled;
+
+            if (!isAllowed)
+            {
+                throw new BusinessException(
+                    $"Booking status cannot be changed from {currentStatus} to {newStatus}."
+                );
+            }
         }
 
         private BookingResponse MapWithAudit(Booking entity)

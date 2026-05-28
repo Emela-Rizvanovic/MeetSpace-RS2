@@ -147,7 +147,7 @@ if (!confirmed) return;
       final auth = context.read<AuthProvider>();
 
     final hours =
-    widget.endTime.difference(widget.startTime).inHours;
+    widget.endTime.difference(widget.startTime).inMinutes / 60.0;
 
 double amount = hours * widget.space.pricePerHour;
 
@@ -226,7 +226,7 @@ if (!confirmed) return;
     final auth = context.read<AuthProvider>();
 
    final hours =
-    widget.endTime.difference(widget.startTime).inHours;
+    widget.endTime.difference(widget.startTime).inMinutes / 60.0;
 
 double amount = hours * widget.space.pricePerHour;
 

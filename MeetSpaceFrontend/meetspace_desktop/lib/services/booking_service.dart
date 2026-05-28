@@ -74,6 +74,17 @@ Future<void> rejectWithReason(int id, String reason) async {
   }
 }
 
+Future<void> cancelWithReason(int id, String reason) async {
+  final response = await api.put(
+    "Booking/$id/cancel",
+    {"reason": reason},
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception("Cancel failed");
+  }
+}
+
 Future<bool> checkConflict({
   required int spaceId,
   required DateTime start,

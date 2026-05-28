@@ -288,6 +288,15 @@ Future<void> createBooking({
   return bookingService.createBooking(body);
 }
 
+Future<void> cancelBooking({
+  required int bookingId,
+  required String reason,
+}) async {
+  if (user == null) throw Exception("Not logged in");
+
+  return bookingService.cancelWithReason(bookingId, reason);
+}
+
 Future<List<ReviewResponse>> getReviewsBySpace(int spaceId) {
   return reviewService.getReviewsBySpace(spaceId);
 }

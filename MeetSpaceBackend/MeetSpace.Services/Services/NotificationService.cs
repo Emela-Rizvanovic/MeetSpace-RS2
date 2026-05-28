@@ -29,12 +29,17 @@ namespace MeetSpace.Services.Services
                 NotificationTypeId = isApproved
                     ? (int)NotificationTypeEnum.BookingApproved
                     : (int)NotificationTypeEnum.BookingRejected,
-                Title = isApproved
-                    ? "Booking approved"
-                    : "Booking rejected",
-                Message = isApproved
-                    ? $"Your reservation for {message.SpaceName} has been approved."
-                    : $"Your reservation for {message.SpaceName} was rejected. \nReason: {message.Reason}",
+                Title = message.IsCancellation
+    ? "Booking cancelled"
+    : isApproved
+        ? "Booking approved"
+        : "Booking rejected",
+
+                Message = message.IsCancellation
+    ? $"Your reservation for {message.SpaceName} was cancelled. \nReason: {message.Reason}"
+    : isApproved
+        ? $"Your reservation for {message.SpaceName} has been approved."
+        : $"Your reservation for {message.SpaceName} was rejected. \nReason: {message.Reason}",
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow
             };

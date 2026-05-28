@@ -4,6 +4,7 @@ import '../models/space.dart';
 import '../models/amenity.dart';
 import '../providers/auth_provider.dart';
 import 'payment_page.dart';
+import '../constants/app_constants.dart';
 
 class BookingPage extends StatefulWidget {
   final SpaceResponse space;
@@ -61,6 +62,12 @@ class _BookingPageState extends State<BookingPage> {
     final Set<int> hours = {};
 
     for (var b in bookings) {
+      final blocksAvailability =
+    b.bookingStatusId == BookingStatusIds.pending ||
+    b.bookingStatusId == BookingStatusIds.approved;
+
+if (!blocksAvailability) continue;
+
       if (b.startTime.year == widget.selectedDate.year &&
           b.startTime.month == widget.selectedDate.month &&
           b.startTime.day == widget.selectedDate.day) {

@@ -1,5 +1,6 @@
 ﻿using MeetSpace.Models.Constants;
 using MeetSpace.Models.Enums;
+using MeetSpace.Models.Exceptions;
 using MeetSpace.Models.Requests;
 using MeetSpace.Models.Responses;
 using MeetSpace.Models.SearchObjects;
@@ -147,11 +148,6 @@ namespace MeetSpace.WebAPI.Controllers
             if (booking == null)
                 return NotFound();
 
-            var request = new BookingUpdateRequest
-            {
-                BookingStatusId = (int)BookingStatusEnum.Approved // Approved
-            };
-
             await _bookingService.ApproveAsync(id);
 
             return Ok();
@@ -167,6 +163,19 @@ namespace MeetSpace.WebAPI.Controllers
                 return NotFound();
 
             await _bookingService.RejectAsync(id, reason.Reason);
+
+            return Ok();
+        }
+
+        [HttpPut("{id}/cancel")]
+        public async Task<IActionResult> Cancel(int id, [FromBody] RejectRequest reason)
+        {
+            var booking = await _bookingService.GetByIdAsync(id);
+
+            if (booking == null)
+                return NotFound();
+
+            await _bookingService.CancelAsync(id, reason.Reason);
 
             return Ok();
         }
@@ -188,6 +197,15 @@ namespace MeetSpace.WebAPI.Controllers
             await _bookingService.SendReminderAsync(id);
 
             return Ok();
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = Roles.Admin)]
+        public override Task<bool> Delete(int id)
+        {
+            throw new BusinessException(
+                "Bookings cannot be deleted because they are kept as booking history."
+            );
         }
 
 

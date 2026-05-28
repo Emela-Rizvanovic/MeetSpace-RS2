@@ -13,5 +13,6 @@ namespace MeetSpace.Models.Messages
         public DateTime StartTime { get; set; }
         public bool IsApproved { get; set; }
         public string? Reason { get; set; }
+        public bool IsCancellation { get; set; }
     }
 }

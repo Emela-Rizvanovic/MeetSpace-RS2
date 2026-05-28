@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 
 import '../models/booking.dart';
 import '../providers/auth_provider.dart';
+import '../constants/app_constants.dart';
 import 'menu_page.dart';
 import 'edit_profile_page.dart';
+
 
 
 class MyProfilePage extends StatefulWidget {
@@ -26,6 +28,69 @@ class _MyProfilePageState extends State<MyProfilePage> {
     _bookingsFuture ??=
         Provider.of<AuthProvider>(context, listen: false).getMyBookings();
   }
+
+ void _reloadBookings() {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (!mounted) return;
+
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+
+    setState(() {
+      _bookingsFuture = auth.getMyBookings();
+    });
+  });
+}
+
+Future<void> _cancelBooking(BookingResponse booking) async {
+  final auth = Provider.of<AuthProvider>(context, listen: false);
+
+  final reason = await showDialog<String>(
+    context: context,
+    builder: (_) => const _CancelBookingDialog(),
+  );
+
+  if (!mounted) return;
+  if (reason == null || reason.trim().isEmpty) return;
+
+ try {
+  await auth.cancelBooking(
+    bookingId: booking.id,
+    reason: reason.trim(),
+  );
+
+  if (!mounted) return;
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: Colors.red,
+      content: Row(
+        children: const [
+          Icon(Icons.cancel, color: Colors.white),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text("Booking cancelled successfully"),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  _reloadBookings();
+} catch (e) {
+  if (!mounted) return;
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: Colors.red,
+      content: const Text(
+        "Cancellation reason must contain 5-500 characters.",
+      ),
+    ),
+  );
+}
+}
 
   @override
   Widget build(BuildContext context) {
@@ -271,7 +336,10 @@ class _MyProfilePageState extends State<MyProfilePage> {
                         .map(
                           (b) => Padding(
                             padding: const EdgeInsets.only(bottom: 10),
-                            child: _BookingCardFromApi(booking: b),
+                           child: _BookingCardFromApi(
+  booking: b,
+  onCancel: _cancelBooking,
+),
                           ),
                         )
                         .toList(),
@@ -289,6 +357,191 @@ class _MyProfilePageState extends State<MyProfilePage> {
     final s = (v ?? "").trim();
     return s.isEmpty ? fallback : s;
   }
+}
+
+class _CancelBookingDialog extends StatefulWidget {
+  const _CancelBookingDialog();
+
+  @override
+  State<_CancelBookingDialog> createState() => _CancelBookingDialogState();
+}
+
+class _CancelBookingDialogState extends State<_CancelBookingDialog> {
+  final TextEditingController _controller = TextEditingController();
+  String? _errorMessage;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+@override
+Widget build(BuildContext context) {
+  return Dialog(
+    backgroundColor: Colors.transparent,
+    insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+    child: Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2E2E2E),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black45,
+            blurRadius: 18,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  "Cancel booking",
+                  style: TextStyle(
+                    fontFamily: "Poppins",
+                    color: Color(0xFFA56E09),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 22,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close, color: Colors.white70),
+                tooltip: "Close",
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Please enter the reason for cancelling this booking.",
+            style: TextStyle(
+              fontFamily: "Poppins",
+              color: Colors.white70,
+              fontSize: 13,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _controller,
+            maxLines: 3,
+            cursorColor: const Color(0xFFA56E09),
+            style: const TextStyle(
+              fontFamily: "Poppins",
+              color: Colors.white,
+            ),
+            onChanged: (_) {
+  if (_errorMessage != null) {
+    setState(() {
+      _errorMessage = null;
+    });
+  }
+},
+            decoration: InputDecoration(
+              hintText: "Cancellation reason",
+              hintStyle: const TextStyle(
+                fontFamily: "Poppins",
+                color: Colors.white38,
+              ),
+              filled: true,
+              fillColor: const Color(0xFF3B3B3B),
+              contentPadding: const EdgeInsets.all(14),
+              enabledBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: Colors.white24),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: const BorderSide(
+                  color: Color(0xFFA56E09),
+                  width: 1.4,
+                ),
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
+          if (_errorMessage != null) ...[
+  const SizedBox(height: 6),
+  Text(
+    _errorMessage!,
+    style: const TextStyle(
+      fontFamily: "Poppins",
+      color: Colors.red,
+      fontSize: 12,
+      height: 1.3,
+    ),
+  ),
+],
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white70,
+                    side: const BorderSide(color: Colors.white24),
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    "Close",
+                    style: TextStyle(
+                      fontFamily: "Poppins",
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                 onPressed: () {
+  final value = _controller.text.trim();
+
+  if (value.length < 5 || value.length > 500) {
+    setState(() {
+      _errorMessage =
+          "Cancellation reason must contain 5-500 characters.";
+    });
+    return;
+  }
+
+  Navigator.of(context).pop(value);
+},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFE53935),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    "Cancel booking",
+                    style: TextStyle(
+                      fontFamily: "Poppins",
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
 }
 
 class _Header extends StatelessWidget {
@@ -358,8 +611,12 @@ class _InfoRow extends StatelessWidget {
 
 class _BookingCardFromApi extends StatelessWidget {
   final BookingResponse booking;
+ final void Function(BookingResponse booking) onCancel;
 
-  const _BookingCardFromApi({required this.booking});
+const _BookingCardFromApi({
+  required this.booking,
+  required this.onCancel,
+});
 
   @override
   Widget build(BuildContext context) {
@@ -369,6 +626,11 @@ class _BookingCardFromApi extends StatelessWidget {
 
     final address = (booking.facilityAddress ?? "").trim();
     final status = (booking.statusName ?? "").trim();
+
+    final canCancel =
+    (booking.bookingStatusId == BookingStatusIds.pending ||
+        booking.bookingStatusId == BookingStatusIds.approved) &&
+    booking.startTime.isAfter(DateTime.now());
 
     final timeLine =
         "${_fmtDateTimeLocal(booking.startTime)} → ${_fmtDateTimeLocal(booking.endTime)}";
@@ -449,7 +711,8 @@ class _BookingCardFromApi extends StatelessWidget {
                 ),
             ],
           ),
-          if (status.toLowerCase() == "rejected" &&
+         if ((status.toLowerCase() == "rejected" ||
+        status.toLowerCase() == "cancelled") &&
     booking.rejectionReason != null &&
     booking.rejectionReason!.trim().isNotEmpty) ...[
   const SizedBox(height: 10),
@@ -466,15 +729,17 @@ class _BookingCardFromApi extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Rejection reason",
-          style: TextStyle(
-            fontFamily: "Poppins",
-            color: Colors.red,
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-          ),
-        ),
+       Text(
+  status.toLowerCase() == "cancelled"
+      ? "Cancellation reason"
+      : "Rejection reason",
+  style: const TextStyle(
+    fontFamily: "Poppins",
+    color: Colors.red,
+    fontWeight: FontWeight.w600,
+    fontSize: 13,
+  ),
+),
         const SizedBox(height: 4),
         Text(
           booking.rejectionReason!,
@@ -489,10 +754,35 @@ class _BookingCardFromApi extends StatelessWidget {
     ),
   ),
 ],
+if (canCancel) ...[
+  const SizedBox(height: 12),
+  SizedBox(
+    width: double.infinity,
+    child: OutlinedButton(
+      onPressed: () => onCancel(booking),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Colors.red,
+        side: const BorderSide(color: Colors.red, width: 1.2),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+      child: const Text(
+        "Cancel booking",
+        style: TextStyle(
+          fontFamily: "Poppins",
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    ),
+  ),
+],
         ],
       ),
     );
   }
+
 
   static String _fmtDateTimeLocal(DateTime dt) {
     final local = dt.toLocal();

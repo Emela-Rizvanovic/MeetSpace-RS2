@@ -12,4 +12,5 @@ class BookingStatusIds {
   static const pending = 1;
   static const approved = 2;
   static const rejected = 3;
+  static const cancelled = 4;
 }

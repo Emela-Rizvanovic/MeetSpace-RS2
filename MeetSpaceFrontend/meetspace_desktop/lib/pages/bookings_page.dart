@@ -432,18 +432,6 @@ const SizedBox(height: 6),
 
               _statusBadge(),
 
-              if (booking.bookingStatusId == BookingStatusIds.rejected && booking.rejectionReason != null)
-  Padding(
-    padding: const EdgeInsets.only(top: 6),
-    child: Text(
-      "Reason: ${booking.rejectionReason}",
-      style: const TextStyle(
-        fontSize: 12,
-        color: Colors.redAccent,
-        fontStyle: FontStyle.italic,
-      ),
-    ),
-  ),
 
               const SizedBox(height: 10),
 
@@ -574,12 +562,201 @@ Future<bool> _confirmSendReminder(BuildContext context) async {
   return confirmed == true;
 }
 
+Future<String?> _confirmReasonDialog({
+  required BuildContext context,
+  required String title,
+  required String description,
+  required String hintText,
+  required String confirmText,
+  required Color confirmColor,
+}) async {
+  final controller = TextEditingController();
+  String? errorMessage;
+
+  final result = await showDialog<String>(
+    context: context,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setDialogState) {
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              width: 430,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2E2E2E),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black45,
+                    blurRadius: 20,
+                    offset: Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            fontFamily: "Poppins",
+                            color: Color(0xFFA56E09),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 22,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close, color: Colors.white70),
+                        tooltip: "Close",
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    description,
+                    style: const TextStyle(
+                      fontFamily: "Poppins",
+                      color: Colors.white70,
+                      fontSize: 14,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: controller,
+                    maxLines: 3,
+                    cursorColor: const Color(0xFFA56E09),
+                    style: const TextStyle(
+                      fontFamily: "Poppins",
+                      color: Colors.white,
+                    ),
+                    onChanged: (_) {
+                      if (errorMessage != null) {
+                        setDialogState(() {
+                          errorMessage = null;
+                        });
+                      }
+                    },
+                    decoration: InputDecoration(
+                      hintText: hintText,
+                      hintStyle: const TextStyle(
+                        fontFamily: "Poppins",
+                        color: Colors.white38,
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFF3B3B3B),
+                      contentPadding: const EdgeInsets.all(14),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.white24),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                          color: Color(0xFFA56E09),
+                          width: 1.4,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                  if (errorMessage != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      errorMessage!,
+                      style: const TextStyle(
+                        fontFamily: "Poppins",
+                        color: Color(0xFFE53935),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 22),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white70,
+                            side: const BorderSide(color: Colors.white24),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text("Close"),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            final reason = controller.text.trim();
+
+                            if (reason.length < 5 || reason.length > 500) {
+                              setDialogState(() {
+                                errorMessage =
+                                    "Reason must contain 5-500 characters.";
+                              });
+                              return;
+                            }
+
+                            Navigator.pop(context, reason);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: confirmColor,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(confirmText),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+
+  controller.dispose();
+  return result;
+}
+
+Future<String?> _confirmCancelBooking(BuildContext context) async {
+  return _confirmReasonDialog(
+    context: context,
+    title: "Cancel booking",
+    description: "Please enter the reason for cancelling this booking.",
+    hintText: "Enter cancellation reason...",
+    confirmText: "Cancel booking",
+    confirmColor: const Color(0xFFE53935),
+  );
+}
+
   /// 🔥 MODAL FIX (NO OVERFLOW)
 Future<void> _openDetails(BuildContext context) async {
   final booking = widget.booking;
   final isPending = booking.bookingStatusId == BookingStatusIds.pending;
    final isReminderAvailable =
     booking.bookingStatusId == BookingStatusIds.approved &&
+    booking.startTime.isAfter(DateTime.now());
+  final canCancel =
+    (booking.bookingStatusId == BookingStatusIds.pending ||
+        booking.bookingStatusId == BookingStatusIds.approved) &&
     booking.startTime.isAfter(DateTime.now());
   await _loadConflict();
 
@@ -839,76 +1016,14 @@ ScaffoldMessenger.of(context).showSnackBar(
                         text: "Reject",
                         color: const Color(0xFFE53935),
                         onTap: () async {
-                          final controller = TextEditingController();
-
-                          final result = await showDialog<String>(
-                            context: context,
-                            builder: (context) {
-                           return AlertDialog(
-  backgroundColor: const Color(0xFFF8F8F8),
-  shape: RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(20),
-  ),
-title: Row(
-  children: [
-    const Expanded(
-      child: Text(
-        "Reject booking",
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: Color(0xFFA56E09),
-        ),
-      ),
-    ),
-    IconButton(
-      onPressed: () => Navigator.pop(context),
-      icon: const Icon(Icons.close),
-      tooltip: "Close",
-    ),
-  ],
-),
-  content: TextField(
-    controller: controller,
-    maxLines: 3,
-    cursorColor: const Color(0xFFA56E09),
-    decoration: InputDecoration(
-      hintText: "Enter rejection reason...",
-      focusedBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: Color(0xFFA56E09)),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(12),
-      ),
-    ),
-  ),
-  actions: [
-    TextButton(
-      onPressed: () => Navigator.pop(context),
-      child: const Text(
-        "Cancel",
-        style: TextStyle(color: Colors.grey),
-      ),
-    ),
-    ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFFE53935),
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-      ),
-      onPressed: () {
-        if (controller.text.trim().isEmpty) return;
-        Navigator.pop(context, controller.text.trim());
-      },
-      child: const Text("Reject"),
-    ),
-  ],
+                         final result = await _confirmReasonDialog(
+  context: context,
+  title: "Reject booking",
+  description: "Please enter the reason for rejecting this booking.",
+  hintText: "Enter rejection reason...",
+  confirmText: "Reject",
+  confirmColor: const Color(0xFFE53935),
 );
-                            },
-                          );
 
                           if (result == null) return;
 
@@ -973,6 +1088,58 @@ ScaffoldMessenger.of(context).showSnackBar(
 ],
                 const SizedBox(height: 12),
               ],
+
+              if (canCancel) ...[
+  _secondaryButton(
+    text: "Cancel booking",
+    onTap: () async {
+      final reason = await _confirmCancelBooking(context);
+
+      if (reason == null || reason.trim().isEmpty) return;
+
+      await context
+          .read<AuthProvider>()
+          .bookingService
+          .cancelWithReason(booking.id, reason);
+
+      Navigator.pop(context);
+      widget.onRefresh();
+
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(
+            bottom: 40,
+            left: 20,
+            right: 20,
+          ),
+          backgroundColor: const Color(0xFFE53935),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          content: Row(
+            children: const [
+              Icon(Icons.cancel, color: Colors.white),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  "Booking cancelled successfully",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  ),
+  const SizedBox(height: 12),
+],
 
               /// 🔥 REMINDER (NE ZA REJECTED)
               if (isReminderAvailable)
