@@ -14,10 +14,11 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json;
 using System.IdentityModel.Tokens.Jwt;
+using MeetSpace.Services.Seed;
 
 internal class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
         Env.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
@@ -186,6 +187,14 @@ internal class Program
 
         var app = builder.Build();
 
+        using (var scope = app.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<MeetSpaceDbContext>();
+            var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+
+            await DatabaseSeeder.SeedAsync(context, passwordHasher);
+        }
+
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
@@ -270,6 +279,6 @@ internal class Program
             });
         });
 
-        app.Run();
+        await app.RunAsync();
     }
 }
