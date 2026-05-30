@@ -192,6 +192,7 @@ internal class Program
             var context = scope.ServiceProvider.GetRequiredService<MeetSpaceDbContext>();
             var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
 
+            await context.Database.MigrateAsync();
             await DatabaseSeeder.SeedAsync(context, passwordHasher);
         }
 
