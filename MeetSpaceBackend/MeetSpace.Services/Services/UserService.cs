@@ -10,9 +10,7 @@ using MeetSpace.Services.Database;
 using MeetSpace.Services.Database.Entities;
 using MeetSpace.Services.Interfaces;
 using MeetSpace.Services.Security;
-using MeetSpace.Services.Services;
 using Microsoft.EntityFrameworkCore;
-using System.Threading;
 using MeetSpace.Models.Exceptions;
 
 public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User, UserInsertRequest, UserUpdateRequest>, IUserService
@@ -80,8 +78,6 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
         entity.UpdatedAt = DateTime.UtcNow;
         await base.BeforeUpdate(entity, request, cancellationToken);
     }
-
-    // Privatna metoda koja učitava korisnika s Role
     private async Task<User?> GetUserWithRoleAsync(int id, CancellationToken cancellationToken = default)
     {
         return await _context.Users
@@ -147,13 +143,10 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
             entity.PasswordHash = _passwordHasher.Hash(request.Password);
         }
 
-        // Upload nove slike samo ako je zaista poslana (file != null && ima sadržaj)
         if (request.ProfileImageUrl != null && request.ProfileImageUrl.Length > 0)
         {
-            // Upload nove slike
             var newUrl = await _blobService.UploadUserImageAsync(request.ProfileImageUrl);
 
-            // Brisanje stare slike da se ne zauzima storage
             if (!string.IsNullOrEmpty(entity.ProfileImageUrl))
                 await _blobService.DeleteUserImageAsync(entity.ProfileImageUrl);
 
@@ -199,7 +192,6 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
         if (!user.IsActive)
             throw new BusinessException("Your account has been deactivated.");
 
-        // Uspješna prijava mapira i vrati korisnika
         return _mapper.Map<UserResponse>(user);
     }
 
@@ -215,7 +207,6 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
         if (!_passwordHasher.Verify(request.Password, user.PasswordHash))
             return null;
 
-        // provjera da li je user admin
         if (user.Role?.Name != Roles.Admin)
             throw new UnauthorizedAccessException("Access denied. User is not an admin.");
 
@@ -255,7 +246,6 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email, ct);
         if (user == null)
         {
-            // Don't reveal that email doesn't exist for security
             return new ForgotPasswordResponse
             {
                 Success = true,
@@ -263,7 +253,6 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
             };
         }
 
-        // Deactivate any existing reset codes for this user
         var existingResets = await _context.PasswordResets
             .Where(pr => pr.UserId == user.Id && !pr.IsUsed && pr.ExpiresAt > DateTime.UtcNow)
             .ToListAsync(ct);
@@ -274,9 +263,8 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
             reset.UsedAt = DateTime.UtcNow;
         }
 
-        // Generate 6-digit reset code
         var resetCode = GenerateResetCode();
-        var expiresAt = DateTime.UtcNow.AddMinutes(15); // 15 minutes expiry
+        var expiresAt = DateTime.UtcNow.AddMinutes(15); 
 
         var passwordReset = new PasswordReset
         {
@@ -289,7 +277,6 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
         _context.PasswordResets.Add(passwordReset);
         await _context.SaveChangesAsync(ct);
 
-        // Publish message to RabbitMQ for email sending
         var message = new PasswordResetRequested
         {
             UserId = user.Id,
@@ -300,7 +287,6 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
             ExpiresAt = expiresAt
         };
 
-        // Assuming you have IRabbitMQService injected
         await _rabbitMQService.PublishAsync(message, "meetspace.password-reset");
 
         return new ForgotPasswordResponse
@@ -339,11 +325,9 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
             };
         }
 
-        // Update password
         user.PasswordHash = _passwordHasher.Hash(request.NewPassword);
         user.UpdatedAt = DateTime.UtcNow;
 
-        // Mark reset code as used
         passwordReset.IsUsed = true;
         passwordReset.UsedAt = DateTime.UtcNow;
 
@@ -359,7 +343,7 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
     private string GenerateResetCode()
     {
         var random = new Random();
-        return random.Next(100000, 999999).ToString(); // 6-digit code
+        return random.Next(100000, 999999).ToString(); 
     }
 
     public async Task<bool> IsTokenRevokedAsync(string jti, CancellationToken ct = default)

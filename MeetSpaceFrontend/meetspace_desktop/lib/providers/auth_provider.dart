@@ -136,7 +136,6 @@ Future<void> logout() async {
         token: tokenToRevoke,
       ).post("User/logout", {});
     } catch (_) {
-      // Local logout should still continue.
     }
   }
 

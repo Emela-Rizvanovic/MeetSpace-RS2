@@ -130,7 +130,6 @@ Future<bool> _confirmPayment(String method) async {
   return confirmed == true;
 }
 
-  // ---------------- STRIPE ----------------
   Future<void> _pay() async {
 
     final confirmed = await _confirmPayment("card");
@@ -151,7 +150,6 @@ if (!confirmed) return;
 
 double amount = hours * widget.space.pricePerHour;
 
-// ADD AMENITIES
 for (var amenity in widget.amenities) {
   if (widget.selectedAmenities[amenity.id] == true) {
     amount += amenity.price;
@@ -214,7 +212,6 @@ Navigator.pushReplacement(
     setState(() => _loading = false);
   }
 
-  // ---------------- PAYPAL ----------------
 Future<void> _payWithPaypal() async {
 
   final confirmed = await _confirmPayment("PayPal");
@@ -230,7 +227,6 @@ if (!confirmed) return;
 
 double amount = hours * widget.space.pricePerHour;
 
-// ADD AMENITIES
 for (var amenity in widget.amenities) {
   if (widget.selectedAmenities[amenity.id] == true) {
     amount += amenity.price;
@@ -350,8 +346,6 @@ for (var amenity in widget.amenities) {
 
               Row(
   children: [
-
-    /// BACK BUTTON
     InkWell(
       onTap: () => Navigator.pop(context),
       borderRadius: BorderRadius.circular(999),
@@ -383,8 +377,6 @@ for (var amenity in widget.amenities) {
 ),
 
 const SizedBox(height: 20),
-
-              // ---------------- CARD TOGGLE ----------------
               GestureDetector(
                 onTap: () => setState(() => _method = "card"),
                 child: Row(
@@ -415,8 +407,6 @@ const SizedBox(height: 20),
               ),
 
               const SizedBox(height: 20),
-
-              // ---------------- PAYPAL TOGGLE ----------------
               GestureDetector(
                 onTap: () => setState(() => _method = "paypal"),
                 child: Row(
@@ -442,7 +432,6 @@ const SizedBox(height: 20),
 
               const SizedBox(height: 20),
 
-              // ---------------- CARD UI ----------------
               if (_method == "card") ...[
                 _input("Cardholder name", _nameController),
 
@@ -467,7 +456,6 @@ const SizedBox(height: 20),
                 _button("Pay", _pay),
               ],
 
-              // ---------------- PAYPAL UI ----------------
               if (_method == "paypal") ...[
                 const SizedBox(height: 10),
 

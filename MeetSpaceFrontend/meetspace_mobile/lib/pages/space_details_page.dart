@@ -199,8 +199,6 @@ final s = _space ?? widget.space;
         child: SingleChildScrollView(
           child: Column(
             children: [
-
-              /// GALERIJA 
               _TopGallery(
                 imageUrls: _imageUrls,
                 pageController: _pageController,
@@ -667,7 +665,7 @@ class _TopGallery extends StatelessWidget {
     required this.onPageChanged,
     required this.onBack,
     required this.onThumbTap,
-    required this.onMainTap, // ✅ NEW
+    required this.onMainTap, 
   });
 
   final List<String> imageUrls;
@@ -676,7 +674,7 @@ class _TopGallery extends StatelessWidget {
   final ValueChanged<int> onPageChanged;
   final VoidCallback onBack;
   final ValueChanged<int> onThumbTap;
-  final VoidCallback onMainTap; // ✅ NEW
+  final VoidCallback onMainTap;
 
   static const Color brandOrange = Color.fromARGB(255, 165, 110, 9);
 
@@ -692,7 +690,7 @@ class _TopGallery extends StatelessWidget {
               aspectRatio: 1.25,
               child: hasImages
                   ? GestureDetector(
-                      onTap: onMainTap, // ✅ NEW: tap main image opens fullscreen
+                      onTap: onMainTap, 
                       child: PageView.builder(
                         controller: pageController,
                         itemCount: imageUrls.length,
@@ -780,7 +778,7 @@ class _TopGallery extends StatelessWidget {
                     padding: EdgeInsets.only(
                         right: i == 0 && (imageUrls.length >= 2) ? 10 : 0),
                     child: InkWell(
-                      onTap: () => onThumbTap(i), // opens fullscreen too
+                      onTap: () => onThumbTap(i), 
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         height: 92,
@@ -819,7 +817,6 @@ class _TopGallery extends StatelessWidget {
   }
 }
 
-/// ✅ NEW: Fullscreen gallery
 class _FullscreenGallery extends StatefulWidget {
   final List<String> imageUrls;
   final int initialIndex;
@@ -881,8 +878,6 @@ class _FullscreenGalleryState extends State<_FullscreenGallery> {
                 );
               },
             ),
-
-            // Back
             Positioned(
               left: 12,
               top: 12,
@@ -899,8 +894,6 @@ class _FullscreenGalleryState extends State<_FullscreenGallery> {
                 ),
               ),
             ),
-
-            // Counter
             Positioned(
               right: 12,
               top: 12,
@@ -1192,7 +1185,7 @@ Future<void> _deleteReview() async {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor:
-                      const Color(0xFFA56E09), // brandOrange
+                      const Color(0xFFA56E09), 
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius:

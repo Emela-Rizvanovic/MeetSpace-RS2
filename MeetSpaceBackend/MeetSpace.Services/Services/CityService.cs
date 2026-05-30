@@ -7,11 +7,12 @@ using MeetSpace.Services.BaseServices;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace MeetSpace.Services.Services
 {
     public class CityService
-        : BaseCRUDService<
+        : CachedReferenceCRUDService<
             CityResponse,
             CitySearchObject,
             City,
@@ -21,8 +22,9 @@ namespace MeetSpace.Services.Services
     {
         public CityService(
             MeetSpaceDbContext context,
-            IMapper mapper)
-            : base(context, mapper)
+            IMapper mapper,
+            IMemoryCache cache)
+            : base(context, mapper, cache)
         {
         }
 

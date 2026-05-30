@@ -53,7 +53,6 @@ class NotificationDialog extends StatelessWidget {
 
             const SizedBox(height: 28),
 
-            /// PRIMARY BUTTON
             SizedBox(
               width: double.infinity,
               height: 54,
@@ -84,7 +83,6 @@ class NotificationDialog extends StatelessWidget {
 
             const SizedBox(height: 14),
 
-            /// SECONDARY BUTTON
             SizedBox(
               width: double.infinity,
               height: 54,

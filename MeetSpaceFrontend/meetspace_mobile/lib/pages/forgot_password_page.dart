@@ -54,7 +54,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
         ),
       );
 
-      // pre-fill email na reset page
       Navigator.pushReplacementNamed(
         context,
         '/reset-password',

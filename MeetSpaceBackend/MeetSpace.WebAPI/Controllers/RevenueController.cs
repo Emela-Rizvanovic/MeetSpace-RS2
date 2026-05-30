@@ -22,14 +22,12 @@ namespace MeetSpace.WebAPI.Controllers
             _service = service;
         }
 
-        /// 🔹 PAGED GET (frontend koristi ovo)
         [HttpGet]
         public override Task<PagedResult<RevenueResponse>> Get([FromQuery] RevenueSearchObject search)
         {
             return base.Get(search);
         }
 
-        /// 🔹 LATEST
         [HttpGet("latest")]
         public async Task<IActionResult> GetLatest()
         {
@@ -37,7 +35,6 @@ namespace MeetSpace.WebAPI.Controllers
             return Ok(data);
         }
 
-        /// 🔹 TOTAL
         [HttpGet("total")]
         public async Task<IActionResult> GetTotal()
         {

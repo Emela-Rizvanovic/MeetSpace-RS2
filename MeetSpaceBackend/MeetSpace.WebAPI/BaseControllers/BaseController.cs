@@ -1,13 +1,11 @@
 ﻿using MeetSpace.Models.SearchObjects;
 using MeetSpace.Services.BaseInterfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MeetSpace.WebAPI.BaseControllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    //[Authorize]
     public class BaseController<T, TSearch> : ControllerBase where T : class where TSearch : BaseSearchObject, new()
     {
         protected readonly IService<T, TSearch> _service;

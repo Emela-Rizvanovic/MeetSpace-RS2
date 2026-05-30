@@ -93,7 +93,7 @@ Future<http.Response> multipartPost(
   required Map<String, String> fields,
   required List<File> files,
   required String fileFieldName,
-  Map<String, List<int>>? listFields, // 👈 NOVO
+  Map<String, List<int>>? listFields, 
 }) async {
   final uri = Uri.parse('$baseUrl/$endpoint');
 
@@ -103,10 +103,8 @@ Future<http.Response> multipartPost(
     request.headers['Authorization'] = 'Bearer $token';
   }
 
-  /// fields
   request.fields.addAll(fields);
 
-  /// LIST FIELDS (npr AmenityIds)
 if (listFields != null) {
   listFields.forEach((key, values) {
     for (int i = 0; i < values.length; i++) {
@@ -115,7 +113,6 @@ if (listFields != null) {
   });
 }
 
-  /// files
   for (var file in files) {
     request.files.add(
      await http.MultipartFile.fromPath(
@@ -148,15 +145,12 @@ Future<http.Response> multipartPut(
 
   final request = http.MultipartRequest("PUT", uri);
 
-  /// ❗ SAMO AUTH HEADER (bez Content-Type)
   if (token != null) {
     request.headers['Authorization'] = 'Bearer $token';
   }
 
-  /// fields
   request.fields.addAll(fields);
 
-  /// LIST FIELDS (ISTO KAO POST!)
   if (listFields != null) {
     listFields.forEach((key, values) {
       for (int i = 0; i < values.length; i++) {
@@ -165,7 +159,6 @@ Future<http.Response> multipartPut(
     });
   }
 
-  /// FILES
   if (files != null) {
     for (var file in files) {
       request.files.add(

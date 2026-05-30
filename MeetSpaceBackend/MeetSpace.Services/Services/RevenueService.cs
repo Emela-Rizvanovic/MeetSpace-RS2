@@ -32,7 +32,6 @@ namespace MeetSpace.Services.Services
                     .ThenInclude(b => b.Space)
                         .ThenInclude(s => s.Facility);
 
-            /// 🔍 SEARCH
             if (!string.IsNullOrWhiteSpace(search.Name))
             {
                 query = query.Where(p =>
@@ -40,7 +39,6 @@ namespace MeetSpace.Services.Services
                 );
             }
 
-            /// 📅 DATE FILTER
             if (search.FromDate.HasValue)
             {
                 query = query.Where(p => p.PaymentDate >= search.FromDate.Value);
@@ -51,7 +49,6 @@ namespace MeetSpace.Services.Services
                 query = query.Where(p => p.PaymentDate <= search.ToDate.Value);
             }
 
-            /// 🔥 SORT (isti kao kod ostalih)
             query = base.ApplyFilter(query, search);
 
             return query;

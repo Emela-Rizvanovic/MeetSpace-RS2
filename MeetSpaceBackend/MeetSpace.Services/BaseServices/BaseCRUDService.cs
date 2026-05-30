@@ -1,11 +1,6 @@
 ﻿using MeetSpace.Services.Database;
 using MeetSpace.Models.SearchObjects;
 using AutoMapper;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MeetSpace.Services.BaseServices
 {

@@ -1,6 +1,4 @@
 ﻿using MeetSpace.Models.Messages;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -14,6 +12,7 @@ namespace MeetSpace.Subscriber.Services
         private readonly IEmailService _emailService;
         private readonly ILogger<RabbitMQConsumerService> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly string _apiBaseUrl;
         public RabbitMQConsumerService(
     IConfiguration config,
     IEmailService emailService,
@@ -23,6 +22,7 @@ namespace MeetSpace.Subscriber.Services
             _emailService = emailService;
             _logger = logger;
             _httpClientFactory = httpClientFactory;
+            _apiBaseUrl = Environment.GetEnvironmentVariable("API_BASE_URL")!;
 
             var factory = new ConnectionFactory()
             {
@@ -91,8 +91,7 @@ namespace MeetSpace.Subscriber.Services
 
                     var client = _httpClientFactory.CreateClient();
 
-                    var url =
-    $"{Environment.GetEnvironmentVariable("API_BASE_URL")}/api/notifications/send";
+                    var url = $"{_apiBaseUrl}/api/notifications/send";
 
                     var payload = JsonConvert.SerializeObject(message);
                     var content = new StringContent(payload, Encoding.UTF8, "application/json");
@@ -126,8 +125,7 @@ namespace MeetSpace.Subscriber.Services
 
                     var client = _httpClientFactory.CreateClient();
 
-                    var url =
-    $"{Environment.GetEnvironmentVariable("API_BASE_URL")}/api/notifications/reminder";
+                    var url = $"{_apiBaseUrl}/api/notifications/reminder";
 
                     var payload = JsonConvert.SerializeObject(message);
 

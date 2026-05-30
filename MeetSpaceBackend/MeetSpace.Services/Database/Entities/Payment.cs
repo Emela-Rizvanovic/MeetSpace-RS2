@@ -17,8 +17,6 @@
         public string? ExternalTransactionId { get; set; }
         public PaymentMethod? PaymentMethod { get; set; }
         public PaymentStatus? PaymentStatus { get; set; }
-
-        // Audit
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
     }

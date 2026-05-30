@@ -78,7 +78,6 @@ void initState() {
         child: Row(
           children: [
 
-            /// SIDEBAR
             Container(
               width: 240,
               decoration: const BoxDecoration(
@@ -141,8 +140,6 @@ const SizedBox(height: 40),
                 ],
               ),
             ),
-
-            /// CONTENT
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(30),
@@ -766,8 +763,6 @@ int? selectedCountryId =
   child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-
-                 /// CITY NAME
 TextFormField(
   controller: controller,
 
@@ -792,7 +787,6 @@ decoration:
 
                   const SizedBox(height: 20),
 
-                  /// COUNTRY DROPDOWN
                   DropdownButtonFormField<int>(
                     value: selectedCountryId,
                     dropdownColor: AdminStyles.cardColor,
@@ -1060,8 +1054,6 @@ int? selectedCityId =
                   mainAxisSize:
                       MainAxisSize.min,
                   children: [
-
-                    /// NAME
 TextFormField(
   controller: nameController,
 
@@ -1087,7 +1079,6 @@ decoration:
                     const SizedBox(
                         height: 16),
 
-                    /// ADDRESS
 TextFormField(
   controller: addressController,
 
@@ -1113,7 +1104,6 @@ decoration:
                     const SizedBox(
                         height: 16),
 
-                    /// CITY
                     DropdownButtonFormField<
                         int>(
                       value:
@@ -1160,7 +1150,6 @@ decoration:
                     const SizedBox(
                         height: 16),
 
-                    /// EMAIL
 TextFormField(
   controller: emailController,
 
@@ -1182,7 +1171,6 @@ decoration:
                     const SizedBox(
                         height: 16),
 
-                    /// PHONE
 TextFormField(
   controller: phoneController,
 
@@ -1204,7 +1192,6 @@ decoration:
                     const SizedBox(
                         height: 16),
 
-                    /// DESCRIPTION
                     TextField(
                       controller:
                           descriptionController,

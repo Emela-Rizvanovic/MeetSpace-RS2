@@ -1,11 +1,6 @@
 ﻿using MeetSpace.Models.Messages;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Mail;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MeetSpace.Subscriber.Services
 {
@@ -13,11 +8,21 @@ namespace MeetSpace.Subscriber.Services
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<EmailService> _logger;
+        private readonly string _smtpHost;
+        private readonly int _smtpPort;
+        private readonly string _smtpUsername;
+        private readonly string _smtpPassword;
+        private readonly string _smtpFrom;
 
         public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
         {
             _configuration = configuration;
             _logger = logger;
+            _smtpHost = Environment.GetEnvironmentVariable("SMTP_HOST")!;
+            _smtpPort = int.Parse(Environment.GetEnvironmentVariable("SMTP_PORT")!);
+            _smtpUsername = Environment.GetEnvironmentVariable("SMTP_USERNAME")!;
+            _smtpPassword = Environment.GetEnvironmentVariable("SMTP_PASSWORD")!;
+            _smtpFrom = Environment.GetEnvironmentVariable("SMTP_FROM")!;
         }
 
         public async Task SendPasswordResetEmailAsync(PasswordResetRequested message)
@@ -30,24 +35,20 @@ namespace MeetSpace.Subscriber.Services
         </div>
         <p>This code expires at {message.ExpiresAt.ToLocalTime():HH:mm}.</p>";
 
-            using var smtp = new SmtpClient(
-    Environment.GetEnvironmentVariable("SMTP_HOST"))
+            using var smtp = new SmtpClient(_smtpHost)
             {
-                Port = int.Parse(
-        Environment.GetEnvironmentVariable("SMTP_PORT")!),
-
+                Port = _smtpPort,
                 EnableSsl = true,
-
                 Credentials = new NetworkCredential(
-        Environment.GetEnvironmentVariable("SMTP_USERNAME"),
-        Environment.GetEnvironmentVariable("SMTP_PASSWORD"))
+        _smtpUsername,
+        _smtpPassword)
             };
 
             await smtp.SendMailAsync(
-                new MailMessage(
-                    Environment.GetEnvironmentVariable("SMTP_FROM"),
-                    message.UserEmail)
-                {
+               new MailMessage(
+    _smtpFrom,
+    message.UserEmail)
+               {
                     Subject = subject,
                     Body = body,
                     IsBodyHtml = true

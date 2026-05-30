@@ -72,7 +72,6 @@ class _AddAmenityDialogState extends State<AddAmenityDialog> {
       final auth = context.read<AuthProvider>();
 
       if (widget.amenity == null) {
-        /// CREATE
         await auth.amenityService.api.post("Amenity", {
           "name": _nameController.text,
           "description": _descController.text,
@@ -80,7 +79,6 @@ class _AddAmenityDialogState extends State<AddAmenityDialog> {
           "amenityCategoryId": _categoryId,
         });
       } else {
-        /// UPDATE
         await auth.amenityService.api.put(
           "Amenity/${widget.amenity!.id}",
           {
@@ -149,8 +147,7 @@ class _AddAmenityDialogState extends State<AddAmenityDialog> {
 
               _input(_priceController, "Price", isNumber: true),
               const SizedBox(height: 12),
-
-              /// 🔥 CATEGORY DROPDOWN
+              
               DropdownButtonFormField<int>(
                 value: _categoryId,
                 items: _categories

@@ -142,7 +142,6 @@ errorStyle: const TextStyle(fontSize: 12),
                     key: _formKey,
                     child: Column(
                       children: [
-                        /// PROFILE IMAGE
                         GestureDetector(
                           onTap: _pickImage,
                           child: CircleAvatar(

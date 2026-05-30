@@ -117,7 +117,6 @@ Future<void> _generatePdf() async {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// TOP BAR
 Row(
   children: [
     InkWell(
@@ -150,7 +149,6 @@ Row(
 ),
 
 const SizedBox(height: 10),
-            /// TITLE
       Row(
   children: [
     const Text(
@@ -164,7 +162,6 @@ const SizedBox(height: 10),
 
     const Spacer(),
 
-    /// SORT (gore desno)
     Container(
       height: 52,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -193,7 +190,6 @@ const SizedBox(height: 10),
 
 const SizedBox(height: 10),
  
-            /// SEARCH
             TextField(
               onChanged: (value) {
   setState(() {
@@ -216,7 +212,6 @@ const SizedBox(height: 10),
  
             const SizedBox(height: 10),
  
-            /// GRID
 Expanded(
   child: _isLoading
       ? const Center(
@@ -335,7 +330,6 @@ Align(
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        /// PREV
         GestureDetector(
           onTap: _page > 0
               ? () {
@@ -351,7 +345,6 @@ Align(
 
         const SizedBox(width: 8),
 
-        /// PAGE NUMBERS
         for (int i = 0; i < _totalPages; i++)
           GestureDetector(
             onTap: () {
@@ -380,7 +373,6 @@ Align(
 
         const SizedBox(width: 8),
 
-        /// NEXT
         GestureDetector(
           onTap: _page < _totalPages - 1
               ? () {
@@ -418,20 +410,19 @@ class _UserCard extends StatelessWidget {
     final image = user.profileImageUrl;
 
     return Container(
-      padding: const EdgeInsets.all(12), // 🔥 manji padding
+      padding: const EdgeInsets.all(12), 
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16), // 🔥 malo manji radius
+        borderRadius: BorderRadius.circular(16), 
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// IMAGE
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: image == null || image.isEmpty
                 ? Container(
-                    height: 130, // 🔥 manja slika
+                    height: 130, 
                     color: const Color(0xFFEDEDED),
                     child: const Center(
                       child: Icon(Icons.person),
@@ -447,7 +438,6 @@ class _UserCard extends StatelessWidget {
 
           const SizedBox(height: 10),
 
-          /// NAME
           Text(
             "${user.firstName ?? ""} ${user.lastName ?? ""}",
             style: const TextStyle(
@@ -458,7 +448,6 @@ class _UserCard extends StatelessWidget {
 
           const SizedBox(height: 2),
 
-          /// USERNAME
           Text(
             user.username,
             style: const TextStyle(
@@ -469,11 +458,10 @@ class _UserCard extends StatelessWidget {
 
           const Spacer(),
 
-          /// BUTTON (FIGMA STYLE)
           Align(
             alignment: Alignment.bottomRight,
             child: SizedBox(
-              height: 36, // 🔥 manji button
+              height: 36, 
               child: ElevatedButton(
                 onPressed: () async {
                   final result = await Navigator.push(
@@ -483,11 +471,11 @@ class _UserCard extends StatelessWidget {
                     ),
                   );
 
-                  onResult(result); // 🔥 vrati parentu
+                  onResult(result); 
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: brandOrange,
-                  foregroundColor: Colors.black, // 🔥 kao na slici
+                  foregroundColor: Colors.black, 
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   shape: RoundedRectangleBorder(

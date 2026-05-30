@@ -45,7 +45,6 @@ class PaymentStatusesSection extends StatelessWidget {
           CrossAxisAlignment.start,
       children: [
 
-        /// HEADER
         Row(
           children: [
 
@@ -75,7 +74,6 @@ class PaymentStatusesSection extends StatelessWidget {
 
         const SizedBox(height: 24),
 
-        /// SEARCH
         TextField(
           onChanged: onSearch,
           decoration:
@@ -86,7 +84,6 @@ class PaymentStatusesSection extends StatelessWidget {
 
         const SizedBox(height: 24),
 
-        /// TABLE
         Expanded(
           child: Container(
             decoration: BoxDecoration(
@@ -107,7 +104,6 @@ class PaymentStatusesSection extends StatelessWidget {
                 : Column(
                     children: [
 
-                      /// HEADER
                       Container(
                         padding:
                             const EdgeInsets.symmetric(
@@ -156,7 +152,6 @@ class PaymentStatusesSection extends StatelessWidget {
                         ),
                       ),
 
-                      /// LIST
                       Expanded(
                         child:
                             ListView.separated(

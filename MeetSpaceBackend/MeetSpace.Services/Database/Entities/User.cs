@@ -1,6 +1,4 @@
-﻿using System.Data;
-
-namespace MeetSpace.Models.Entities
+﻿namespace MeetSpace.Models.Entities
 {
     public class User
     {
@@ -18,8 +16,6 @@ namespace MeetSpace.Models.Entities
         public bool IsActive { get; set; } = true;
          public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
          public DateTime? UpdatedAt { get; set; }
-
-         // Navigation
          public virtual Role Role { get; set; }
          public virtual ICollection<Booking> Bookings { get; set; }
          public virtual ICollection<Review> Reviews { get; set; }

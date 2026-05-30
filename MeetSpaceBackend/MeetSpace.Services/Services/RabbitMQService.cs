@@ -3,9 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
-using System;
 using System.Text;
-using System.Threading.Tasks;
 using IModel = RabbitMQ.Client.IModel;
 
 namespace MeetSpace.Services.Services
@@ -42,7 +40,6 @@ namespace MeetSpace.Services.Services
             }
             catch (Exception ex)
             {
-                // Ako RabbitMQ nije dostupan, samo loguj i nastavi
                 _logger.LogWarning(ex, "RabbitMQ unavailable, continuing without queue.");
                 _connection = null;
                 _channel = null;

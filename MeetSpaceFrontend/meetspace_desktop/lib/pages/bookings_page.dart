@@ -43,8 +43,6 @@ void initState() {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-  /// 🔥 HEADER
   Row(
     children: [
       InkWell(
@@ -91,7 +89,6 @@ void initState() {
 
     const Spacer(),
 
-    /// HISTORY
     OutlinedButton.icon(
      onPressed: () {
   Navigator.push(
@@ -126,7 +123,6 @@ void initState() {
 
     const SizedBox(width: 16),
 
-    /// STATUSES
     OutlinedButton.icon(
       onPressed: () async {
   await showDialog(
@@ -164,7 +160,6 @@ void initState() {
 
 const SizedBox(height: 20),
 
-/// SEARCH
 TextField(
   onChanged: (value) {
     setState(() {
@@ -270,7 +265,6 @@ Widget _buildPagination() {
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        /// PREV
         GestureDetector(
           onTap: _page > 0
               ? () {
@@ -286,7 +280,6 @@ Widget _buildPagination() {
 
         const SizedBox(width: 8),
 
-        /// PAGE NUMBERS
         for (int i = 0; i < _totalPages; i++)
           GestureDetector(
             onTap: () {
@@ -315,7 +308,6 @@ Widget _buildPagination() {
 
         const SizedBox(width: 8),
 
-        /// NEXT
         GestureDetector(
           onTap: _page < _totalPages - 1
               ? () {
@@ -385,7 +377,6 @@ class _BookingCardState extends State<BookingCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// TITLE
 Text(
   booking.spaceName ?? "Space",
   style: const TextStyle(
@@ -396,11 +387,10 @@ Text(
 
 const SizedBox(height: 6),
 
-              /// IMAGE
               ClipRRect(
                 borderRadius: BorderRadius.circular(14),
                 child: AspectRatio(
-                  aspectRatio: 16 / 10, // 🔥 manja visina
+                  aspectRatio: 16 / 10, 
                   child: booking.spaceImageUrl == null ||
                           booking.spaceImageUrl!.isEmpty
                       ? Container(
@@ -416,7 +406,6 @@ const SizedBox(height: 6),
 
               const SizedBox(height: 10),
 
-              /// MIN INFO
               _infoRow(
                 "Time",
                 "${_formatTime(booking.startTime)} - ${_formatTime(booking.endTime)}",
@@ -435,7 +424,6 @@ const SizedBox(height: 6),
 
               const SizedBox(height: 10),
 
-              /// 🔥 hint da je klikabilno
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: const [
@@ -747,7 +735,6 @@ Future<String?> _confirmCancelBooking(BuildContext context) async {
   );
 }
 
-  /// 🔥 MODAL FIX (NO OVERFLOW)
 Future<void> _openDetails(BuildContext context) async {
   final booking = widget.booking;
   final isPending = booking.bookingStatusId == BookingStatusIds.pending;
@@ -795,7 +782,6 @@ final canApprove = isPending && approveDisabledReason == null;
           ),
           child: Column(
             children: [
-              /// 🔥 SCROLLABLE CONTENT
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
@@ -876,13 +862,15 @@ Text(
         const Icon(Icons.history, size: 16, color: Colors.black45),
         const SizedBox(width: 6),
         Expanded(
-          child: Text(
-            "${booking.lastAction} by ${booking.lastAdminName ?? '-'}",
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.black54,
-            ),
-          ),
+         child: Text(
+  booking.lastAdminName != null
+      ? "${booking.lastAction} · ${booking.lastAdminName}"
+      : booking.lastAction!,
+  style: const TextStyle(
+    fontSize: 12,
+    color: Colors.black54,
+  ),
+),
         ),
       ],
     ),
@@ -918,7 +906,6 @@ Text(
     ),
   ),
 
-                      /// 🔥 REJECTION REASON
                       if (booking.bookingStatusId == BookingStatusIds.rejected &&
                           booking.rejectionReason != null)
                         Padding(
@@ -934,7 +921,6 @@ Text(
 
                       const SizedBox(height: 20),
 
-                      /// 🔥 USER INFO TITLE (MEETSPACE STYLE)
                       const Text(
                         "User information",
                         style: TextStyle(
@@ -956,7 +942,6 @@ Text(
 
               const SizedBox(height: 16),
 
-              /// 🔥 BUTTONS
               if (isPending) ...[
                 Row(
                   children: [
@@ -1141,7 +1126,6 @@ ScaffoldMessenger.of(context).showSnackBar(
   const SizedBox(height: 12),
 ],
 
-              /// 🔥 REMINDER (NE ZA REJECTED)
               if (isReminderAvailable)
                 _secondaryButton(
                   text: "Send reminder",

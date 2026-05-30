@@ -4,11 +4,6 @@ using MeetSpace.Models.SearchObjects;
 using MeetSpace.Services.BaseInterfaces;
 using MeetSpace.Services.Database;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MeetSpace.Services.BaseServices
 {
@@ -36,18 +31,23 @@ namespace MeetSpace.Services.BaseServices
             query = ApplyFilter(query, search);
             query = ApplySort(query, search);
 
-            // 👉 TOTAL COUNT (uvijek prije paginacije)
             var totalCount = await query.CountAsync(cancellationToken);
 
             var page = search.Page ?? 0;
-            var pageSize = search.PageSize ?? 20;
+            var pageSize = search.PageSize ?? BaseSearchObject.DefaultPageSize;
 
-            if (!search.RetrieveAll)
-            {
-                query = query
-                    .Skip(page * pageSize)
-                    .Take(pageSize);
-            }
+            if (page < 0)
+                page = 0;
+
+            if (pageSize <= 0)
+                pageSize = BaseSearchObject.DefaultPageSize;
+
+            if (pageSize > BaseSearchObject.MaxPageSize)
+                pageSize = BaseSearchObject.MaxPageSize;
+
+            query = query
+                .Skip(page * pageSize)
+                .Take(pageSize);
 
             var list = await query.ToListAsync(cancellationToken);
 

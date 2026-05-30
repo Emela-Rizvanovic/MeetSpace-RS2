@@ -134,7 +134,6 @@ profileImage: _pickedImage,
       body: SafeArea(
         child: Column(
           children: [
-            // HEADER
             Padding(
               padding: const EdgeInsets.symmetric(
                   horizontal: 20, vertical: 18),
@@ -180,8 +179,6 @@ profileImage: _pickedImage,
                   key: _formKey,
                   child: Column(
                     children: [
-
-                      // PROFILE IMAGE
                       Center(
                         child: Column(
                           children: [

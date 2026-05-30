@@ -6,24 +6,19 @@ using MeetSpace.Models.SearchObjects;
 using MeetSpace.Services.BaseServices;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace MeetSpace.Services.Services
 {
     public class SpaceTypeService
-      : BaseCRUDService<SpaceTypeResponse, SpaceTypeSearchObject, SpaceType, SpaceTypeInsertRequest, SpaceTypeUpdateRequest>,
+      : CachedReferenceCRUDService<SpaceTypeResponse, SpaceTypeSearchObject, SpaceType, SpaceTypeInsertRequest, SpaceTypeUpdateRequest>,
         ISpaceTypeService
     {
-        public SpaceTypeService(MeetSpaceDbContext context, IMapper mapper)
-            : base(context, mapper)
+        public SpaceTypeService(MeetSpaceDbContext context, IMapper mapper, IMemoryCache cache)
+            : base(context, mapper, cache)
         {
         }
 
-        // Filter za pretragu po nazivu
         protected override IQueryable<SpaceType> ApplyFilter(IQueryable<SpaceType> query, SpaceTypeSearchObject search)
         {
             if (!string.IsNullOrWhiteSpace(search.Name))
@@ -34,6 +29,5 @@ namespace MeetSpace.Services.Services
             return query;
         }
 
-        // protected override async Task BeforeUpdate(...) { } ?
     }
 }

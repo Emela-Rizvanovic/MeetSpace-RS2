@@ -57,7 +57,6 @@ class BookingConfirmationPage extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // SPACE NAME
               Text(
                 space.name,
                 style: const TextStyle(
@@ -69,7 +68,6 @@ class BookingConfirmationPage extends StatelessWidget {
 
               const SizedBox(height: 8),
 
-              // ADDRESS (facilityAddress iz tvog modela)
               Text(
                 space.facilityAddress ?? "",
                 style: const TextStyle(color: Colors.white70),
@@ -77,7 +75,6 @@ class BookingConfirmationPage extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // IMAGE
               ClipRRect(
                 borderRadius: BorderRadius.circular(20),
                 child: Image.network(
@@ -107,7 +104,6 @@ class BookingConfirmationPage extends StatelessWidget {
 
               const SizedBox(height: 30),
 
-              // QR
               Center(
                 child: Container(
                   padding: const EdgeInsets.all(12),

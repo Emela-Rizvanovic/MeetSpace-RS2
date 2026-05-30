@@ -78,7 +78,6 @@ namespace MeetSpace.Services.Services
             await _context.Spaces.AddAsync(entity, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
-            // ✅ 1) Upload images (existing logic)
             if (request.Images != null && request.Images.Any())
             {
                 foreach (var file in request.Images)
@@ -139,7 +138,7 @@ namespace MeetSpace.Services.Services
         {
             var entity = await _context.Spaces
                 .Include(s => s.Images)
-                .Include(s => s.SpaceAmenities) // ✅ needed for replace
+                .Include(s => s.SpaceAmenities) 
                 .Include(s => s.Reviews)
                 .Include(s => s.SpaceType)
                 .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
@@ -147,7 +146,6 @@ namespace MeetSpace.Services.Services
             if (entity == null)
                 return null;
 
-            // Update fields (existing logic)
             if (!string.IsNullOrWhiteSpace(request.Name))
                 entity.Name = request.Name;
 
@@ -168,7 +166,6 @@ namespace MeetSpace.Services.Services
 
             entity.UpdatedAt = DateTime.UtcNow;
 
-            // ✅ 1) Delete images (existing logic)
             if (request.DeleteImageIds != null && request.DeleteImageIds.Any())
             {
                 foreach (var idToDelete in request.DeleteImageIds)
@@ -182,7 +179,6 @@ namespace MeetSpace.Services.Services
                 }
             }
 
-            // ✅ 2) Add new images (existing logic)
             if (request.NewImages != null && request.NewImages.Any())
             {
                 foreach (var file in request.NewImages)
@@ -199,19 +195,15 @@ namespace MeetSpace.Services.Services
                 }
             }
 
-            // ✅ 3) Replace amenities (NEW) — only if AmenityIds provided
-            // AMENITIES: diraj samo ako su poslani neki ID-evi
             if (request.AmenityIds != null && request.AmenityIds.Count > 0)
             {
                 var newIdsDistinct = request.AmenityIds.Distinct().ToList();
 
-                // (opcionalno) validacija da amenity postoji
                 var validIds = await _context.Amenities
                     .Where(a => newIdsDistinct.Contains(a.Id))
                     .Select(a => a.Id)
                     .ToListAsync(cancellationToken);
 
-                // replace
                 _context.SpaceAmenities.RemoveRange(entity.SpaceAmenities);
 
                 foreach (var amenityId in validIds)
@@ -228,7 +220,6 @@ namespace MeetSpace.Services.Services
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            // ✅ Reload with all includes so response has Images + Facility + Amenities
             entity = await _context.Spaces
                 .Include(s => s.Images)
                 .Include(s => s.Facility)
@@ -244,7 +235,7 @@ namespace MeetSpace.Services.Services
         {
             var entity = await _context.Spaces
                 .Include(s => s.Images)
-                .Include(s => s.SpaceAmenities) // ✅ clean links too
+                .Include(s => s.SpaceAmenities)
                 .Include(s => s.Reviews)
                 .Include(s => s.SpaceType)
                 .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
@@ -252,14 +243,12 @@ namespace MeetSpace.Services.Services
             if (entity == null)
                 return false;
 
-            // delete images from blob + db
             foreach (var img in entity.Images)
             {
                 await _blobService.DeleteSpaceImageAsync(img.ImageUrl);
                 _context.SpaceImages.Remove(img);
             }
 
-            // remove amenities links
             _context.SpaceAmenities.RemoveRange(entity.SpaceAmenities);
 
             _context.Spaces.Remove(entity);
@@ -288,14 +277,21 @@ namespace MeetSpace.Services.Services
             if (search.IncludeTotalCount)
                 totalCount = await query.CountAsync(cancellationToken);
 
-            if (!search.RetrieveAll)
-            {
-                if (search.Page.HasValue)
-                    query = query.Skip(search.Page.Value * (search.PageSize ?? 20));
+            var page = search.Page ?? 0;
+            var pageSize = search.PageSize ?? BaseSearchObject.DefaultPageSize;
 
-                if (search.PageSize.HasValue)
-                    query = query.Take(search.PageSize.Value);
-            }
+            if (page < 0)
+                page = 0;
+
+            if (pageSize <= 0)
+                pageSize = BaseSearchObject.DefaultPageSize;
+
+            if (pageSize > BaseSearchObject.MaxPageSize)
+                pageSize = BaseSearchObject.MaxPageSize;
+
+            query = query
+                .Skip(page * pageSize)
+                .Take(pageSize);
 
             var entities = await query.ToListAsync(cancellationToken);
             var mapped = entities.Select(MapToResponse).ToList();
@@ -304,8 +300,8 @@ namespace MeetSpace.Services.Services
             {
                 Items = mapped,
                 TotalCount = totalCount ?? mapped.Count,
-                Page = search.Page ?? 0,
-                PageSize = search.PageSize ?? mapped.Count
+                Page = page,
+                PageSize = pageSize
             };
         }
 

@@ -7,15 +7,16 @@ using MeetSpace.Services.BaseServices;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace MeetSpace.Services.Services
 {
     public class BookingStatusService
-        : BaseCRUDService<BookingStatusResponse, BookingStatusSearchObject, BookingStatus, BookingStatusInsertRequest, BookingStatusUpdateRequest>,
+        : CachedReferenceCRUDService<BookingStatusResponse, BookingStatusSearchObject, BookingStatus, BookingStatusInsertRequest, BookingStatusUpdateRequest>,
           IBookingStatusService
     {
-        public BookingStatusService(MeetSpaceDbContext context, IMapper mapper)
-            : base(context, mapper)
+        public BookingStatusService(MeetSpaceDbContext context, IMapper mapper, IMemoryCache cache)
+            : base(context, mapper, cache)
         {
         }
 
@@ -29,7 +30,6 @@ namespace MeetSpace.Services.Services
 
         protected override async Task BeforeInsert(BookingStatus entity, BookingStatusInsertRequest request, CancellationToken cancellationToken = default)
         {
-            // Unique name check (preporučeno)
             var exists = await _context.BookingStatuses.AnyAsync(x => x.Name.ToLower() == request.Name.ToLower(), cancellationToken);
             if (exists)
                 throw new ArgumentException("Booking status with this name already exists.");

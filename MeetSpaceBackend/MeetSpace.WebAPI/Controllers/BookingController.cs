@@ -1,5 +1,4 @@
 ﻿using MeetSpace.Models.Constants;
-using MeetSpace.Models.Enums;
 using MeetSpace.Models.Exceptions;
 using MeetSpace.Models.Requests;
 using MeetSpace.Models.Responses;
@@ -37,7 +36,6 @@ namespace MeetSpace.WebAPI.Controllers
 
             if (currentRole != Roles.Admin)
             {
-                // Force booking to logged-in user
                 request.UserId = currentUserId;
             }
 
@@ -82,7 +80,6 @@ namespace MeetSpace.WebAPI.Controllers
 
             if (currentRole != Roles.Admin)
             {
-                // Force filter to current user
                 search.UserId = currentUserId;
             }
 

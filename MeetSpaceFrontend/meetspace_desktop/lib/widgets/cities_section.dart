@@ -44,8 +44,6 @@ class CitiesSection extends StatelessWidget {
       crossAxisAlignment:
           CrossAxisAlignment.start,
       children: [
-
-        /// HEADER
         Row(
           children: [
 
@@ -75,7 +73,6 @@ class CitiesSection extends StatelessWidget {
 
         const SizedBox(height: 24),
 
-        /// SEARCH
         TextField(
           onChanged: onSearch,
           decoration:
@@ -86,7 +83,6 @@ class CitiesSection extends StatelessWidget {
 
         const SizedBox(height: 24),
 
-        /// TABLE
         Expanded(
           child: Container(
             decoration: BoxDecoration(
@@ -107,7 +103,6 @@ class CitiesSection extends StatelessWidget {
                 : Column(
                     children: [
 
-                      /// HEADER
                       Container(
                         padding:
                             const EdgeInsets.symmetric(
@@ -171,7 +166,6 @@ class CitiesSection extends StatelessWidget {
                         ),
                       ),
 
-                      /// LIST
                       Expanded(
                         child:
                             ListView.separated(

@@ -6,11 +6,6 @@ using MeetSpace.Models.SearchObjects;
 using MeetSpace.Services.BaseServices;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MeetSpace.Services.Services
 {
@@ -22,7 +17,6 @@ namespace MeetSpace.Services.Services
         {
         }
 
-        // ApplyFilter za pretragu po poljima AmenitySearchObject
         protected override IQueryable<Amenity> ApplyFilter(IQueryable<Amenity> query, AmenitySearchObject search)
         {
             if (!string.IsNullOrWhiteSpace(search.Name))

@@ -71,18 +71,15 @@ namespace MeetSpace.Services.Services
         {
             entity.CreatedAt = DateTime.UtcNow;
 
-            // 1️⃣ Rating validacija (dodatna zaštita)
             if (request.Rating < 1 || request.Rating > 5)
                 throw new BusinessException("Rating must be between 1 and 5.");
 
-            // 2️⃣ Space mora postojati
             var spaceExists = await _context.Spaces
                 .AnyAsync(s => s.Id == request.SpaceId, cancellationToken);
 
             if (!spaceExists)
                 throw new NotFoundException("Space not found.");
 
-            // 3️⃣ User mora imati ZAVRŠEN booking za taj space
             var now = DateTime.UtcNow;
 
             var hasCompletedBooking = await _context.Bookings
@@ -99,7 +96,6 @@ namespace MeetSpace.Services.Services
                     "You can leave a review only for visited spaces after your booking has finished.");
             }
 
-            // 4️⃣ Provjeri da već ne postoji review
             var exists = await _context.Reviews
                 .AnyAsync(r => r.UserId == entity.UserId &&
                                r.SpaceId == request.SpaceId,
@@ -166,6 +162,25 @@ namespace MeetSpace.Services.Services
         {
             return await _context.Reviews
                 .CountAsync(r => r.SpaceId == spaceId);
+        }
+
+        public async Task<ReviewSummaryResponse> GetSummaryAsync(int spaceId)
+        {
+            var summary = await _context.Reviews
+                .Where(r => r.SpaceId == spaceId)
+                .GroupBy(r => r.SpaceId)
+                .Select(g => new ReviewSummaryResponse
+                {
+                    AverageRating = Math.Round(g.Average(r => r.Rating), 2),
+                    TotalReviews = g.Count()
+                })
+                .FirstOrDefaultAsync();
+
+            return summary ?? new ReviewSummaryResponse
+            {
+                AverageRating = 0,
+                TotalReviews = 0
+            };
         }
     }
 }

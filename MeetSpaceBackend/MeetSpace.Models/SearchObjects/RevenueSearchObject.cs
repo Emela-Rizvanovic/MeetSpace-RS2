@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MeetSpace.Models.SearchObjects
+﻿namespace MeetSpace.Models.SearchObjects
 {
     public class RevenueSearchObject : BaseSearchObject
     {

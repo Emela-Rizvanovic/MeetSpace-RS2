@@ -71,7 +71,7 @@ if (!mounted) return;
 
   switch (_sort) {
     case "Date ↓":
-      sortBy = "PaymentDate"; // 🔥 FIX
+      sortBy = "PaymentDate"; 
       desc = true;
       break;
 
@@ -134,7 +134,6 @@ Future<void> _generatePdf() async {
 
     await file.writeAsBytes(bytes);
 
-    /// 🔥 OTVORI FAJL
     await OpenFile.open(file.path);
 
   } catch (_) {
@@ -154,7 +153,6 @@ Future<void> _generatePdf() async {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// TOP BAR
 Row(
   children: [
     InkWell(
@@ -187,7 +185,6 @@ Row(
 ),
 
 const SizedBox(height: 10),
-            /// TITLE + ACTIONS
            
 Row(
   children: [
@@ -233,14 +230,11 @@ Row(
 
 const SizedBox(width: 16),
 
-                /// DATE FILTER
                 _dateButton("From", _fromDate, () => _pickDate(true)),
 const SizedBox(width: 8),
 _dateButton("To", _toDate, () => _pickDate(false)),
                 const SizedBox(width: 8),
 
-
-                /// SORT
                 Container(
                   height: 52,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -272,7 +266,6 @@ _dateButton("To", _toDate, () => _pickDate(false)),
 
             const SizedBox(height: 20),
 
-            /// SEARCH
             TextField(
               onChanged: (value) {
   setState(() {
@@ -296,7 +289,6 @@ _dateButton("To", _toDate, () => _pickDate(false)),
 
             const SizedBox(height: 10),
 
-            /// LIST
         Expanded(
   child: _loading
       ? const Center(
@@ -334,7 +326,6 @@ _dateButton("To", _toDate, () => _pickDate(false)),
 
                      const SizedBox(height: 20),
 
-/// 🔥 PDF BUTTON (BOTTOM)
 Align(
   alignment: Alignment.centerRight,
   child: ElevatedButton.icon(

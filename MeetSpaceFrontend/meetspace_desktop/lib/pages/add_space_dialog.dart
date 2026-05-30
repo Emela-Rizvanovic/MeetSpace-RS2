@@ -148,7 +148,7 @@ final spaceService = auth.spaceService;
   spaceTypeId: _spaceTypeId!,
   amenityIds: _selectedAmenities,
   newImages: _images,
-  deleteImageIds: _imagesToDelete, // 👈 NOVO
+  deleteImageIds: _imagesToDelete, 
 );
 }
 
@@ -201,8 +201,6 @@ final spaceService = auth.spaceService;
           ],
         ),
                 const SizedBox(height: 20),
-
-                /// NAME + FACILITY
                 Row(
   children: [
     Expanded(
@@ -227,7 +225,6 @@ final spaceService = auth.spaceService;
 
                 const SizedBox(height: 12),
 
-                /// CAPACITY + PRICE
                Row(
   children: [
     Expanded(
@@ -242,7 +239,6 @@ final spaceService = auth.spaceService;
 
                 const SizedBox(height: 12),
 
-                /// SPACE TYPE
                 _dropdown(
                   hint: "Space type",
                   value: _spaceTypeId,
@@ -252,12 +248,10 @@ final spaceService = auth.spaceService;
 
                 const SizedBox(height: 12),
 
-                /// DESCRIPTION
                 _input(_descController, "Description", minLength: 10, maxLength: 500),
 
                 const SizedBox(height: 12),
 
-                /// AMENITIES
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Wrap(
@@ -343,7 +337,6 @@ if (widget.space != null && widget.space!.images.isNotEmpty) ...[
     }).toList(),
   ),
 ],
-                /// IMAGE PICKER
                 GestureDetector(
                   onTap: _pickImages,
                   child: Container(
@@ -370,7 +363,6 @@ if (widget.space != null && widget.space!.images.isNotEmpty) ...[
                 ),
               ),
 
-              /// REMOVE BUTTON
               Positioned(
                 top: 4,
                 right: 4,
@@ -402,7 +394,6 @@ if (widget.space != null && widget.space!.images.isNotEmpty) ...[
 
                 const SizedBox(height: 20),
 
-                /// SUBMIT
                 SizedBox(
                   height: 50,
                   width: double.infinity,

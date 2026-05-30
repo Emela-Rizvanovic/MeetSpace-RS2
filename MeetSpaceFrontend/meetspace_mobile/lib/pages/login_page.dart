@@ -84,12 +84,11 @@ class _LoginPageState extends State<LoginPage>
             padding: const EdgeInsets.symmetric(horizontal: 30),
             child: Column(
               children: [
-                /// APP TITLE
                 Text(
                   "MEETSPACE",
                   style: TextStyle(
                     fontFamily: "Poppins",
-                    fontWeight: FontWeight.w300, // thin/light
+                    fontWeight: FontWeight.w300,
                     fontSize: 38,
                     color: Colors.white,
                     letterSpacing: 3,
@@ -98,7 +97,6 @@ class _LoginPageState extends State<LoginPage>
 
                 const SizedBox(height: 40),
 
-                /// FORM CONTAINER
                 Container(
                   padding: const EdgeInsets.all(25),
                   decoration: BoxDecoration(
@@ -109,7 +107,6 @@ class _LoginPageState extends State<LoginPage>
                     key: _formKey,
                     child: Column(
                       children: [
-                        /// USERNAME
                         TextFormField(
                           controller: _usernameController,
                           style: const TextStyle(color: Colors.white),
@@ -145,7 +142,6 @@ if (value.trim().length < 4) {
 
                         const SizedBox(height: 20),
 
-                        /// PASSWORD
                         TextFormField(
                           controller: _passwordController,
                           obscureText: true,
@@ -194,12 +190,8 @@ Align(
   ),
 ),
 
-
                         const SizedBox(height: 30),
 
-                        
-
-                        /// LOGIN BUTTON
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -225,7 +217,6 @@ Align(
 
                         const SizedBox(height: 16),
 
-                        /// REGISTER LINK
                         GestureDetector(
                           onTap: () {
                             Navigator.pushNamed(context, '/register');

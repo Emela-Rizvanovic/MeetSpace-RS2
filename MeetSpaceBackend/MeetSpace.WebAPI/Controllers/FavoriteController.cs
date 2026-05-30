@@ -1,5 +1,4 @@
 ﻿using MeetSpace.Models.Constants;
-using MeetSpace.Models.Entities;
 using MeetSpace.Models.Requests;
 using MeetSpace.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;

@@ -11,7 +11,6 @@ class PdfHelper {
     DateTime? from,
     DateTime? to,
   }) async {
-    /// 🔤 LOAD FONTS (Unicode fix)
     final font = await pw.Font.ttf(
       await rootBundle.load("assets/fonts/Roboto-Regular.ttf"),
     );
@@ -22,7 +21,6 @@ class PdfHelper {
 
     final pdf = pw.Document();
 
-    /// 🎯 FILTER
     final filtered = data.where((e) {
       if (from != null && e.date.isBefore(from)) return false;
       if (to != null && e.date.isAfter(to)) return false;
@@ -34,13 +32,11 @@ class PdfHelper {
       (sum, item) => sum + item.amount,
     );
 
-    /// 📄 PAGE
     pdf.addPage(
       pw.MultiPage(
         margin: const pw.EdgeInsets.all(40),
         build: (context) => [
           
-          /// 🔝 HEADER (MeetSpace style)
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
@@ -58,7 +54,7 @@ class PdfHelper {
                 style: pw.TextStyle(
                   font: boldFont,
                   fontSize: 22,
-                  color: PdfColor.fromHex("#A56E09"), // brand orange
+                  color: PdfColor.fromHex("#A56E09"), 
                 ),
               ),
             ],
@@ -66,7 +62,6 @@ class PdfHelper {
 
           pw.SizedBox(height: 25),
 
-          /// 📅 PERIOD
           if (from != null || to != null)
             pw.Container(
               padding: const pw.EdgeInsets.all(10),
@@ -85,7 +80,6 @@ class PdfHelper {
 
           pw.SizedBox(height: 20),
 
-          /// 💰 TOTAL BOX (highlight)
           pw.Container(
             padding: const pw.EdgeInsets.all(16),
             decoration: pw.BoxDecoration(
@@ -116,7 +110,6 @@ class PdfHelper {
 
           pw.SizedBox(height: 25),
 
-          /// 📊 TABLE
           pw.Table.fromTextArray(
             headers: ["Amount", "User", "Location", "Payment", "Date"],
 
@@ -155,7 +148,6 @@ class PdfHelper {
 
           pw.SizedBox(height: 30),
 
-          /// 📌 FOOTER
           pw.Align(
             alignment: pw.Alignment.centerRight,
             child: pw.Text(
@@ -177,7 +169,6 @@ class PdfHelper {
 static Future<pw.Document> generateUsersPdf(
   List<UserResponse> users,
 ) async {
-  /// 🔤 LOAD FONTS
   final font = await pw.Font.ttf(
     await rootBundle.load("assets/fonts/Roboto-Regular.ttf"),
   );
@@ -193,7 +184,6 @@ static Future<pw.Document> generateUsersPdf(
       margin: const pw.EdgeInsets.all(40),
 
       build: (context) => [
-        /// 🔝 HEADER
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
@@ -220,7 +210,6 @@ static Future<pw.Document> generateUsersPdf(
 
         pw.SizedBox(height: 25),
 
-        /// 👥 TOTAL USERS
         pw.Container(
           padding: const pw.EdgeInsets.all(16),
           decoration: pw.BoxDecoration(
@@ -252,7 +241,6 @@ static Future<pw.Document> generateUsersPdf(
 
         pw.SizedBox(height: 14),
 
-        /// 📊 STATS
         pw.Row(
           children: [
             pw.Expanded(
@@ -287,7 +275,6 @@ static Future<pw.Document> generateUsersPdf(
 
         pw.SizedBox(height: 25),
 
-        /// 📊 TABLE
         pw.Table.fromTextArray(
           headers: [
             "Name",
@@ -347,7 +334,6 @@ static Future<pw.Document> generateUsersPdf(
 
         pw.SizedBox(height: 30),
 
-        /// 📌 FOOTER
         pw.Align(
           alignment: pw.Alignment.centerRight,
           child: pw.Text(

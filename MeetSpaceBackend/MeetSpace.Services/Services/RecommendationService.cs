@@ -5,11 +5,6 @@ using MeetSpace.Models.Responses;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MeetSpace.Services.Services
 {
@@ -26,14 +21,12 @@ namespace MeetSpace.Services.Services
 
         public async Task<List<SpaceResponse>> GetRecommendedSpaces(int userId, int count = 5)
         {
-            // 1️⃣ Učitaj interakcije
             var bookings = await _context.Bookings
     .Where(b => b.BookingStatusId == (int)BookingStatusEnum.Approved)
     .ToListAsync();
             var reviews = await _context.Reviews.ToListAsync();
             var favorites = await _context.Set<Favorite>().ToListAsync();
 
-            // 2️⃣ Kreiraj user-item matricu
             var userItemScores = new Dictionary<int, Dictionary<int, double>>();
 
             void AddScore(int uId, int sId, double score)
@@ -47,28 +40,22 @@ namespace MeetSpace.Services.Services
                 userItemScores[uId][sId] += score;
             }
 
-            // Booking = 3
             foreach (var b in bookings)
                 AddScore(b.UserId, b.SpaceId, 3);
 
-            // Favorite = 2
             foreach (var f in favorites)
                 AddScore(f.UserId, f.SpaceId, 2);
 
-            // Review = rating
             foreach (var r in reviews)
                 AddScore(r.UserId, r.SpaceId, r.Rating);
 
-            // Ako user nema interakcije → fallback
             if (!userItemScores.ContainsKey(userId))
                 return await GetTopRatedSpaces(count);
 
             var currentUserItems = userItemScores[userId];
 
-            // 3️⃣ Izračun similarity između prostora
             var similarity = CalculateItemSimilarity(userItemScores);
 
-            // 4️⃣ Izračun preporuke
             var scores = new Dictionary<int, double>();
 
             foreach (var item in currentUserItems)

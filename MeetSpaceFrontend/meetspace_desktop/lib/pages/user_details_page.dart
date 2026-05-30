@@ -40,7 +40,6 @@ bool _isBookingsLoading = true;
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// HEADER
             Row(
               children: [
                 InkWell(
@@ -119,7 +118,6 @@ bool _isBookingsLoading = true;
  
                           const SizedBox(height: 30),
 
-/// 🔥 BOOKINGS
 const Text(
   "Bookings",
   style: TextStyle(
@@ -368,13 +366,7 @@ _isBookingsLoading
       ),
     );
   }
- 
-  // ─── EDIT ─────────────────────────────────────────────────────────────────
-  // Pattern identičan AddSpaceDialog:
-  //   showDialog čeka result string
-  //   Unutar dijaloga: API poziv → Navigator.pop(dialogContext, "updated")
-  //   Ovdje: if result == "updated" → Navigator.pop(context, "updated")
-  //   UsersPage hvata "updated" → _loadUsers() + snackbar
+
   void _showEditDialog(BuildContext context) async {
     final firstNameCtrl = TextEditingController(text: user.firstName);
     final lastNameCtrl = TextEditingController(text: user.lastName);
@@ -531,7 +523,6 @@ DropdownMenuItem(value: AppRoles.client, child: Text(AppRoles.client)),
     ? null
     : passwordCtrl.text.trim(),
                           );
-                          // API ok → zatvori modal s "updated"
                           Navigator.pop(dialogContext, "updated");
                         } catch (e) {
                           ScaffoldMessenger.of(ctx).showSnackBar(
@@ -555,14 +546,11 @@ DropdownMenuItem(value: AppRoles.client, child: Text(AppRoles.client)),
       },
     );
  
-    // Identično SpaceDetailsPage edit handler:
-    // if (result == "updated") { Navigator.pop(context, "updated"); }
     if (result == "updated") {
       Navigator.pop(context, "updated");
     }
   }
  
-  // ─── TOGGLE ACTIVE ────────────────────────────────────────────────────────
   void _confirmToggle(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,

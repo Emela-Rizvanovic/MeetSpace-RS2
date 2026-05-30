@@ -14,7 +14,6 @@
 
         public User? User { get; set; }
         public NotificationType? NotificationType { get; set; }
-        // Audit
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
     }

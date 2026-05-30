@@ -7,10 +7,6 @@ using MeetSpace.Services.BaseServices;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace MeetSpace.Services.Services
 {
@@ -21,7 +17,6 @@ namespace MeetSpace.Services.Services
         {
         }
 
-        // ApplyFilter za pretragu po poljima FacilitySearchObject
         protected override IQueryable<Facility> ApplyFilter(IQueryable<Facility> query, FacilitySearchObject search)
         {
             query = query

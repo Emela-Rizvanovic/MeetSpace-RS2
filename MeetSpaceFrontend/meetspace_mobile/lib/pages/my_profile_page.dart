@@ -97,7 +97,6 @@ Future<void> _cancelBooking(BookingResponse booking) async {
     final auth = Provider.of<AuthProvider>(context);
     final u = auth.user;
 
-    // ako neko direktno uđe na profil bez login-a
     if (u == null) {
       return Scaffold(
         backgroundColor: bgGrey,
@@ -188,7 +187,6 @@ Future<void> _cancelBooking(BookingResponse booking) async {
 
               const SizedBox(height: 18),
 
-              // PROFILE CARD
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -198,11 +196,10 @@ Future<void> _cancelBooking(BookingResponse booking) async {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // IMAGE
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: AspectRatio(
-                        aspectRatio: 1.25, // približno kao prototip
+                        aspectRatio: 1.25, 
                         child: imageUrl.isEmpty
                             ? Container(
                                 color: const Color(0xFFE9E9E9),

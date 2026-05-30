@@ -57,7 +57,6 @@ class _HomePageState extends State<HomePage> {
     onTap: () => FocusScope.of(context).unfocus(),
     child: Stack(
         children: [
-          /// BACKGROUND IMAGE
           Positioned.fill(
             child: Image.asset(
               'assets/images/background.png',
@@ -69,12 +68,10 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          /// DARK OVERLAY
           Positioned.fill(
             child: Container(color: Colors.black.withOpacity(0.35)),
           ),
 
-          /// CONTENT
           SafeArea(
             child: Padding(
               padding:
@@ -82,7 +79,6 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  /// HEADER
                   Row(
                     children: [
                       const Text(
@@ -196,7 +192,6 @@ GestureDetector(
 
                   const SizedBox(height: 28),
 
-                  /// AUTOCOMPLETE SEARCH
                   Center(
                     child: Container(
                       width: double.infinity,
@@ -263,7 +258,7 @@ GestureDetector(
     final optionList = options.toList();
 
     return GestureDetector(
-      onTap: () {}, // da klik unutar ne zatvori
+      onTap: () {}, 
       child: Align(
         alignment: Alignment.topLeft,
         child: Material(
@@ -330,7 +325,6 @@ GestureDetector(
 
                   const Spacer(),
 
-                  /// SLOGAN
                   Padding(
                     padding: const EdgeInsets.only(bottom: 24),
                     child: Column(

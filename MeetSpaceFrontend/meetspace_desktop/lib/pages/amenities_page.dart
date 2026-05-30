@@ -110,7 +110,6 @@ Future<void> _deleteAmenity(AmenityResponse amenity) async {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            /// ICON
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -126,7 +125,6 @@ Future<void> _deleteAmenity(AmenityResponse amenity) async {
 
             const SizedBox(height: 20),
 
-            /// TITLE
             const Text(
               "Delete amenity?",
               style: TextStyle(
@@ -138,7 +136,6 @@ Future<void> _deleteAmenity(AmenityResponse amenity) async {
 
             const SizedBox(height: 10),
 
-            /// DESCRIPTION
             Text(
               "This action cannot be undone.\n'${amenity.name}' will be permanently removed.",
               textAlign: TextAlign.center,
@@ -150,10 +147,8 @@ Future<void> _deleteAmenity(AmenityResponse amenity) async {
 
             const SizedBox(height: 24),
 
-            /// ACTIONS
             Row(
               children: [
-                /// CANCEL
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context, false),
@@ -171,7 +166,6 @@ Future<void> _deleteAmenity(AmenityResponse amenity) async {
 
                 const SizedBox(width: 12),
 
-                /// DELETE
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => Navigator.pop(context, true),
@@ -201,7 +195,7 @@ Future<void> _deleteAmenity(AmenityResponse amenity) async {
 
     await auth.amenityService.deleteAmenity(amenity.id);
 
-    await _loadAmenities(); // refresh (za razliku od spaces)
+    await _loadAmenities(); 
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -226,8 +220,6 @@ Future<void> _deleteAmenity(AmenityResponse amenity) async {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// LOGO
-            /// TOP BAR
 Row(
   children: [
     InkWell(
@@ -261,7 +253,6 @@ Row(
 
             const SizedBox(height: 10),
 
-            /// HEADER
             Row(
               children: [
                 const Text(
@@ -275,7 +266,6 @@ Row(
                 const Spacer(),
                 Row(
                   children: [
-                    /// ADD BUTTON
                     ElevatedButton(
                   onPressed: () async {
   final auth = context.read<AuthProvider>();
@@ -364,7 +354,6 @@ OutlinedButton.icon(
 
         const SizedBox(width: 16),
 
-                    /// SORT
                     Container(
                       height: 52,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -400,7 +389,6 @@ OutlinedButton.icon(
 
             const SizedBox(height: 10),
 
-            /// SEARCH
             TextField(
              onChanged: (value) {
   setState(() {
@@ -425,7 +413,6 @@ OutlinedButton.icon(
 
             const SizedBox(height: 10),
 
-            /// LIST
           Expanded(
   child: _isLoading
       ? const Center(

@@ -21,7 +21,6 @@ class DashboardPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// LOGO
            Row(
   children: [
     const Text(
@@ -61,7 +60,6 @@ class DashboardPage extends StatelessWidget {
 
             const SizedBox(height: 40),
 
-            /// TITLE
             const Text(
               "Welcome to Admin Dashboard!",
               style: TextStyle(
@@ -73,7 +71,6 @@ class DashboardPage extends StatelessWidget {
 
             const SizedBox(height: 40),
 
-            /// GRID
             Expanded(
               child: GridView.count(
                 crossAxisCount: 3,
@@ -207,7 +204,6 @@ class DashboardCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// ICON
           Image.asset(
             iconPath,
             width: 30,
@@ -217,7 +213,6 @@ class DashboardCard extends StatelessWidget {
 
           const SizedBox(height: 18),
 
-          /// TITLE
           Text(
             title,
             style: const TextStyle(
@@ -228,7 +223,6 @@ class DashboardCard extends StatelessWidget {
 
           const SizedBox(height: 10),
 
-          /// DESCRIPTION
           Text(
             description,
             style: const TextStyle(

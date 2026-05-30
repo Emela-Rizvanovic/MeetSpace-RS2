@@ -1,6 +1,4 @@
-﻿using System.Security.AccessControl;
-
-namespace MeetSpace.Models.Entities
+﻿namespace MeetSpace.Models.Entities
 {
     public class Space
     {
@@ -11,16 +9,12 @@ namespace MeetSpace.Models.Entities
         public int Capacity { get; set; }
         public int FacilityId { get; set; }
         public int SpaceTypeId { get; set; }
-
-        // Navigacija
         public Facility? Facility { get; set; }
         public SpaceType? SpaceType { get; set; }
         public ICollection<SpaceImage> Images { get; set; } = new HashSet<SpaceImage>();
         public ICollection<SpaceAmenity> SpaceAmenities { get; set; } = new HashSet<SpaceAmenity>();
         public ICollection<Booking> Bookings { get; set; } = new HashSet<Booking>();
         public ICollection<Review> Reviews { get; set; } = new HashSet<Review>();
-
-        // Audit polja
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
     }

@@ -27,9 +27,6 @@ class _ExtraServicesPageState extends State<ExtraServicesPage> {
   Future<List<AmenityResponse>> _loadAmenities() async {
     final auth = context.read<AuthProvider>();
 
-    // Ako želiš filtrirati samo "extra services" kategoriju, ovdje postavi ID:
-    // return auth.getAmenities(amenityCategoryId: 1);
-
     return auth.getAmenities();
   }
 

@@ -21,8 +21,6 @@ Widget build(BuildContext context) {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
-          /// 🔥 HEADER
           Row(
             children: [
               InkWell(
@@ -71,16 +69,12 @@ Widget build(BuildContext context) {
           Expanded(
             child: Row(
               children: [
-
-                /// 🔥 LEFT PANEL
                 Expanded(
                   flex: 2,
                   child: SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-
-                        /// INFO GRID
                         Wrap(
                           spacing: 12,
                           runSpacing: 12,
@@ -94,7 +88,6 @@ Widget build(BuildContext context) {
 
                         const SizedBox(height: 30),
 
-                        /// DESCRIPTION
                         const Text(
                           "Description",
                           style: TextStyle(
@@ -123,7 +116,6 @@ Widget build(BuildContext context) {
 
                         const SizedBox(height: 30),
 
-                        /// AMENITIES
                         const Text(
                           "Amenities",
                           style: TextStyle(
@@ -181,7 +173,6 @@ Widget build(BuildContext context) {
 
                 const SizedBox(width: 40),
 
-                /// 🔥 RIGHT PANEL (GALLERY)
                 Expanded(
                   flex: 1,
                   child: Container(
@@ -301,7 +292,6 @@ void _confirmDelete(BuildContext context) async {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            /// ICON
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -317,7 +307,6 @@ void _confirmDelete(BuildContext context) async {
 
             const SizedBox(height: 20),
 
-            /// TITLE
             const Text(
               "Delete space?",
               style: TextStyle(
@@ -329,7 +318,6 @@ void _confirmDelete(BuildContext context) async {
 
             const SizedBox(height: 10),
 
-            /// DESCRIPTION
             const Text(
               "This action cannot be undone.\nThe space and all related data will be permanently removed.",
               textAlign: TextAlign.center,
@@ -341,10 +329,8 @@ void _confirmDelete(BuildContext context) async {
 
             const SizedBox(height: 24),
 
-            /// ACTIONS
             Row(
               children: [
-                /// CANCEL
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context, false),
@@ -362,7 +348,6 @@ void _confirmDelete(BuildContext context) async {
 
                 const SizedBox(width: 12),
 
-                /// DELETE
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => Navigator.pop(context, true),

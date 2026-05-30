@@ -25,8 +25,6 @@ class _PaymentReferenceDataDialogState
     extends State<
         PaymentReferenceDataDialog> {
 
-  /// PAYMENT STATUSES
-
   List<PaymentStatus>
       _paymentStatuses = [];
 
@@ -43,8 +41,6 @@ class _PaymentReferenceDataDialogState
 
   int _paymentStatusTotalPages =
       1;
-
-  /// PAYMENT METHODS
 
   List<PaymentMethod>
       _paymentMethods = [];
@@ -96,8 +92,6 @@ class _PaymentReferenceDataDialogState
 
         child: Row(
           children: [
-
-            /// SIDEBAR
 
             Container(
               width: 240,
@@ -192,8 +186,6 @@ const SizedBox(
                 ],
               ),
             ),
-
-            /// CONTENT
 
             Expanded(
               child: Padding(

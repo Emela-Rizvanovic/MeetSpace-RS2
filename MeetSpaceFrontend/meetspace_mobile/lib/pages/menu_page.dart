@@ -59,7 +59,6 @@ class MenuPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // HEADER: logo lijevo, X desno
               Row(
                 children: [
                   const Text(
@@ -86,7 +85,6 @@ class MenuPage extends StatelessWidget {
 
               const SizedBox(height: 34),
 
-              // MENU LIST
               Expanded(
                 child: ListView.separated(
                   itemCount: items.length,

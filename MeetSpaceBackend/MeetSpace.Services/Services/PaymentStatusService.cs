@@ -6,24 +6,19 @@ using MeetSpace.Models.SearchObjects;
 using MeetSpace.Services.BaseServices;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace MeetSpace.Services.Services
 {
     public class PaymentStatusService
- : BaseCRUDService<PaymentStatusResponse, PaymentStatusSearchObject, PaymentStatus, PaymentStatusInsertRequest, PaymentStatusUpdateRequest>,
+ : CachedReferenceCRUDService<PaymentStatusResponse, PaymentStatusSearchObject, PaymentStatus, PaymentStatusInsertRequest, PaymentStatusUpdateRequest>,
    IPaymentStatusService
     {
-        public PaymentStatusService(MeetSpaceDbContext context, IMapper mapper)
-            : base(context, mapper)
+        public PaymentStatusService(MeetSpaceDbContext context, IMapper mapper, IMemoryCache cache)
+            : base(context, mapper, cache)
         {
         }
 
-        // Filter za pretragu po nazivu
         protected override IQueryable<PaymentStatus> ApplyFilter(IQueryable<PaymentStatus> query, PaymentStatusSearchObject search)
         {
             if (!string.IsNullOrWhiteSpace(search.Name))
@@ -34,6 +29,5 @@ namespace MeetSpace.Services.Services
             return query;
         }
 
-        // protected override async Task BeforeUpdate(...) { } ?
     }
 }

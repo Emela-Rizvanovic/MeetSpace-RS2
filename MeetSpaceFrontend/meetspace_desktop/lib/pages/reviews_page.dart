@@ -94,7 +94,6 @@ Map<String, dynamic> _getSortParams() {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// TOP BAR
 Row(
   children: [
     InkWell(
@@ -127,7 +126,6 @@ Row(
 ),
 
 const SizedBox(height: 10),
-            /// TITLE
            Row(
   children: [
     const Text(
@@ -141,7 +139,6 @@ const SizedBox(height: 10),
 
     const Spacer(),
 
-    /// ⭐ RATING
   Container(
   height: 52,
   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -206,7 +203,6 @@ const SizedBox(height: 10),
 
     const SizedBox(width: 12),
 
-    /// SORT
     Container(
       height: 52,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -226,7 +222,7 @@ const SizedBox(height: 10),
             _sort = v!;
             _page = 0;
           });
-          _load(); // 🔥 BITNO
+          _load(); 
         },
       ),
     ),
@@ -234,7 +230,6 @@ const SizedBox(height: 10),
 ),
 const SizedBox(height: 10),
 
-            /// SEARCH
             TextField(
           onChanged: (v) {
   setState(() {
@@ -257,7 +252,6 @@ const SizedBox(height: 10),
 
             const SizedBox(height: 10),
 
-            /// LIST
           Expanded(
   child: _loading
       ? const Center(
@@ -378,12 +372,10 @@ const SizedBox(height: 10),
       ),
       child: Row(
         children: [
-          /// LEFT
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// SPACE
                 Text(
                   r.spaceName ?? "Unknown space",
                   style: const TextStyle(
@@ -395,7 +387,6 @@ const SizedBox(height: 10),
 
                 const SizedBox(height: 4),
 
-                /// USER
                 Text(
                   r.userName ?? "Unknown user",
                   style: const TextStyle(color: Colors.white70),
@@ -403,7 +394,6 @@ const SizedBox(height: 10),
 
                 const SizedBox(height: 6),
 
-                /// STARS
                Row(
   children: List.generate(
     5,
@@ -422,7 +412,6 @@ const SizedBox(height: 10),
 
 const SizedBox(height: 10),
 
-                /// COMMENT
                 Text(
                   r.comment ?? "",
                   style: const TextStyle(color: Colors.white),
@@ -430,7 +419,6 @@ const SizedBox(height: 10),
 
                 const SizedBox(height: 6),
 
-                /// DATE
                 Text(
                   "${r.createdAt.day}.${r.createdAt.month}.${r.createdAt.year}",
                   style: const TextStyle(
@@ -442,7 +430,6 @@ const SizedBox(height: 10),
             ),
           ),
 
-          /// DELETE
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.red),
             onPressed: () => _confirmDelete(r),
@@ -468,7 +455,6 @@ const SizedBox(height: 10),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              /// ICON
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
@@ -484,7 +470,6 @@ const SizedBox(height: 10),
 
               const SizedBox(height: 20),
 
-              /// TITLE
               const Text(
                 "Delete review?",
                 style: TextStyle(
@@ -496,7 +481,6 @@ const SizedBox(height: 10),
 
               const SizedBox(height: 10),
 
-              /// DESC
               const Text(
                 "This action cannot be undone.",
                 textAlign: TextAlign.center,
@@ -508,7 +492,6 @@ const SizedBox(height: 10),
 
               const SizedBox(height: 24),
 
-              /// ACTIONS
               Row(
                 children: [
                   Expanded(

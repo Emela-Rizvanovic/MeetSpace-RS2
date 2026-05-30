@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MeetSpace.Models.Messages
+﻿namespace MeetSpace.Models.Messages
 {
     public class PasswordResetRequested
     {

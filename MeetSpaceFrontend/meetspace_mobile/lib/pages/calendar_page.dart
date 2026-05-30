@@ -77,7 +77,6 @@ if (!blocksAvailability) continue;
       body: SafeArea(
         child: Column(
           children: [
-            /// HEADER IMAGE
             Stack(
               children: [
                 AspectRatio(
@@ -146,7 +145,6 @@ if (!blocksAvailability) continue;
 
                     const SizedBox(height: 22),
 
-                    /// CALENDAR
                     Container(
                       padding: const EdgeInsets.all(18),
                       decoration: BoxDecoration(
@@ -161,7 +159,6 @@ if (!blocksAvailability) continue;
                             )
                           : Column(
                               children: [
-                                /// MONTH NAVIGATION
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -199,7 +196,6 @@ if (!blocksAvailability) continue;
 
                                 const SizedBox(height: 14),
 
-                                /// GRID
                                 GridView.builder(
                                   shrinkWrap: true,
                                   physics:
@@ -237,7 +233,6 @@ final isToday =
     dayDate.month == now.month &&
     dayDate.day == now.day;
 
-/// prošli sati danas
 final pastHoursToday = isToday
     ? List.generate(
         now.hour - 8 > 0 ? now.hour - 8 : 0,
@@ -245,7 +240,6 @@ final pastHoursToday = isToday
       ).toSet()
     : <int>{};
 
-/// booked + prošli sati
 final unavailableHours = {
   ...bookedHours,
   ...pastHoursToday,

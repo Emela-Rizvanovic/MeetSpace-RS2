@@ -24,8 +24,6 @@ class _ExploreSpacesPageState
       Color.fromARGB(255, 165, 110, 9);
       ExploreMode _mode = ExploreMode.recommended;
 
-  //bool _showFavorites = false;
-
   int _page = 0;
 final int _pageSize = 5;
 int _totalPages = 1;
@@ -188,8 +186,6 @@ void _showFilters() {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-
-            /// TITLE
             const Text(
               "Filters",
               style: TextStyle(
@@ -202,7 +198,6 @@ void _showFilters() {
 
             const SizedBox(height: 22),
 
-            /// MIN PRICE
             TextField(
               controller: _minPriceController,
               keyboardType: TextInputType.number,
@@ -213,7 +208,6 @@ void _showFilters() {
 
             const SizedBox(height: 14),
 
-            /// MAX PRICE
             TextField(
               controller: _maxPriceController,
               keyboardType: TextInputType.number,
@@ -224,7 +218,6 @@ void _showFilters() {
 
             const SizedBox(height: 14),
 
-            /// MIN CAPACITY
             TextField(
               controller: _minCapacityController,
               keyboardType: TextInputType.number,
@@ -235,7 +228,6 @@ void _showFilters() {
 
             const SizedBox(height: 14),
 
-            /// SORT
             Container(
               padding: const EdgeInsets.symmetric(
                 horizontal: 14,
@@ -281,7 +273,6 @@ void _showFilters() {
 
             const SizedBox(height: 22),
 
-            /// APPLY BUTTON
         SizedBox(
   width: double.infinity,
   child: ElevatedButton(
@@ -384,8 +375,6 @@ InputDecoration _filterDecoration(String hint) {
                   crossAxisAlignment:
                       CrossAxisAlignment.start,
                   children: [
-
-                    /// HEADER
                     _Header(
                       title: 'MEETSPACE',
                       onMenu: () =>
@@ -411,12 +400,8 @@ InputDecoration _filterDecoration(String hint) {
                     ),
 
                     const SizedBox(height: 16),
-
-                    /// AUTOCOMPLETE SEARCH (IDENTICAL TO HOME)
               Row(
   children: [
-
-    /// SEARCH
     Expanded(
       child: Container(
         width: double.infinity,
@@ -568,8 +553,6 @@ InputDecoration _filterDecoration(String hint) {
 
     const SizedBox(width: 10),
     
-
-    /// FILTER BUTTON
 if (_mode == ExploreMode.all) ...[
   const SizedBox(width: 10),
 
@@ -594,11 +577,8 @@ if (_mode == ExploreMode.all) ...[
 
                     const SizedBox(height: 12),
 
-                    /// FILTER BUTTONS
                  Row(
   children: [
-
-    /// RECOMMENDED
     Expanded(
       child: _buildFilterButton(
         text: "Recommended",
@@ -614,7 +594,6 @@ if (_mode == ExploreMode.all) ...[
 
     const SizedBox(width: 8),
 
-    /// SEE ALL
     Expanded(
       child: _buildFilterButton(
         text: "See all",
@@ -622,7 +601,7 @@ if (_mode == ExploreMode.all) ...[
         onTap: () {
   setState(() {
     _mode = ExploreMode.all;
-    _page = 0;  // 👈 resetuj
+    _page = 0; 
     _future = _loadSpaces();
   });
 },
@@ -631,7 +610,6 @@ if (_mode == ExploreMode.all) ...[
 
     const SizedBox(width: 8),
 
-    /// FAVORITES
     Expanded(
       child: _buildFilterButton(
         text: "Favorites",

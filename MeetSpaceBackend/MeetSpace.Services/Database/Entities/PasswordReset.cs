@@ -1,11 +1,6 @@
 ﻿using MeetSpace.Models.Entities;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MeetSpace.Services.Database.Entities
 {
@@ -34,8 +29,6 @@ namespace MeetSpace.Services.Database.Entities
 
         [Column("used_at")]
         public DateTime? UsedAt { get; set; }
-
-        // Navigation
         public virtual User User { get; set; }
     }
 }

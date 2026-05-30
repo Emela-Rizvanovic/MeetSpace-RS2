@@ -139,9 +139,6 @@ switch (_sort) {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// HEADER
-  /// HEADER
-/// TOP BAR
 Row(
   children: [
     InkWell(
@@ -175,7 +172,6 @@ Row(
 
 const SizedBox(height: 10),
 
-/// HEADER
 Row(
   children: [
     const Text(
@@ -189,7 +185,6 @@ Row(
 
     const Spacer(),
 
-    /// ADD BUTTON
     ElevatedButton(
       onPressed: () async {
   final auth = context.read<AuthProvider>();
@@ -266,7 +261,6 @@ Row(
 
     const SizedBox(width: 16),
 
-    /// MANAGE DATA
     OutlinedButton.icon(
       onPressed: () async {
         await showDialog(
@@ -293,7 +287,6 @@ Row(
 
     const SizedBox(width: 16),
 
-    /// SORT
     Container(
       height: 52,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -340,12 +333,8 @@ Row(
 ),
 
             const SizedBox(height: 10),
-
-            /// SEARCH BAR
- /// SEARCH + FILTERS
 Row(
   children: [
-    /// SEARCH
     Expanded(
       child: TextField(
         onChanged: (value) {
@@ -373,7 +362,6 @@ Row(
 
     const SizedBox(width: 18),
 
-    /// FILTERS
     Container(
       padding: const EdgeInsets.symmetric(
         horizontal: 14,
@@ -385,7 +373,6 @@ Row(
       ),
       child: Row(
         children: [
-          /// MIN PRICE
           SizedBox(
             width: 95,
             child: TextField(
@@ -417,7 +404,6 @@ Row(
 
           const SizedBox(width: 10),
 
-          /// MAX PRICE
           SizedBox(
             width: 95,
             child: TextField(
@@ -449,7 +435,6 @@ Row(
 
           const SizedBox(width: 10),
 
-          /// CAPACITY
           SizedBox(
             width: 120,
             child: TextField(
@@ -486,7 +471,6 @@ Row(
 
 const SizedBox(height: 10),
 
-            /// GRID
            Expanded(
   child: _isLoading
       ? const Center(
@@ -569,7 +553,6 @@ const SizedBox(height: 10),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        /// PREV
         GestureDetector(
           onTap: _page > 0
               ? () {
@@ -585,7 +568,6 @@ const SizedBox(height: 10),
 
         const SizedBox(width: 8),
 
-        /// PAGE NUMBERS
         for (int i = 0; i < _totalPages; i++)
           GestureDetector(
             onTap: () {
@@ -614,7 +596,6 @@ const SizedBox(height: 10),
 
         const SizedBox(width: 8),
 
-        /// NEXT
         GestureDetector(
           onTap: _page < _totalPages - 1
               ? () {
@@ -655,7 +636,6 @@ class _AdminSpaceCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// IMAGE
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: imageUrl.isEmpty
@@ -676,7 +656,6 @@ class _AdminSpaceCard extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          /// NAME
           Text(
             space.name,
             style: const TextStyle(
@@ -687,7 +666,6 @@ class _AdminSpaceCard extends StatelessWidget {
 
           const SizedBox(height: 6),
 
-          /// ADDRESS
           Text(
             space.facilityAddress ?? "No address",
             style: const TextStyle(
@@ -698,7 +676,6 @@ class _AdminSpaceCard extends StatelessWidget {
 
           const SizedBox(height: 8),
 
-          /// CAPACITY
           Row(
             children: [
               const Icon(Icons.people_outline, size: 16),
@@ -709,7 +686,6 @@ class _AdminSpaceCard extends StatelessWidget {
 
           const Spacer(),
 
-          /// PRICE
           Text(
             "BAM ${space.pricePerHour.toStringAsFixed(0)} / hour",
             style: const TextStyle(

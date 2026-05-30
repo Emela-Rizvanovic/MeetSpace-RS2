@@ -37,7 +37,6 @@ public class BlobService : IBlobService
             Environment.GetEnvironmentVariable("AZURE_SPACE_CONTAINER")!;
     }
 
-    // User Images
     public async Task<string> UploadUserImageAsync(IFormFile file)
     {
         return await UploadFileAsync(file, _userImagesContainer);
@@ -48,7 +47,6 @@ public class BlobService : IBlobService
         return await DeleteFileAsync(url, _userImagesContainer);
     }
 
-    // Space Images
     public async Task<string> UploadSpaceImageAsync(IFormFile file)
     {
         return await UploadFileAsync(file, _spaceImagesContainer);

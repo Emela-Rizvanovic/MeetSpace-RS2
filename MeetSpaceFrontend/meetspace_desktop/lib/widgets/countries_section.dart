@@ -45,7 +45,6 @@ class CountriesSection extends StatelessWidget {
           CrossAxisAlignment.start,
       children: [
 
-        /// HEADER
         Row(
           children: [
 
@@ -74,8 +73,6 @@ class CountriesSection extends StatelessWidget {
         ),
 
         const SizedBox(height: 24),
-
-        /// SEARCH
         SizedBox(
           width: double.infinity,
           child: TextField(
@@ -89,7 +86,6 @@ class CountriesSection extends StatelessWidget {
 
         const SizedBox(height: 24),
 
-        /// TABLE
         Expanded(
           child: Container(
             decoration: BoxDecoration(
@@ -109,8 +105,6 @@ class CountriesSection extends StatelessWidget {
                   )
                 : Column(
                     children: [
-
-                      /// HEADER
                       Container(
                         padding:
                             const EdgeInsets.symmetric(
@@ -159,7 +153,6 @@ class CountriesSection extends StatelessWidget {
                         ),
                       ),
 
-                      /// LIST
                       Expanded(
                         child:
                             ListView.separated(

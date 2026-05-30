@@ -9,10 +9,8 @@ namespace MeetSpace.Services.Mapping
     {
         public ReviewProfile()
         {
-            // Entity -> Response
             CreateMap<Review, ReviewResponse>();
 
-            // InsertRequest -> Entity
             CreateMap<ReviewInsertRequest, Review>()
                 .ForMember(d => d.Id, opt => opt.Ignore())
                 .ForMember(d => d.CreatedAt, opt => opt.Ignore())
@@ -20,7 +18,6 @@ namespace MeetSpace.Services.Mapping
                 .ForMember(d => d.User, opt => opt.Ignore())
                 .ForMember(d => d.Space, opt => opt.Ignore());
 
-            // UpdateRequest -> Entity
             CreateMap<ReviewUpdateRequest, Review>()
                 .ForMember(d => d.Id, opt => opt.Ignore())
                 .ForMember(d => d.CreatedAt, opt => opt.Ignore())

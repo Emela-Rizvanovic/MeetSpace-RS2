@@ -10,12 +10,7 @@ using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Storage;
 using MeetSpace.Models.Exceptions;
 using MeetSpace.Models.Constants;
@@ -96,7 +91,7 @@ namespace MeetSpace.Services.Services
     .AnyAsync(b =>
         b.SpaceId == request.SpaceId &&
         b.BookingStatusId != (int)BookingStatusEnum.Rejected &&
-b.BookingStatusId != (int)BookingStatusEnum.Cancelled && // ignore rejected
+b.BookingStatusId != (int)BookingStatusEnum.Cancelled && 
         request.StartTime < b.EndTime &&
         request.EndTime > b.StartTime
     );
@@ -104,14 +99,12 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled && // ignore rejected
             if (hasConflict)
                 throw new BusinessException("Time slot already booked.");
 
-            // 1️⃣ Space
             var space = await _context.Spaces
                 .FirstOrDefaultAsync(s => s.Id == request.SpaceId, cancellationToken);
 
             if (space == null)
                 throw new NotFoundException("Space not found.");
 
-            // 2️⃣ Duration
             var hours = (decimal)(request.EndTime - request.StartTime).TotalHours;
 
             if (hours <= 0)
@@ -121,7 +114,6 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled && // ignore rejected
 
             decimal amenitiesTotal = 0m;
 
-            // 3️⃣ Amenities (NEW LOGIC)
             if (request.Amenities != null && request.Amenities.Any())
             {
                 foreach (var item in request.Amenities)
@@ -140,18 +132,17 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled && // ignore rejected
                     {
                         AmenityId = amenity.Id,
                         Quantity = quantity,
-                        Price = amenity.Price // snapshot price
+                        Price = amenity.Price 
                     });
 
                     amenitiesTotal += itemTotal;
                 }
             }
 
-            // 4️⃣ Final total
             entity.TotalPrice = Math.Round(basePrice + amenitiesTotal, 2);
 
-            entity.PaymentStatusId = (int)PaymentStatusEnum.Completed; // Completed
-            entity.BookingStatusId = (int)BookingStatusEnum.Pending; // Pending approval
+            entity.PaymentStatusId = (int)PaymentStatusEnum.Completed; 
+            entity.BookingStatusId = (int)BookingStatusEnum.Pending; 
 
             await base.BeforeInsert(entity, request, cancellationToken);
         }
@@ -212,7 +203,6 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
             _context.Bookings.Add(entity);
             await _context.SaveChangesAsync(cancellationToken);
 
-            // update RecommendationLog ako je prostor bio preporučen
 
             var log = await _context.RecommendationLogs
                 .Where(r => r.UserId == entity.UserId && r.SpaceId == entity.SpaceId)
@@ -225,7 +215,6 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
                 await _context.SaveChangesAsync(cancellationToken);
             }
 
-            // reload sa include-ovima da mapper dobije Space/Facility/Status
             var loaded = await _context.Bookings
                 .Include(b => b.Space).ThenInclude(s => s.Facility)
                 .Include(b => b.Space)
@@ -241,7 +230,7 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
                 await transaction.DisposeAsync();
             }
 
-            return MapWithAudit(loaded);
+            return await MapWithAuditAsync(loaded, cancellationToken);
         }
 
 
@@ -256,7 +245,7 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
                 .Include(b => b.PaymentStatus)
                 .FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
 
-            return entity == null ? null : MapWithAudit(entity);
+            return entity == null ? null : await MapWithAuditAsync(entity, cancellationToken);
         }
 
         public override async Task<BookingResponse?> UpdateAsync(int id, BookingUpdateRequest request, CancellationToken cancellationToken = default)
@@ -267,12 +256,10 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
             if (entity == null)
                 return null;
 
-            // ✅ ovdje recalculacija totalPrice + UpdatedAt
             await BeforeUpdate(entity, request, cancellationToken);
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            // ✅ reload sa include-ovima radi response-a
             var loaded = await _context.Bookings
                 .Include(b => b.Space).ThenInclude(s => s.Facility)
                 .Include(b => b.Space)
@@ -282,7 +269,7 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
                 .Include(b => b.PaymentStatus)
                 .FirstAsync(b => b.Id == id, cancellationToken);
 
-            return MapWithAudit(loaded);
+            return await MapWithAuditAsync(loaded, cancellationToken);
         }
 
 
@@ -299,7 +286,7 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
                 .OrderByDescending(b => b.StartTime)
                 .ToListAsync(ct);
 
-            return list.Select(MapWithAudit).ToList();
+            return await MapWithAuditListAsync(list, ct);
         }
 
         public async Task<List<BookingResponse>> GetBySpaceIdAsync(int spaceId, CancellationToken ct = default)
@@ -316,7 +303,7 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
                 .OrderBy(b => b.StartTime)
                 .ToListAsync(ct);
 
-            return list.Select(MapWithAudit).ToList();
+            return await MapWithAuditListAsync(list, ct);
         }
 
         public async Task ApproveAsync(int id, CancellationToken ct = default)
@@ -334,7 +321,7 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
     BookingStatusEnum.Approved
 );
 
-            entity.BookingStatusId = (int)BookingStatusEnum.Approved; // Approved
+            entity.BookingStatusId = (int)BookingStatusEnum.Approved; 
 
             var userId = int.Parse(
                 _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value
@@ -375,7 +362,7 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
     BookingStatusEnum.Rejected
 );
 
-            entity.BookingStatusId = (int)BookingStatusEnum.Rejected; //Rejected
+            entity.BookingStatusId = (int)BookingStatusEnum.Rejected; 
             entity.RejectionReason = reason;
 
             var userId = int.Parse(
@@ -498,23 +485,69 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
             }
         }
 
-        private BookingResponse MapWithAudit(Booking entity)
+        private async Task<BookingResponse> MapWithAuditAsync(Booking entity, CancellationToken ct = default)
         {
             var response = _mapper.Map<BookingResponse>(entity);
 
             response.IsPaid = entity.PaymentStatusId == (int)PaymentStatusEnum.Completed;
 
-            var lastLog = _context.BookingAuditLogs
+            var lastLog = await _context.BookingAuditLogs
                 .Where(x => x.BookingId == entity.Id)
                 .OrderByDescending(x => x.CreatedAt)
                 .Include(x => x.Admin)
-                .FirstOrDefault();
+                .FirstOrDefaultAsync(ct);
 
             response.LastAction = lastLog?.Action;
             response.LastAdminName = lastLog?.Admin?.Username;
             response.LastActionAt = lastLog?.CreatedAt;
 
             return response;
+        }
+
+        private async Task<List<BookingResponse>> MapWithAuditListAsync(
+    List<Booking> bookings,
+    CancellationToken ct = default)
+        {
+            if (!bookings.Any())
+                return new List<BookingResponse>();
+
+            var bookingIds = bookings
+                .Select(x => x.Id)
+                .ToList();
+
+            var auditLogs = await _context.BookingAuditLogs
+                .Where(x => bookingIds.Contains(x.BookingId))
+                .Include(x => x.Admin)
+                .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync(ct);
+
+            var latestLogs = auditLogs
+                .GroupBy(x => x.BookingId)
+                .ToDictionary(
+                    x => x.Key,
+                    x => x.First()
+                );
+
+            var result = new List<BookingResponse>();
+
+            foreach (var booking in bookings)
+            {
+                var response = _mapper.Map<BookingResponse>(booking);
+
+                response.IsPaid =
+                    booking.PaymentStatusId == (int)PaymentStatusEnum.Completed;
+
+                if (latestLogs.TryGetValue(booking.Id, out var lastLog))
+                {
+                    response.LastAction = lastLog.Action;
+                    response.LastAdminName = lastLog.Admin?.Username;
+                    response.LastActionAt = lastLog.CreatedAt;
+                }
+
+                result.Add(response);
+            }
+
+            return result;
         }
 
         public override async Task<PagedResult<BookingResponse>> GetAsync(
@@ -537,21 +570,32 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
 
             var totalCount = await query.CountAsync(cancellationToken);
 
-            if (search.Page.HasValue && search.PageSize.HasValue)
-            {
-                query = query
-                    .Skip(search.Page.Value * search.PageSize.Value)
-                    .Take(search.PageSize.Value);
-            }
+            var page = search.Page ?? 0;
+            var pageSize = search.PageSize ?? BaseSearchObject.DefaultPageSize;
+
+            if (page < 0)
+                page = 0;
+
+            if (pageSize <= 0)
+                pageSize = BaseSearchObject.DefaultPageSize;
+
+            if (pageSize > BaseSearchObject.MaxPageSize)
+                pageSize = BaseSearchObject.MaxPageSize;
+
+            query = query
+                .Skip(page * pageSize)
+                .Take(pageSize);
 
             var list = await query.ToListAsync(cancellationToken);
 
+            var items = await MapWithAuditListAsync(list, cancellationToken);
+
             return new PagedResult<BookingResponse>
             {
-                Items = list.Select(MapWithAudit).ToList(),
+                Items = items,
                 TotalCount = totalCount,
-                Page = search.Page ?? 0,
-                PageSize = search.PageSize ?? 10
+                Page = page,
+                PageSize = pageSize
             };
         }
 

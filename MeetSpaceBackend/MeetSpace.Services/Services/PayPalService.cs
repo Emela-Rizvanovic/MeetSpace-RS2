@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Globalization;
-using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 
@@ -20,6 +19,8 @@ namespace MeetSpace.Services.Services
         private readonly MeetSpaceDbContext _context;
         private readonly IBookingService _bookingService;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly string _payPalClientId;
+        private readonly string _payPalSecret;
 
         public PayPalService(
        MeetSpaceDbContext context,
@@ -29,6 +30,8 @@ namespace MeetSpace.Services.Services
             _context = context;
             _bookingService = bookingService;
             _httpClientFactory = httpClientFactory;
+            _payPalClientId = Environment.GetEnvironmentVariable("PAYPAL_CLIENT_ID")!;
+            _payPalSecret = Environment.GetEnvironmentVariable("PAYPAL_SECRET")!;
         }
 
         public async Task<PayPalOrderResponse> CreateOrderAsync(
@@ -38,8 +41,8 @@ namespace MeetSpace.Services.Services
             var client = _httpClientFactory.CreateClient();
 
             var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(
-                $"{Environment.GetEnvironmentVariable("PAYPAL_CLIENT_ID")}:{Environment.GetEnvironmentVariable("PAYPAL_SECRET")}"
-            ));
+     $"{_payPalClientId}:{_payPalSecret}"
+ ));
 
             client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Basic", auth);
@@ -125,8 +128,8 @@ namespace MeetSpace.Services.Services
             var client = _httpClientFactory.CreateClient();
 
             var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(
-                $"{Environment.GetEnvironmentVariable("PAYPAL_CLIENT_ID")}:{Environment.GetEnvironmentVariable("PAYPAL_SECRET")}"
-            ));
+     $"{_payPalClientId}:{_payPalSecret}"
+ ));
 
             client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Basic", auth);

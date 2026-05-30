@@ -65,7 +65,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
 
       if (!mounted) return;
 
-      // pokaži poruku u svakom slučaju
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(res.message),
@@ -73,7 +72,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
         ),
       );
 
-      // ako je uspješno — vrati na login
       if (res.success) {
         Navigator.pushNamedAndRemoveUntil(
           context,

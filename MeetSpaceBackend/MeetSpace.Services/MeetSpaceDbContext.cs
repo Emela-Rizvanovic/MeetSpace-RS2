@@ -9,7 +9,6 @@ namespace MeetSpace.Services.Database
         public MeetSpaceDbContext(DbContextOptions<MeetSpaceDbContext> options)
             : base(options) { }
 
-        // DbSet-ovi za sve entitete
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<Country> Countries { get; set; }
@@ -41,14 +40,12 @@ namespace MeetSpace.Services.Database
         {
             base.OnModelCreating(modelBuilder);
 
-            // Composite key za many-to-many tabele
             modelBuilder.Entity<Favorite>()
                 .HasKey(f => new { f.UserId, f.SpaceId });
 
             modelBuilder.Entity<SpaceAmenity>()
                 .HasKey(sa => new { sa.SpaceId, sa.AmenityId });
 
-            // Relacije za BookingAmenity
             modelBuilder.Entity<BookingAmenity>()
                 .HasOne(ba => ba.Booking)
                 .WithMany(b => b.BookingAmenities)
@@ -59,7 +56,6 @@ namespace MeetSpace.Services.Database
                 .WithMany(a => a.BookingAmenities)
                 .HasForeignKey(ba => ba.AmenityId);
 
-            // Decimal preciznosti
             modelBuilder.Entity<Booking>()
                 .Property(b => b.TotalPrice)
                 .HasPrecision(18,2);
@@ -85,7 +81,6 @@ namespace MeetSpace.Services.Database
                 .Property(s => s.PricePerHour)
                 .HasPrecision(18, 2);
 
-            // Rješavanje multiple cascade paths za Payments
             modelBuilder.Entity<Payment>()
                 .HasOne(p => p.User)
                 .WithMany()

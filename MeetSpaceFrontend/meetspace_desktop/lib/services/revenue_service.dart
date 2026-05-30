@@ -8,7 +8,6 @@ class RevenueService {
 
   RevenueService(this.api);
 
-  /// 🔹 LAST 3 TRANSACTIONS
   Future<List<RevenueResponse>> getLatest() async {
     final response = await api.get("Revenue/latest");
 
@@ -73,7 +72,6 @@ class RevenueService {
   throw Exception("Failed to load paged revenue");
 }
 
-  /// 🔹 TOTAL REVENUE
   Future<double> getTotal() async {
     final response = await api.get("Revenue/total");
 

@@ -44,8 +44,6 @@ class AmenityCategoriesSection extends StatelessWidget {
       crossAxisAlignment:
           CrossAxisAlignment.start,
       children: [
-
-        /// HEADER
         Row(
           children: [
 
@@ -75,7 +73,6 @@ class AmenityCategoriesSection extends StatelessWidget {
 
         const SizedBox(height: 24),
 
-        /// SEARCH
         TextField(
           onChanged: onSearch,
           decoration:
@@ -86,7 +83,6 @@ class AmenityCategoriesSection extends StatelessWidget {
 
         const SizedBox(height: 24),
 
-        /// TABLE
         Expanded(
           child: Container(
             decoration: BoxDecoration(
@@ -106,8 +102,6 @@ class AmenityCategoriesSection extends StatelessWidget {
                   )
                 : Column(
                     children: [
-
-                      /// HEADER
                       Container(
                         padding:
                             const EdgeInsets.symmetric(
@@ -156,7 +150,6 @@ class AmenityCategoriesSection extends StatelessWidget {
                         ),
                       ),
 
-                      /// LIST
                       Expanded(
                         child:
                             ListView.separated(

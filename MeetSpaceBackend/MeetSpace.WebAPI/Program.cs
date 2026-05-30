@@ -1,4 +1,3 @@
-using AutoMapper;
 using DotNetEnv;
 using MeetSpace.API.Helpers;
 using MeetSpace.Models.Exceptions;
@@ -11,7 +10,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json;
@@ -26,12 +24,12 @@ internal class Program
 
         Stripe.StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
 
-        // DbContext
         builder.Services.AddDbContext<MeetSpaceDbContext>(options =>
             options.UseSqlServer(Environment.GetEnvironmentVariable("DB_CONNECTION"))
         );
 
-        // Registracija servisa
+        builder.Services.AddMemoryCache();
+
         builder.Services.AddScoped<ISpaceService, SpaceService>();
         builder.Services.AddScoped<IFacilityService, FacilityService>();
         builder.Services.AddScoped<ISpaceTypeService, SpaceTypeService>();
@@ -57,8 +55,6 @@ internal class Program
         builder.Services.AddScoped<IPaymentService, PaymentService>();
         builder.Services.AddScoped<IPayPalService, PayPalService>();
 
-
-        // Registracija AutoMappera
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<SpaceProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<FacilityProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<SpaceTypeProfile>());
@@ -74,7 +70,6 @@ internal class Program
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<PaymentMethodProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<PaymentStatusProfile>());
 
-        // JWT konfiguracija
         var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY");
         var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER");
         var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE");
@@ -133,15 +128,12 @@ internal class Program
 
         builder.Services.AddAuthorization();
 
-
-        // Add controllers
         builder.Services.AddControllers();
 
         builder.Services.AddSignalR();
 
         builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 
-        // Swagger/OpenAPI
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(c =>
         {
@@ -194,14 +186,11 @@ internal class Program
 
         var app = builder.Build();
 
-        // Configure the HTTP request pipeline
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
             app.UseSwaggerUI();
         }
-
-        //app.UseHttpsRedirection();
 
         app.UseCors("MeetSpaceCors");
 

@@ -46,8 +46,6 @@ class _RevenuePageState extends State<RevenuePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// LOGO
-           /// TOP BAR
 Row(
   children: [
     InkWell(
@@ -80,9 +78,6 @@ Row(
 ),
 
             const SizedBox(height: 10),
-
-            /// TITLE
-           /// TITLE
 const Text(
   "Revenue history",
   style: TextStyle(
@@ -94,7 +89,6 @@ const Text(
 
             const SizedBox(height: 30),
 
-            /// SUBTITLE
             const Center(
               child: Text(
                 "Last 3 transactions",
@@ -107,7 +101,6 @@ const Text(
 
             const SizedBox(height: 20),
 
-            /// CARDS
             Expanded(
               child: _loading
                   ? const Center(
@@ -129,7 +122,6 @@ const Text(
 
             const SizedBox(height: 20),
 
-            /// BUTTONS
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [

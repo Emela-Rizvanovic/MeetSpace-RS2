@@ -27,8 +27,6 @@ class AdminPagination extends StatelessWidget {
       mainAxisAlignment:
           MainAxisAlignment.center,
       children: [
-
-        /// PREVIOUS
         IconButton(
           onPressed: onPrevious,
           icon: const Icon(
@@ -37,7 +35,6 @@ class AdminPagination extends StatelessWidget {
           ),
         ),
 
-        /// PAGES
         for (int i = 0; i < totalPages; i++)
 
           GestureDetector(
@@ -72,7 +69,6 @@ class AdminPagination extends StatelessWidget {
             ),
           ),
 
-        /// NEXT
         IconButton(
           onPressed: onNext,
           icon: const Icon(

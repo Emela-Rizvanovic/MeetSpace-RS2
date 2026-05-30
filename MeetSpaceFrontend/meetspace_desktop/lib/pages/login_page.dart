@@ -76,12 +76,11 @@ class _LoginPageState extends State<LoginPage>
         child: FadeTransition(
           opacity: _fade,
           child: Container(
-            width: 500, // 🔥 desktop širina
+            width: 500, 
             padding: const EdgeInsets.all(30),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                /// TITLE
                 const Text(
                   "MEETSPACE",
                   style: TextStyle(
@@ -95,7 +94,6 @@ class _LoginPageState extends State<LoginPage>
 
                 const SizedBox(height: 40),
 
-                /// FORM CARD
                 Container(
                   padding: const EdgeInsets.all(25),
                   decoration: BoxDecoration(
@@ -106,7 +104,6 @@ class _LoginPageState extends State<LoginPage>
                     key: _formKey,
                     child: Column(
                       children: [
-                        /// USERNAME
                         TextFormField(
                           controller: _usernameController,
                           style: const TextStyle(color: Colors.white),
@@ -138,7 +135,6 @@ class _LoginPageState extends State<LoginPage>
 
                         const SizedBox(height: 20),
 
-                        /// PASSWORD
                         TextFormField(
                           controller: _passwordController,
                           obscureText: true,
@@ -169,7 +165,6 @@ class _LoginPageState extends State<LoginPage>
 
                         const SizedBox(height: 30),
 
-                        /// BUTTON
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(

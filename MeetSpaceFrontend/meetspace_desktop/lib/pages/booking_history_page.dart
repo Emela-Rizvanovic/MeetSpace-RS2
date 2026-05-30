@@ -95,8 +95,6 @@ class _BookingHistoryPageState
               CrossAxisAlignment.start,
 
           children: [
-
-            /// TOP BAR
             Row(
               children: [
                 InkWell(
@@ -151,8 +149,6 @@ class _BookingHistoryPageState
 
             const SizedBox(
                 height: 30),
-
-            /// TITLE
            Row(
   mainAxisAlignment:
       MainAxisAlignment.spaceBetween,
@@ -251,7 +247,6 @@ class _BookingHistoryPageState
 
 const SizedBox(height: 20),
 
-            /// SEARCH
             TextField(
               onChanged: (value) {
                 setState(() {
@@ -332,8 +327,6 @@ const SizedBox(height: 20),
 
                             child: Column(
                               children: [
-
-                                /// HEADER
                                 Container(
                                   padding:
                                       const EdgeInsets
@@ -429,7 +422,6 @@ const SizedBox(height: 20),
                                   ),
                                 ),
 
-                                /// LIST
                                 ListView.builder(
                                   shrinkWrap:
                                       true,

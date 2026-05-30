@@ -49,7 +49,7 @@ class _BookingPageState extends State<BookingPage> {
 
   Future<void> _loadAmenities() async {
   setState(() {
-    _amenities = widget.space.amenities; // koristi već učitane amenities tog spacea
+    _amenities = widget.space.amenities; 
     _loading = false;
   });
 }
@@ -120,7 +120,6 @@ if (_endHour! <= _startHour!) {
   return;
 }
 
-    // CHECK PREKLAPANJA
     for (int h = _startHour!; h < _endHour!; h++) {
    if (_bookedHours.contains(h)) {
   setState(() {
@@ -181,8 +180,6 @@ if (_endHour! <= _startHour!) {
                   children: [
                     Row(
   children: [
-
-    /// BACK BUTTON
     InkWell(
       onTap: () => Navigator.pop(context),
       borderRadius: BorderRadius.circular(999),
@@ -306,7 +303,6 @@ const SizedBox(height: 18),
 
                     const SizedBox(height: 28),
 
-                    // 🔥 PRICING DETAILS
                     const Text(
                       "Pricing details",
                       style: TextStyle(

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MeetSpace.Models.Entities
+﻿namespace MeetSpace.Models.Entities
 {
     public class BookingAuditLog
     {
@@ -12,7 +10,7 @@ namespace MeetSpace.Models.Entities
         public int AdminId { get; set; }
         public User Admin { get; set; }
 
-        public string Action { get; set; } // Approved / Rejected
+        public string Action { get; set; } 
 
         public string? Comment { get; set; }
 

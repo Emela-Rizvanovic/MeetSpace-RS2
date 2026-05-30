@@ -59,7 +59,7 @@ Future<void> createSpace({
   required int facilityId,
   required int spaceTypeId,
   required List<File> images,
-  required List<int> amenityIds, // 👈 NOVO
+  required List<int> amenityIds, 
 }) async {
   final fields = {
     "Name": name,
@@ -76,7 +76,7 @@ Future<void> createSpace({
     files: images,
     fileFieldName: "Images",
     listFields: {
-      "AmenityIds": amenityIds, // 👈 KLJUČNO
+      "AmenityIds": amenityIds, 
     },
   );
 
@@ -95,7 +95,7 @@ Future<void> updateSpace({
   required int facilityId,
   required int spaceTypeId,
   required List<int> amenityIds,
-  List<File> newImages = const [], // opcionalno
+  List<File> newImages = const [],
   List<int> deleteImageIds = const [],
 }) async {
   final fields = {
@@ -111,7 +111,7 @@ Future<void> updateSpace({
     "Space/$id",
     fields: fields,
     files: newImages,
-    fileFieldName: "NewImages", // 👈 BITNO (backend očekuje NewImages)
+    fileFieldName: "NewImages", 
     listFields: {
       "AmenityIds": amenityIds,
       "DeleteImageIds": deleteImageIds,

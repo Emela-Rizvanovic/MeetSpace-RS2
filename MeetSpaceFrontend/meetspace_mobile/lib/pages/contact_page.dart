@@ -14,8 +14,6 @@ class ContactPage extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-
-            // HEADER (isti kao About)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
               child: Row(
@@ -46,7 +44,6 @@ class ContactPage extends StatelessWidget {
               ),
             ),
 
-            // CONTENT
             Expanded(
               child: SingleChildScrollView(
                 padding:
@@ -57,7 +54,6 @@ class ContactPage extends StatelessWidget {
 
                     const SizedBox(height: 20),
 
-                    // TITLE
                     const Text(
                       "Contact Us",
                       style: TextStyle(
@@ -83,7 +79,6 @@ class ContactPage extends StatelessWidget {
 
                     const SizedBox(height: 30),
 
-                    // EMAIL SECTION
                     const Text(
                       "Email Support",
                       style: TextStyle(
@@ -104,7 +99,6 @@ class ContactPage extends StatelessWidget {
 
                     const SizedBox(height: 30),
 
-                    // WORKING HOURS
                     const Text(
                       "Working Hours",
                       style: TextStyle(
@@ -125,7 +119,6 @@ class ContactPage extends StatelessWidget {
 
                     const SizedBox(height: 30),
 
-                    // SUPPORT NOTE
                     const Text(
                       "Need Help Quickly?",
                       style: TextStyle(

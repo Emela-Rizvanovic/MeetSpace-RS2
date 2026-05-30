@@ -8,7 +8,6 @@ using MeetSpace.Services.Security;
 using MeetSpace.WebAPI.BaseControllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace MeetSpace.WebAPI.Controllers
 {

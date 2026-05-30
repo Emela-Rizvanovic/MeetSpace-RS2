@@ -14,8 +14,6 @@ class AboutUsPage extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-
-            // HEADER
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
               child: Row(
@@ -45,8 +43,6 @@ class AboutUsPage extends StatelessWidget {
                 ],
               ),
             ),
-
-            // CONTENT
             Expanded(
               child: SingleChildScrollView(
                 padding:
@@ -57,7 +53,6 @@ class AboutUsPage extends StatelessWidget {
 
                     const SizedBox(height: 20),
 
-                    // TITLE
                     const Text(
                       "About MeetSpace",
                       style: TextStyle(
@@ -82,7 +77,6 @@ class AboutUsPage extends StatelessWidget {
 
                     const SizedBox(height: 28),
 
-                    // MISSION
                     const Text(
                       "Our Mission",
                       style: TextStyle(
@@ -107,7 +101,6 @@ class AboutUsPage extends StatelessWidget {
 
                     const SizedBox(height: 32),
 
-                    // WHY CHOOSE US
                     const Text(
                       "Why Choose MeetSpace?",
                       style: TextStyle(
@@ -156,7 +149,6 @@ class AboutUsPage extends StatelessWidget {
 
                     const SizedBox(height: 40),
 
-                    // CTA SECTION
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),

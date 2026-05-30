@@ -6,11 +6,12 @@ using MeetSpace.Models.SearchObjects;
 using MeetSpace.Services.BaseServices;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace MeetSpace.Services.Services
 {
     public class CountryService
-        : BaseCRUDService<
+        : CachedReferenceCRUDService<
             CountryResponse,
             CountrySearchObject,
             Country,
@@ -20,8 +21,9 @@ namespace MeetSpace.Services.Services
     {
         public CountryService(
             MeetSpaceDbContext context,
-            IMapper mapper)
-            : base(context, mapper)
+            IMapper mapper,
+             IMemoryCache cache)
+            : base(context, mapper, cache)
         {
         }
 

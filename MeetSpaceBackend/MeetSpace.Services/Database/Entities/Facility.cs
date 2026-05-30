@@ -12,8 +12,6 @@
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
-
-        // Navigation
         public virtual City City { get; set; }
         public virtual ICollection<Space> Spaces { get; set; }
 

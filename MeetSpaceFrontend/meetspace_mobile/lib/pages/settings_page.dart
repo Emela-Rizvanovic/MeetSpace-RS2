@@ -25,8 +25,6 @@ class _SettingsPageState extends State<SettingsPage> {
       body: SafeArea(
         child: Column(
           children: [
-
-            // HEADER
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
               child: Row(
@@ -55,8 +53,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               ),
             ),
-
-            // CONTENT
             Expanded(
               child: SingleChildScrollView(
                 padding:
@@ -78,10 +74,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
 
                     const SizedBox(height: 30),
-
-                    // -------------------------
-                    // PREFERENCES
-                    // -------------------------
                     const Text(
                       "Preferences",
                       style: TextStyle(
@@ -136,10 +128,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
 
                     const SizedBox(height: 32),
-
-                    // -------------------------
-                    // ACCOUNT
-                    // -------------------------
                     const Text(
                       "Account",
                       style: TextStyle(
