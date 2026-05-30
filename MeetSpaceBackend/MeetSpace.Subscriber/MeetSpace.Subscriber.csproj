@@ -13,11 +13,11 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
+	<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MeetSpace.Models\MeetSpace.Models.csproj" />
-    <ProjectReference Include="..\MeetSpace.WebAPI\MeetSpace.WebAPI.csproj" />
   </ItemGroup>
 
   <ItemGroup>

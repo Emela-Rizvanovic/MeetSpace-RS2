@@ -21,7 +21,12 @@ internal class Program
     private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        Env.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
+        var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+
+        if (File.Exists(envPath))
+        {
+            Env.Load(envPath);
+        }
 
         Stripe.StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
 

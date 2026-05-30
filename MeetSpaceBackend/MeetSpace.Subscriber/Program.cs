@@ -2,7 +2,11 @@ using MeetSpace.Subscriber.Services;
 using DotNetEnv;
 
 var builder = Host.CreateApplicationBuilder(args);
-Env.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
+var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+if (File.Exists(envPath))
+{
+    Env.Load(envPath);
+}
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<IEmailService, EmailService>();
 builder.Services.AddSingleton<IRabbitMQConsumerService, RabbitMQConsumerService>();

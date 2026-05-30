@@ -1,0 +1,93 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-CU23-ubuntu-22.04
+    container_name: meetspace-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD}"
+      MSSQL_PID: "Developer"
+    ports:
+      - "14330:1433"
+    volumes:
+      - meetspace-sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$${MSSQL_SA_PASSWORD}\" -C -Q \"SELECT 1\""]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  rabbitmq:
+    image: rabbitmq:3.13.7-management
+    container_name: meetspace-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_USERNAME}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASSWORD}"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - meetspace-rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: MeetSpaceBackend/Dockerfile.api
+    container_name: meetspace-api
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      DB_CONNECTION: "Server=sqlserver,1433;Database=220184;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;"
+      JWT_KEY: "${JWT_KEY}"
+      JWT_ISSUER: "${JWT_ISSUER}"
+      JWT_AUDIENCE: "${JWT_AUDIENCE}"
+      JWT_DURATION: "${JWT_DURATION}"
+      RABBITMQ_HOST: "rabbitmq"
+      RABBITMQ_USERNAME: "${RABBITMQ_USERNAME}"
+      RABBITMQ_PASSWORD: "${RABBITMQ_PASSWORD}"
+      STRIPE_SECRET_KEY: "${STRIPE_SECRET_KEY}"
+      STRIPE_PUBLISHABLE_KEY: "${STRIPE_PUBLISHABLE_KEY}"
+      AZURE_BLOB_CONNECTION: "${AZURE_BLOB_CONNECTION}"
+      AZURE_USER_CONTAINER: "${AZURE_USER_CONTAINER}"
+      AZURE_SPACE_CONTAINER: "${AZURE_SPACE_CONTAINER}"
+      PAYPAL_CLIENT_ID: "${PAYPAL_CLIENT_ID}"
+      PAYPAL_SECRET: "${PAYPAL_SECRET}"
+    ports:
+      - "5245:8080"
+    restart: unless-stopped
+
+  subscriber:
+    build:
+      context: .
+      dockerfile: MeetSpaceBackend/Dockerfile.subscriber
+    container_name: meetspace-subscriber
+    depends_on:
+      api:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      API_BASE_URL: "http://api:8080"
+      RABBITMQ_HOST: "rabbitmq"
+      RABBITMQ_USERNAME: "${RABBITMQ_USERNAME}"
+      RABBITMQ_PASSWORD: "${RABBITMQ_PASSWORD}"
+      SMTP_HOST: "${SMTP_HOST}"
+      SMTP_PORT: "${SMTP_PORT}"
+      SMTP_USERNAME: "${SMTP_USERNAME}"
+      SMTP_PASSWORD: "${SMTP_PASSWORD}"
+      SMTP_FROM: "${SMTP_FROM}"
+    restart: unless-stopped
+
+volumes:
+  meetspace-sqlserver-data:
+  meetspace-rabbitmq-data:
