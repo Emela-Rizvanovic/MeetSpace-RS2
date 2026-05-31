@@ -139,11 +139,7 @@ Extract its content into the same root folder. The extracted file must be:
 .env
 ```
 
-Archive password:
-
-```text
-fit
-```
+The archive password is provided separately through DLWMS.
 
 ### 3. Start All Backend Services
 
