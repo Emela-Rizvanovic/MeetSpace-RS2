@@ -22,6 +22,7 @@ namespace MeetSpace.WebAPI.Controllers
             _bookingService = service;
         }
 
+        [Authorize(Roles = Roles.Admin)]
         [HttpPost]
         public override async Task<BookingResponse> Create(BookingInsertRequest request)
         {
@@ -37,6 +38,10 @@ namespace MeetSpace.WebAPI.Controllers
             if (currentRole != Roles.Admin)
             {
                 request.UserId = currentUserId;
+            }
+            else if (!request.UserId.HasValue || request.UserId.Value <= 0)
+            {
+                throw new BusinessException("User is required when administrator creates a booking.");
             }
 
             return await base.Create(request);

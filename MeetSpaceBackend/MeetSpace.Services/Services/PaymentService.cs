@@ -32,6 +32,7 @@ namespace MeetSpace.Services.Services
             {
                 Amount = (long)(request.Amount * 100),
                 Currency = request.Currency,
+                CaptureMethod = "manual",
                 AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
                 {
                     Enabled = true
@@ -70,14 +71,11 @@ namespace MeetSpace.Services.Services
             if (paymentIntent == null)
                 throw new NotFoundException("Payment intent not found");
 
-            if (paymentIntent.IsCompleted)
+            var existingPayment = await _context.Payments
+      .FirstOrDefaultAsync(x => x.PaymentIntentId == paymentIntent.Id, ct);
+
+            if (existingPayment != null)
             {
-                var existingPayment = await _context.Payments
-                    .FirstOrDefaultAsync(x => x.PaymentIntentId == paymentIntent.Id, ct);
-
-                if (existingPayment == null)
-                    throw new BusinessException("Payment is completed, but booking record was not found.");
-
                 return new ConfirmPaymentResponse
                 {
                     BookingId = existingPayment.BookingId
@@ -87,8 +85,8 @@ namespace MeetSpace.Services.Services
             var service = new PaymentIntentService();
             var stripeIntent = await service.GetAsync(paymentIntent.StripePaymentIntentId);
 
-            if (stripeIntent.Status != "succeeded")
-                throw new BusinessException("Payment not completed");
+            if (stripeIntent.Status != "requires_capture")
+                throw new BusinessException("Payment was not authorized.");
 
             var expectedAmount = await CalculateExpectedAmountAsync(
     request.SpaceId,
@@ -103,19 +101,18 @@ namespace MeetSpace.Services.Services
         .ToList(),
     ct);
 
-            var receivedAmount = Math.Round((decimal)stripeIntent.AmountReceived / 100m, 2);
+            var authorizedAmount = Math.Round((decimal)stripeIntent.AmountCapturable / 100m, 2);
 
-            if (paymentIntent.Amount != expectedAmount || receivedAmount != expectedAmount)
-                throw new BusinessException("Paid amount does not match booking price.");
+            if (paymentIntent.Amount != expectedAmount || authorizedAmount != expectedAmount)
+                throw new BusinessException("Authorized amount does not match booking price.");
 
             await using var transaction = await _context.Database.BeginTransactionAsync(ct);
-
-            paymentIntent.IsCompleted = true;
 
             var bookingRequest = new BookingInsertRequest
             {
                 SpaceId = request.SpaceId,
                 UserId = currentUserId,
+                InternalPaymentStatus = PaymentStatusEnum.Authorized,
                 StartTime = request.StartTime,
                 EndTime = request.EndTime,
                 Amenities = request.Amenities
@@ -138,7 +135,7 @@ namespace MeetSpace.Services.Services
                 UserId = currentUserId,
                 PaymentIntentId = paymentIntent.Id,
                 PaymentMethodId = (int)PaymentMethodEnum.Stripe,
-                PaymentStatusId = (int)PaymentStatusEnum.Completed,
+                PaymentStatusId = (int)PaymentStatusEnum.Authorized,
                 Amount = paymentIntent.Amount,
                 PaymentDate = DateTime.UtcNow
             };

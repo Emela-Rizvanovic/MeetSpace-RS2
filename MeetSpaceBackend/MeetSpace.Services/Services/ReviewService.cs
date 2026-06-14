@@ -140,7 +140,10 @@ namespace MeetSpace.Services.Services
 
             MapInsertToEntity(entity, request);
 
-            entity.UserId = request.UserId; 
+            if (!request.UserId.HasValue || request.UserId.Value <= 0)
+                throw new BusinessException("User is required.");
+
+            entity.UserId = request.UserId.Value;
 
             await BeforeInsert(entity, request, cancellationToken);
 

@@ -4,6 +4,7 @@ using MeetSpace.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using MeetSpace.Models.Exceptions;
 
 [ApiController]
 [Authorize]
@@ -32,6 +33,10 @@ public class FavoriteController : ControllerBase
         if (currentRole != Roles.Admin)
         {
             request.UserId = currentUserId;
+        }
+        else if (!request.UserId.HasValue || request.UserId.Value <= 0)
+        {
+            throw new BusinessException("User is required when administrator adds a favorite.");
         }
 
         await _service.AddAsync(request);

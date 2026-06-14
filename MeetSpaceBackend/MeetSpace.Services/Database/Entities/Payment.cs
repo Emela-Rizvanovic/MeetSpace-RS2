@@ -15,6 +15,7 @@
         public User? User { get; set; }
         public PaymentIntent? PaymentIntent { get; set; }
         public string? ExternalTransactionId { get; set; }
+        public string? ProviderAuthorizationId { get; set; }
         public PaymentMethod? PaymentMethod { get; set; }
         public PaymentStatus? PaymentStatus { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

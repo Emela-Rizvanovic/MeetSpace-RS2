@@ -66,7 +66,7 @@ namespace MeetSpace.Services.Services
 
             var orderBody = new
             {
-                intent = "CAPTURE",
+                intent = "AUTHORIZE",
                 purchase_units = new[]
                 {
                     new
@@ -149,18 +149,25 @@ namespace MeetSpace.Services.Services
             client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", accessToken);
 
-            var captureResponse = await client.PostAsync(
-                $"https://api-m.sandbox.paypal.com/v2/checkout/orders/{request.OrderId}/capture",
-                new StringContent("", Encoding.UTF8, "application/json"),
-                ct);
+            var authorizeResponse = await client.PostAsync(
+     $"https://api-m.sandbox.paypal.com/v2/checkout/orders/{request.OrderId}/authorize",
+     new StringContent("", Encoding.UTF8, "application/json"),
+     ct);
 
-            var captureJson = await captureResponse.Content.ReadAsStringAsync(ct);
-            var captureData = JObject.Parse(captureJson);
+            var authorizeJson = await authorizeResponse.Content.ReadAsStringAsync(ct);
+            var authorizeData = JObject.Parse(authorizeJson);
 
-            var captureStatus = captureData["purchase_units"]?[0]?["payments"]?["captures"]?[0]?["status"]?.ToString();
+            var authorization = authorizeData["purchase_units"]?[0]?["payments"]?["authorizations"]?[0];
 
-            if (captureStatus != "COMPLETED")
-                throw new BusinessException("Payment not completed");
+            var authorizationStatus = authorization?["status"]?.ToString();
+
+            if (authorizationStatus != "CREATED")
+                throw new BusinessException("Payment was not authorized.");
+
+            var authorizationId = authorization?["id"]?.ToString();
+
+            if (string.IsNullOrWhiteSpace(authorizationId))
+                throw new BusinessException("PayPal authorization id was not returned.");
 
             var expectedAmount = await CalculateExpectedAmountAsync(
     request.SpaceId,
@@ -171,14 +178,14 @@ namespace MeetSpace.Services.Services
 
             var expectedEurAmount = Math.Round(expectedAmount / 1.95583m, 2);
 
-            var capturedAmountValue = captureData["purchase_units"]?[0]?["payments"]?["captures"]?[0]?["amount"]?["value"]?.ToString();
-            var capturedCurrency = captureData["purchase_units"]?[0]?["payments"]?["captures"]?[0]?["amount"]?["currency_code"]?.ToString();
+            var authorizedAmountValue = authorization?["amount"]?["value"]?.ToString();
+            var authorizedCurrency = authorization?["amount"]?["currency_code"]?.ToString();
 
-            if (capturedCurrency != "EUR" ||
-                !decimal.TryParse(capturedAmountValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var capturedAmount) ||
-                capturedAmount != expectedEurAmount)
+            if (authorizedCurrency != "EUR" ||
+                !decimal.TryParse(authorizedAmountValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var authorizedAmount) ||
+                authorizedAmount != expectedEurAmount)
             {
-                throw new BusinessException("Paid amount does not match booking price.");
+                throw new BusinessException("Authorized amount does not match booking price.");
             }
 
             await using var transaction = await _context.Database.BeginTransactionAsync(ct);
@@ -187,6 +194,7 @@ namespace MeetSpace.Services.Services
             {
                 SpaceId = request.SpaceId,
                 UserId = currentUserId,
+                InternalPaymentStatus = PaymentStatusEnum.Authorized,
                 StartTime = request.StartTime,
                 EndTime = request.EndTime,
                 Amenities = request.Amenities
@@ -209,9 +217,10 @@ namespace MeetSpace.Services.Services
                 UserId = currentUserId,
                 ExternalTransactionId = request.OrderId,
                 PaymentMethodId = (int)PaymentMethodEnum.PayPal,
-                PaymentStatusId = (int)PaymentStatusEnum.Completed,
+                PaymentStatusId = (int)PaymentStatusEnum.Authorized,
                 Amount = bookingResponse.TotalPrice,
-                PaymentDate = DateTime.UtcNow
+                PaymentDate = DateTime.UtcNow,
+                ProviderAuthorizationId = authorizationId
             };
 
             _context.Payments.Add(payment);

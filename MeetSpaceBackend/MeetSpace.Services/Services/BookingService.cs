@@ -14,6 +14,10 @@ using System.Security.Claims;
 using Microsoft.EntityFrameworkCore.Storage;
 using MeetSpace.Models.Exceptions;
 using MeetSpace.Models.Constants;
+using Stripe;
+using Newtonsoft.Json.Linq;
+using System.Net.Http.Headers;
+using System.Text;
 
 namespace MeetSpace.Services.Services
 {
@@ -21,11 +25,22 @@ namespace MeetSpace.Services.Services
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IRabbitMQService _rabbitMq;
-        public BookingService(MeetSpaceDbContext context, IMapper mapper, IHttpContextAccessor httpContextAccessor, IRabbitMQService rabbitMq)
-            : base(context, mapper)
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly string _payPalClientId;
+        private readonly string _payPalSecret;
+        public BookingService(
+     MeetSpaceDbContext context,
+     IMapper mapper,
+     IHttpContextAccessor httpContextAccessor,
+     IRabbitMQService rabbitMq,
+     IHttpClientFactory httpClientFactory)
+     : base(context, mapper)
         {
             _httpContextAccessor = httpContextAccessor;
             _rabbitMq = rabbitMq;
+            _httpClientFactory = httpClientFactory;
+            _payPalClientId = Environment.GetEnvironmentVariable("PAYPAL_CLIENT_ID")!;
+            _payPalSecret = Environment.GetEnvironmentVariable("PAYPAL_SECRET")!;
         }
 
         protected override IQueryable<Booking> ApplyFilter(IQueryable<Booking> query, BookingSearchObject search)
@@ -141,8 +156,11 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
 
             entity.TotalPrice = Math.Round(basePrice + amenitiesTotal, 2);
 
-            entity.PaymentStatusId = (int)PaymentStatusEnum.Completed; 
-            entity.BookingStatusId = (int)BookingStatusEnum.Pending; 
+            entity.PaymentStatusId = request.InternalPaymentStatus.HasValue
+    ? (int)request.InternalPaymentStatus.Value
+    : (int)PaymentStatusEnum.Pending;
+
+            entity.BookingStatusId = (int)BookingStatusEnum.Pending;
 
             await base.BeforeInsert(entity, request, cancellationToken);
         }
@@ -311,6 +329,7 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
             var entity = await _context.Bookings
     .Include(b => b.User)
     .Include(b => b.Space)
+    .Include(b => b.Payments)
     .FirstOrDefaultAsync(b => b.Id == id, ct);
 
             if (entity == null)
@@ -321,7 +340,12 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
     BookingStatusEnum.Approved
 );
 
-            entity.BookingStatusId = (int)BookingStatusEnum.Approved; 
+            await CaptureAuthorizedPaymentAsync(entity, ct);
+
+            if (entity.PaymentStatusId != (int)PaymentStatusEnum.Completed)
+                throw new BusinessException("Booking payment must be captured before approval.");
+
+            entity.BookingStatusId = (int)BookingStatusEnum.Approved;
 
             var userId = int.Parse(
                 _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value
@@ -352,6 +376,7 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
             var entity = await _context.Bookings
     .Include(b => b.User)
     .Include(b => b.Space)
+    .Include(b => b.Payments)
     .FirstOrDefaultAsync(b => b.Id == id, ct);
 
             if (entity == null)
@@ -362,7 +387,9 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
     BookingStatusEnum.Rejected
 );
 
-            entity.BookingStatusId = (int)BookingStatusEnum.Rejected; 
+            await VoidAuthorizedPaymentAsync(entity, ct);
+
+            entity.BookingStatusId = (int)BookingStatusEnum.Rejected;
             entity.RejectionReason = reason;
 
             var userId = int.Parse(
@@ -394,9 +421,10 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
         public async Task CancelAsync(int id, string reason, CancellationToken ct = default)
         {
             var entity = await _context.Bookings
-                .Include(b => b.User)
-                .Include(b => b.Space)
-                .FirstOrDefaultAsync(b => b.Id == id, ct);
+     .Include(b => b.User)
+     .Include(b => b.Space)
+     .Include(b => b.Payments)
+     .FirstOrDefaultAsync(b => b.Id == id, ct);
 
             if (entity == null)
                 throw new NotFoundException("Booking not found");
@@ -415,9 +443,11 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
                 throw new BusinessException("Only future bookings can be cancelled.");
 
             ValidateStatusTransition(
-                entity.BookingStatusId,
-                BookingStatusEnum.Cancelled
-            );
+     entity.BookingStatusId,
+     BookingStatusEnum.Cancelled
+ );
+
+            await VoidAuthorizedPaymentAsync(entity, ct);
 
             entity.BookingStatusId = (int)BookingStatusEnum.Cancelled;
             entity.RejectionReason = reason;
@@ -483,6 +513,169 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
                     $"Booking status cannot be changed from {currentStatus} to {newStatus}."
                 );
             }
+        }
+
+        private async Task CaptureAuthorizedPaymentAsync(Booking entity, CancellationToken ct = default)
+        {
+            if (entity.PaymentStatusId == (int)PaymentStatusEnum.Completed)
+                return;
+
+            var payment = entity.Payments
+                .FirstOrDefault(p => p.PaymentStatusId == (int)PaymentStatusEnum.Authorized);
+
+            if (payment == null)
+                throw new BusinessException("Booking does not have an authorized payment.");
+
+            if (payment.PaymentMethodId == (int)PaymentMethodEnum.Stripe)
+            {
+                if (!payment.PaymentIntentId.HasValue)
+                    throw new BusinessException("Stripe payment intent is missing.");
+
+                var paymentIntent = await _context.PaymentIntents
+                    .FirstOrDefaultAsync(x => x.Id == payment.PaymentIntentId.Value, ct);
+
+                if (paymentIntent == null)
+                    throw new NotFoundException("Stripe payment intent not found.");
+
+                var stripeService = new PaymentIntentService();
+
+                var capturedIntent = await stripeService.CaptureAsync(
+                    paymentIntent.StripePaymentIntentId,
+                    cancellationToken: ct);
+
+                if (capturedIntent.Status != "succeeded")
+                    throw new BusinessException("Stripe payment capture failed.");
+
+                paymentIntent.IsCompleted = true;
+            }
+            else if (payment.PaymentMethodId == (int)PaymentMethodEnum.PayPal)
+            {
+                if (string.IsNullOrWhiteSpace(payment.ProviderAuthorizationId))
+                    throw new BusinessException("PayPal authorization id is missing.");
+
+                var client = _httpClientFactory.CreateClient();
+
+                var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(
+                    $"{_payPalClientId}:{_payPalSecret}"
+                ));
+
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Basic", auth);
+
+                var tokenResponse = await client.PostAsync(
+                    "https://api-m.sandbox.paypal.com/v1/oauth2/token",
+                    new FormUrlEncodedContent(new[]
+                    {
+            new KeyValuePair<string, string>("grant_type", "client_credentials")
+                    }),
+                    ct);
+
+                var tokenJson = await tokenResponse.Content.ReadAsStringAsync(ct);
+                var tokenData = JObject.Parse(tokenJson);
+                string accessToken = tokenData["access_token"]?.ToString();
+
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", accessToken);
+
+                var captureResponse = await client.PostAsync(
+                    $"https://api-m.sandbox.paypal.com/v2/payments/authorizations/{payment.ProviderAuthorizationId}/capture",
+                    new StringContent("", Encoding.UTF8, "application/json"),
+                    ct);
+
+                var captureJson = await captureResponse.Content.ReadAsStringAsync(ct);
+                var captureData = JObject.Parse(captureJson);
+
+                var captureStatus = captureData["status"]?.ToString();
+
+                if (captureStatus != "COMPLETED")
+                    throw new BusinessException("PayPal payment capture failed.");
+            }
+            else
+            {
+                throw new BusinessException("Unsupported payment method.");
+            }
+
+            payment.PaymentStatusId = (int)PaymentStatusEnum.Completed;
+            payment.PaymentDate = DateTime.UtcNow;
+            payment.UpdatedAt = DateTime.UtcNow;
+
+            entity.PaymentStatusId = (int)PaymentStatusEnum.Completed;
+        }
+
+        private async Task VoidAuthorizedPaymentAsync(Booking entity, CancellationToken ct = default)
+        {
+            var payment = entity.Payments
+                .FirstOrDefault(p => p.PaymentStatusId == (int)PaymentStatusEnum.Authorized);
+
+            if (payment == null)
+                return;
+
+            if (payment.PaymentMethodId == (int)PaymentMethodEnum.Stripe)
+            {
+                if (!payment.PaymentIntentId.HasValue)
+                    throw new BusinessException("Stripe payment intent is missing.");
+
+                var paymentIntent = await _context.PaymentIntents
+                    .FirstOrDefaultAsync(x => x.Id == payment.PaymentIntentId.Value, ct);
+
+                if (paymentIntent == null)
+                    throw new NotFoundException("Stripe payment intent not found.");
+
+                var stripeService = new PaymentIntentService();
+
+                var canceledIntent = await stripeService.CancelAsync(
+                    paymentIntent.StripePaymentIntentId,
+                    cancellationToken: ct);
+
+                if (canceledIntent.Status != "canceled")
+                    throw new BusinessException("Stripe payment authorization could not be cancelled.");
+            }
+            else if (payment.PaymentMethodId == (int)PaymentMethodEnum.PayPal)
+            {
+                if (string.IsNullOrWhiteSpace(payment.ProviderAuthorizationId))
+                    throw new BusinessException("PayPal authorization id is missing.");
+
+                var client = _httpClientFactory.CreateClient();
+
+                var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(
+                    $"{_payPalClientId}:{_payPalSecret}"
+                ));
+
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Basic", auth);
+
+                var tokenResponse = await client.PostAsync(
+                    "https://api-m.sandbox.paypal.com/v1/oauth2/token",
+                    new FormUrlEncodedContent(new[]
+                    {
+                new KeyValuePair<string, string>("grant_type", "client_credentials")
+                    }),
+                    ct);
+
+                var tokenJson = await tokenResponse.Content.ReadAsStringAsync(ct);
+                var tokenData = JObject.Parse(tokenJson);
+                string accessToken = tokenData["access_token"]?.ToString();
+
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", accessToken);
+
+                var voidResponse = await client.PostAsync(
+                    $"https://api-m.sandbox.paypal.com/v2/payments/authorizations/{payment.ProviderAuthorizationId}/void",
+                    new StringContent("", Encoding.UTF8, "application/json"),
+                    ct);
+
+                if (!voidResponse.IsSuccessStatusCode)
+                    throw new BusinessException("PayPal payment authorization could not be voided.");
+            }
+            else
+            {
+                throw new BusinessException("Unsupported payment method.");
+            }
+
+            payment.PaymentStatusId = (int)PaymentStatusEnum.Failed;
+            payment.UpdatedAt = DateTime.UtcNow;
+
+            entity.PaymentStatusId = (int)PaymentStatusEnum.Failed;
         }
 
         private async Task<BookingResponse> MapWithAuditAsync(Booking entity, CancellationToken ct = default)

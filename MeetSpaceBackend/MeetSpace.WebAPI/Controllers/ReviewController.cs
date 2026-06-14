@@ -6,6 +6,7 @@ using MeetSpace.Services.Interfaces;
 using MeetSpace.WebAPI.BaseControllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MeetSpace.Models.Exceptions;
 
 namespace MeetSpace.WebAPI.Controllers
 {
@@ -42,6 +43,10 @@ namespace MeetSpace.WebAPI.Controllers
             if (currentRole != Roles.Admin)
             {
                 request.UserId = currentUserId;
+            }
+            else if (!request.UserId.HasValue || request.UserId.Value <= 0)
+            {
+                throw new BusinessException("User is required when administrator creates a review.");
             }
 
             return await base.Create(request);

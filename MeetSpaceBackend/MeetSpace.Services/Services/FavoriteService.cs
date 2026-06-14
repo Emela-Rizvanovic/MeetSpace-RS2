@@ -4,7 +4,7 @@ using MeetSpace.Models.Responses;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-
+using MeetSpace.Models.Exceptions;
 
 namespace MeetSpace.Services.Services
 {
@@ -19,15 +19,18 @@ namespace MeetSpace.Services.Services
 
         public async Task AddAsync(FavoriteInsertRequest request)
         {
+            if (!request.UserId.HasValue || request.UserId.Value <= 0)
+                throw new BusinessException("User is required.");
+
             var exists = await _context.Favorites
-                .AnyAsync(f => f.UserId == request.UserId && f.SpaceId == request.SpaceId);
+                .AnyAsync(f => f.UserId == request.UserId.Value && f.SpaceId == request.SpaceId);
 
             if (exists)
                 return;
 
             var favorite = new Favorite
             {
-                UserId = request.UserId,
+                UserId = request.UserId.Value,
                 SpaceId = request.SpaceId
             };
 

@@ -6,6 +6,7 @@ using MeetSpace.Services.BaseServices;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using MeetSpace.Models.Enums;
 
 namespace MeetSpace.Services.Services
 {
@@ -31,6 +32,10 @@ namespace MeetSpace.Services.Services
                 .Include(p => p.Booking)
                     .ThenInclude(b => b.Space)
                         .ThenInclude(s => s.Facility);
+
+            query = query.Where(p =>
+    p.PaymentStatusId == (int)PaymentStatusEnum.Completed &&
+    p.Booking.BookingStatusId == (int)BookingStatusEnum.Approved);
 
             if (!string.IsNullOrWhiteSpace(search.Name))
             {
@@ -69,7 +74,10 @@ namespace MeetSpace.Services.Services
         public async Task<List<RevenueResponse>> GetLatest()
         {
             return await _context.Payments
-                .Include(p => p.User)
+    .Where(p =>
+        p.PaymentStatusId == (int)PaymentStatusEnum.Completed &&
+        p.Booking.BookingStatusId == (int)BookingStatusEnum.Approved)
+    .Include(p => p.User)
                 .Include(p => p.PaymentMethod)
                 .Include(p => p.Booking)
                     .ThenInclude(b => b.Space)
@@ -89,7 +97,11 @@ namespace MeetSpace.Services.Services
 
         public async Task<double> GetTotal()
         {
-            return await _context.Payments.SumAsync(p => (double)p.Amount);
+            return await _context.Payments
+    .Where(p =>
+        p.PaymentStatusId == (int)PaymentStatusEnum.Completed &&
+        p.Booking.BookingStatusId == (int)BookingStatusEnum.Approved)
+    .SumAsync(p => (double)p.Amount);
         }
     }
 }

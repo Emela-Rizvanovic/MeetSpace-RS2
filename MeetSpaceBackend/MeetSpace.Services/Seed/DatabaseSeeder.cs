@@ -60,8 +60,9 @@ namespace MeetSpace.Services.Seed
                 {
                     context.PaymentStatuses.AddRange(
                         new PaymentStatus { Id = (int)PaymentStatusEnum.Pending, Name = "Pending" },
-                        new PaymentStatus { Id = (int)PaymentStatusEnum.Completed, Name = "Completed" },
-                        new PaymentStatus { Id = (int)PaymentStatusEnum.Failed, Name = "Failed" }
+new PaymentStatus { Id = (int)PaymentStatusEnum.Completed, Name = "Completed" },
+new PaymentStatus { Id = (int)PaymentStatusEnum.Failed, Name = "Failed" },
+new PaymentStatus { Id = (int)PaymentStatusEnum.Authorized, Name = "Authorized" }
                     );
 
                     await context.SaveChangesAsync(ct);

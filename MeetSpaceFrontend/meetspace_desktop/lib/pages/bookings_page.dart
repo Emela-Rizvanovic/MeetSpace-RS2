@@ -747,14 +747,16 @@ Future<void> _openDetails(BuildContext context) async {
     booking.startTime.isAfter(DateTime.now());
   await _loadConflict();
 
-  final isPaymentCompleted =
-    booking.paymentStatusName?.toLowerCase() == "completed";
+  final paymentStatus = booking.paymentStatusName?.toLowerCase();
+
+final isPaymentReadyForApproval =
+    paymentStatus == "authorized" || paymentStatus == "completed";
 
 String? approveDisabledReason;
 
-if (!isPaymentCompleted) {
+if (!isPaymentReadyForApproval) {
   approveDisabledReason =
-      "Payment must be completed before approval.";
+      "Payment must be authorized before approval.";
 } else if (hasConflict == true) {
   approveDisabledReason =
       "Cannot approve because this time slot is already booked.";

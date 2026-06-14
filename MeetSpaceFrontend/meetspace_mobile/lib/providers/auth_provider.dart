@@ -278,7 +278,6 @@ Future<void> createBooking({
 
   final body = {
     "spaceId": spaceId,
-    "bookingStatusId": BookingStatusIds.pending,
     "startTime": startTime.toIso8601String(),
     "endTime": endTime.toIso8601String(),
     "amenities": amenities,
