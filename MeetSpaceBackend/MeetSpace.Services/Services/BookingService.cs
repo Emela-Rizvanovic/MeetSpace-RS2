@@ -89,6 +89,62 @@ namespace MeetSpace.Services.Services
                 .Include(b => b.PaymentStatus);
         }
 
+        public async Task<decimal> ValidateCreatePrerequisitesAndCalculatePriceAsync(
+    int spaceId,
+    DateTime startTime,
+    DateTime endTime,
+    List<BookingAmenityInsertRequest>? amenities,
+    CancellationToken ct = default)
+        {
+            if (endTime <= startTime)
+                throw new BusinessException("EndTime must be greater than StartTime.");
+
+            if (startTime <= DateTime.UtcNow)
+                throw new BusinessException("Booking start time must be in the future.");
+
+            var hasConflict = await _context.Bookings
+                .AnyAsync(b =>
+                    b.SpaceId == spaceId &&
+                    b.BookingStatusId != (int)BookingStatusEnum.Rejected &&
+                    b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
+                    startTime < b.EndTime &&
+                    endTime > b.StartTime,
+                    ct);
+
+            if (hasConflict)
+                throw new BusinessException("Time slot already booked.");
+
+            var space = await _context.Spaces
+                .FirstOrDefaultAsync(s => s.Id == spaceId, ct);
+
+            if (space == null)
+                throw new NotFoundException("Space not found.");
+
+            var hours = (decimal)(endTime - startTime).TotalHours;
+
+            if (hours <= 0)
+                throw new BusinessException("Invalid booking duration.");
+
+            var total = Math.Round(hours * space.PricePerHour, 2);
+
+            if (amenities != null && amenities.Any())
+            {
+                foreach (var item in amenities)
+                {
+                    var amenity = await _context.Amenities
+                        .FirstOrDefaultAsync(a => a.Id == item.AmenityId, ct);
+
+                    if (amenity == null)
+                        throw new NotFoundException($"Amenity {item.AmenityId} not found.");
+
+                    var quantity = item.Quantity <= 0 ? 1 : item.Quantity;
+                    total += Math.Round(amenity.Price * quantity, 2);
+                }
+            }
+
+            return Math.Round(total, 2);
+        }
+
         protected override async Task BeforeInsert(
     Booking entity,
     BookingInsertRequest request,
@@ -96,38 +152,12 @@ namespace MeetSpace.Services.Services
         {
             entity.CreatedAt = DateTime.UtcNow;
 
-            if (request.EndTime <= request.StartTime)
-                throw new BusinessException("EndTime must be greater than StartTime.");
-
-            if (request.StartTime <= DateTime.UtcNow)
-                throw new BusinessException("Booking start time must be in the future.");
-
-            var hasConflict = await _context.Bookings
-    .AnyAsync(b =>
-        b.SpaceId == request.SpaceId &&
-        b.BookingStatusId != (int)BookingStatusEnum.Rejected &&
-b.BookingStatusId != (int)BookingStatusEnum.Cancelled && 
-        request.StartTime < b.EndTime &&
-        request.EndTime > b.StartTime
-    );
-
-            if (hasConflict)
-                throw new BusinessException("Time slot already booked.");
-
-            var space = await _context.Spaces
-                .FirstOrDefaultAsync(s => s.Id == request.SpaceId, cancellationToken);
-
-            if (space == null)
-                throw new NotFoundException("Space not found.");
-
-            var hours = (decimal)(request.EndTime - request.StartTime).TotalHours;
-
-            if (hours <= 0)
-                throw new BusinessException("Invalid booking duration.");
-
-            var basePrice = Math.Round(hours * space.PricePerHour, 2);
-
-            decimal amenitiesTotal = 0m;
+            entity.TotalPrice = await ValidateCreatePrerequisitesAndCalculatePriceAsync(
+      request.SpaceId,
+      request.StartTime,
+      request.EndTime,
+      request.Amenities,
+      cancellationToken);
 
             if (request.Amenities != null && request.Amenities.Any())
             {
@@ -141,20 +171,14 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
 
                     var quantity = item.Quantity <= 0 ? 1 : item.Quantity;
 
-                    var itemTotal = Math.Round(amenity.Price * quantity, 2);
-
                     entity.BookingAmenities.Add(new BookingAmenity
                     {
                         AmenityId = amenity.Id,
                         Quantity = quantity,
-                        Price = amenity.Price 
+                        Price = amenity.Price
                     });
-
-                    amenitiesTotal += itemTotal;
                 }
             }
-
-            entity.TotalPrice = Math.Round(basePrice + amenitiesTotal, 2);
 
             entity.PaymentStatusId = request.InternalPaymentStatus.HasValue
     ? (int)request.InternalPaymentStatus.Value
@@ -165,45 +189,127 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
             await base.BeforeInsert(entity, request, cancellationToken);
         }
 
-        protected override async Task BeforeUpdate(Booking entity, BookingUpdateRequest request, CancellationToken cancellationToken = default)
+        protected override async Task BeforeUpdate(
+      Booking entity,
+      BookingUpdateRequest request,
+      CancellationToken cancellationToken = default)
         {
             entity.UpdatedAt = DateTime.UtcNow;
 
             var start = request.StartTime ?? entity.StartTime;
             var end = request.EndTime ?? entity.EndTime;
+            var spaceId = request.SpaceId ?? entity.SpaceId;
+            var userId = request.UserId ?? entity.UserId;
+            var bookingStatusId = request.BookingStatusId ?? entity.BookingStatusId;
 
-            if (end <= start)
+            var amenities = request.Amenities;
+
+            entity.TotalPrice = await ValidateUpdatePrerequisitesAndCalculatePriceAsync(
+                entity.Id,
+                spaceId,
+                start,
+                end,
+                amenities,
+                cancellationToken);
+
+            entity.SpaceId = spaceId;
+            entity.UserId = userId;
+            entity.BookingStatusId = bookingStatusId;
+            entity.StartTime = start;
+            entity.EndTime = end;
+
+            if (amenities != null)
+            {
+                _context.BookingAmenities.RemoveRange(entity.BookingAmenities);
+                entity.BookingAmenities.Clear();
+
+                foreach (var item in amenities)
+                {
+                    var amenity = await _context.Amenities
+                        .FirstOrDefaultAsync(a => a.Id == item.AmenityId, cancellationToken);
+
+                    if (amenity == null)
+                        throw new NotFoundException($"Amenity {item.AmenityId} not found.");
+
+                    var quantity = item.Quantity <= 0 ? 1 : item.Quantity;
+
+                    entity.BookingAmenities.Add(new BookingAmenity
+                    {
+                        BookingId = entity.Id,
+                        AmenityId = amenity.Id,
+                        Quantity = quantity,
+                        Price = amenity.Price
+                    });
+                }
+            }
+
+            await base.BeforeUpdate(entity, request, cancellationToken);
+        }
+
+        private async Task<decimal> ValidateUpdatePrerequisitesAndCalculatePriceAsync(
+    int bookingId,
+    int spaceId,
+    DateTime startTime,
+    DateTime endTime,
+    List<BookingAmenityInsertRequest>? amenities,
+    CancellationToken ct = default)
+        {
+            if (endTime <= startTime)
                 throw new BusinessException("EndTime must be greater than StartTime.");
 
-            if (start <= DateTime.UtcNow)
+            if (startTime <= DateTime.UtcNow)
                 throw new BusinessException("Booking start time must be in the future.");
 
-            var spaceId = request.SpaceId ?? entity.SpaceId;
-
-            var space = await _context.Spaces.FirstOrDefaultAsync(s => s.Id == spaceId, cancellationToken);
-            if (space == null)
-                throw new NotFoundException("Space not found.");
-
             var hasConflict = await _context.Bookings
-    .AnyAsync(b =>
-        b.Id != entity.Id &&
-        b.SpaceId == spaceId &&
-        b.BookingStatusId != (int)BookingStatusEnum.Rejected &&
-b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
-        start < b.EndTime &&
-        end > b.StartTime,
-        cancellationToken);
+                .AnyAsync(b =>
+                    b.Id != bookingId &&
+                    b.SpaceId == spaceId &&
+                    b.BookingStatusId != (int)BookingStatusEnum.Rejected &&
+                    b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
+                    startTime < b.EndTime &&
+                    endTime > b.StartTime,
+                    ct);
 
             if (hasConflict)
                 throw new BusinessException("Time slot already booked.");
 
-            var hours = (decimal)(end - start).TotalHours;
+            var space = await _context.Spaces
+                .FirstOrDefaultAsync(s => s.Id == spaceId, ct);
+
+            if (space == null)
+                throw new NotFoundException("Space not found.");
+
+            var hours = (decimal)(endTime - startTime).TotalHours;
+
             if (hours <= 0)
                 throw new BusinessException("Invalid booking duration.");
 
-            entity.TotalPrice = Math.Round(hours * space.PricePerHour, 2);
+            var total = Math.Round(hours * space.PricePerHour, 2);
 
-            await base.BeforeUpdate(entity, request, cancellationToken);
+            if (amenities != null && amenities.Any())
+            {
+                foreach (var item in amenities)
+                {
+                    var amenity = await _context.Amenities
+                        .FirstOrDefaultAsync(a => a.Id == item.AmenityId, ct);
+
+                    if (amenity == null)
+                        throw new NotFoundException($"Amenity {item.AmenityId} not found.");
+
+                    var quantity = item.Quantity <= 0 ? 1 : item.Quantity;
+                    total += Math.Round(amenity.Price * quantity, 2);
+                }
+            }
+            else if (amenities == null)
+            {
+                var existingAmenitiesTotal = await _context.BookingAmenities
+                    .Where(x => x.BookingId == bookingId)
+                    .SumAsync(x => x.Price * x.Quantity, ct);
+
+                total += existingAmenitiesTotal;
+            }
+
+            return Math.Round(total, 2);
         }
 
         public override async Task<BookingResponse> CreateAsync(BookingInsertRequest request, CancellationToken cancellationToken = default)
@@ -266,10 +372,28 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
             return entity == null ? null : await MapWithAuditAsync(entity, cancellationToken);
         }
 
+        public async Task<List<BookingAvailabilityResponse>> GetAvailabilityBySpaceIdAsync(int spaceId, CancellationToken ct = default)
+        {
+            return await _context.Bookings
+                .Where(b =>
+                    b.SpaceId == spaceId &&
+                    b.BookingStatusId != (int)BookingStatusEnum.Rejected &&
+                    b.BookingStatusId != (int)BookingStatusEnum.Cancelled)
+                .OrderBy(b => b.StartTime)
+                .Select(b => new BookingAvailabilityResponse
+                {
+                    StartTime = b.StartTime,
+                    EndTime = b.EndTime,
+                    Status = AvailabilityStatuses.Busy
+                })
+                .ToListAsync(ct);
+        }
+
         public override async Task<BookingResponse?> UpdateAsync(int id, BookingUpdateRequest request, CancellationToken cancellationToken = default)
         {
             var entity = await _context.Bookings
-                .FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
+    .Include(b => b.BookingAmenities)
+    .FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
 
             if (entity == null)
                 return null;

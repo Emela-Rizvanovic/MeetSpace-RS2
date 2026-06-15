@@ -4,7 +4,6 @@ import '../models/space.dart';
 import '../models/amenity.dart';
 import '../providers/auth_provider.dart';
 import 'payment_page.dart';
-import '../constants/app_constants.dart';
 
 class BookingPage extends StatefulWidget {
   final SpaceResponse space;
@@ -54,20 +53,15 @@ class _BookingPageState extends State<BookingPage> {
   });
 }
 
-  Future<void> _loadBookedHours() async {
+ Future<void> _loadBookedHours() async {
+  try {
     final auth = context.read<AuthProvider>();
     final bookings =
-        await auth.getBookingsForSpace(widget.space.id);
+        await auth.getAvailabilityForSpace(widget.space.id);
 
     final Set<int> hours = {};
 
     for (var b in bookings) {
-      final blocksAvailability =
-    b.bookingStatusId == BookingStatusIds.pending ||
-    b.bookingStatusId == BookingStatusIds.approved;
-
-if (!blocksAvailability) continue;
-
       if (b.startTime.year == widget.selectedDate.year &&
           b.startTime.month == widget.selectedDate.month &&
           b.startTime.day == widget.selectedDate.day) {
@@ -79,10 +73,19 @@ if (!blocksAvailability) continue;
       }
     }
 
+    if (!mounted) return;
+
     setState(() {
       _bookedHours = hours;
     });
+  } catch (_) {
+    if (!mounted) return;
+
+    setState(() {
+      _bookedHours = {};
+    });
   }
+}
 
   int get _hours {
     if (_startHour == null || _endHour == null) return 0;

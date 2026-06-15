@@ -7,6 +7,7 @@ using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
+using System.Text.Json;
 
 namespace MeetSpace.Services.Services
 {
@@ -28,9 +29,16 @@ namespace MeetSpace.Services.Services
             int currentUserId,
             CancellationToken ct = default)
         {
+           var amount = await _bookingService.ValidateCreatePrerequisitesAndCalculatePriceAsync(
+    request.SpaceId,
+    request.StartTime,
+    request.EndTime,
+    request.Amenities,
+    ct);
+
             var options = new PaymentIntentCreateOptions
             {
-                Amount = (long)(request.Amount * 100),
+                Amount = (long)(amount * 100),
                 Currency = request.Currency,
                 CaptureMethod = "manual",
                 AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
@@ -45,9 +53,17 @@ namespace MeetSpace.Services.Services
             var paymentIntent = new MeetSpace.Models.Entities.PaymentIntent
             {
                 StripePaymentIntentId = stripeIntent.Id,
-                Amount = request.Amount,
+                Amount = amount,
                 Currency = request.Currency,
-                IsCompleted = false
+                IsCompleted = false,
+                UserId = currentUserId,
+                SpaceId = request.SpaceId,
+                StartTime = request.StartTime,
+                EndTime = request.EndTime,
+                AmenitiesSnapshotJson = JsonSerializer.Serialize(request.Amenities),
+                Provider = "Stripe",
+                Status = "Created",
+                ExpiresAt = DateTime.UtcNow.AddMinutes(30),
             };
 
             _context.PaymentIntents.Add(paymentIntent);
@@ -56,7 +72,8 @@ namespace MeetSpace.Services.Services
             return new PaymentIntentResponse
             {
                 ClientSecret = stripeIntent.ClientSecret,
-                PaymentIntentId = paymentIntent.Id
+                PaymentIntentId = paymentIntent.Id,
+                Amount = amount
             };
         }
 
@@ -66,10 +83,17 @@ namespace MeetSpace.Services.Services
             CancellationToken ct = default)
         {
             var paymentIntent = await _context.PaymentIntents
-                .FirstOrDefaultAsync(x => x.Id == request.PaymentIntentId, ct);
+    .FirstOrDefaultAsync(x =>
+        x.Id == request.PaymentIntentId &&
+        x.UserId == currentUserId &&
+        x.Provider == "Stripe",
+        ct);
 
             if (paymentIntent == null)
                 throw new NotFoundException("Payment intent not found");
+
+            if (paymentIntent.ExpiresAt <= DateTime.UtcNow)
+                throw new BusinessException("Payment intent has expired.");
 
             var existingPayment = await _context.Payments
       .FirstOrDefaultAsync(x => x.PaymentIntentId == paymentIntent.Id, ct);
@@ -88,102 +112,73 @@ namespace MeetSpace.Services.Services
             if (stripeIntent.Status != "requires_capture")
                 throw new BusinessException("Payment was not authorized.");
 
-            var expectedAmount = await CalculateExpectedAmountAsync(
-    request.SpaceId,
-    request.StartTime,
-    request.EndTime,
-    request.Amenities
-        .Select(x => new BookingAmenityInsertRequest
-        {
-            AmenityId = x.AmenityId,
-            Quantity = x.Quantity
-        })
-        .ToList(),
-    ct);
+            var amenities = JsonSerializer.Deserialize<List<BookingAmenityInsertRequest>>(
+    paymentIntent.AmenitiesSnapshotJson
+) ?? new();
 
-            var authorizedAmount = Math.Round((decimal)stripeIntent.AmountCapturable / 100m, 2);
-
-            if (paymentIntent.Amount != expectedAmount || authorizedAmount != expectedAmount)
-                throw new BusinessException("Authorized amount does not match booking price.");
-
-            await using var transaction = await _context.Database.BeginTransactionAsync(ct);
-
-            var bookingRequest = new BookingInsertRequest
+            try
             {
-                SpaceId = request.SpaceId,
-                UserId = currentUserId,
-                InternalPaymentStatus = PaymentStatusEnum.Authorized,
-                StartTime = request.StartTime,
-                EndTime = request.EndTime,
-                Amenities = request.Amenities
-                    .Select(x => new BookingAmenityInsertRequest
-                    {
-                        AmenityId = x.AmenityId,
-                        Quantity = x.Quantity
-                    })
-                    .ToList()
-            };
+                var expectedAmount = await _bookingService.ValidateCreatePrerequisitesAndCalculatePriceAsync(
+                    paymentIntent.SpaceId,
+                    paymentIntent.StartTime,
+                    paymentIntent.EndTime,
+                    amenities,
+                    ct);
 
-            var bookingResponse =
-                await _bookingService.CreateAsync(bookingRequest, ct);
+                var authorizedAmount = Math.Round((decimal)stripeIntent.AmountCapturable / 100m, 2);
 
-            await _context.SaveChangesAsync(ct);
+                if (paymentIntent.Amount != expectedAmount || authorizedAmount != expectedAmount)
+                    throw new BusinessException("Authorized amount does not match booking price.");
 
-            var payment = new Payment
-            {
-                BookingId = bookingResponse.Id,
-                UserId = currentUserId,
-                PaymentIntentId = paymentIntent.Id,
-                PaymentMethodId = (int)PaymentMethodEnum.Stripe,
-                PaymentStatusId = (int)PaymentStatusEnum.Authorized,
-                Amount = paymentIntent.Amount,
-                PaymentDate = DateTime.UtcNow
-            };
+                await using var transaction = await _context.Database.BeginTransactionAsync(ct);
 
-            _context.Payments.Add(payment);
+                var bookingRequest = new BookingInsertRequest
+                {
+                    SpaceId = paymentIntent.SpaceId,
+                    UserId = currentUserId,
+                    InternalPaymentStatus = PaymentStatusEnum.Authorized,
+                    StartTime = paymentIntent.StartTime,
+                    EndTime = paymentIntent.EndTime,
+                    Amenities = amenities
+                };
 
-            await _context.SaveChangesAsync(ct);
+                var bookingResponse = await _bookingService.CreateAsync(bookingRequest, ct);
 
-            await transaction.CommitAsync(ct);
+                await _context.SaveChangesAsync(ct);
 
-            return new ConfirmPaymentResponse
-            {
-                BookingId = bookingResponse.Id
-            };
-        }
+                var payment = new Payment
+                {
+                    BookingId = bookingResponse.Id,
+                    UserId = currentUserId,
+                    PaymentIntentId = paymentIntent.Id,
+                    PaymentMethodId = (int)PaymentMethodEnum.Stripe,
+                    PaymentStatusId = (int)PaymentStatusEnum.Authorized,
+                    Amount = paymentIntent.Amount,
+                    PaymentDate = DateTime.UtcNow
+                };
 
-        private async Task<decimal> CalculateExpectedAmountAsync(
-    int spaceId,
-    DateTime startTime,
-    DateTime endTime,
-    List<BookingAmenityInsertRequest> amenities,
-    CancellationToken ct)
-        {
-            if (endTime <= startTime)
-                throw new BusinessException("EndTime must be greater than StartTime.");
+                _context.Payments.Add(payment);
 
-            var space = await _context.Spaces
-                .FirstOrDefaultAsync(x => x.Id == spaceId, ct);
+                paymentIntent.Status = "Authorized";
 
-            if (space == null)
-                throw new NotFoundException("Space not found.");
+                await _context.SaveChangesAsync(ct);
 
-            var hours = (decimal)(endTime - startTime).TotalHours;
-            var total = Math.Round(hours * space.PricePerHour, 2);
+                await transaction.CommitAsync(ct);
 
-            foreach (var item in amenities)
-            {
-                var amenity = await _context.Amenities
-                    .FirstOrDefaultAsync(x => x.Id == item.AmenityId, ct);
-
-                if (amenity == null)
-                    throw new NotFoundException($"Amenity {item.AmenityId} not found.");
-
-                var quantity = item.Quantity <= 0 ? 1 : item.Quantity;
-                total += Math.Round(amenity.Price * quantity, 2);
+                return new ConfirmPaymentResponse
+                {
+                    BookingId = bookingResponse.Id
+                };
             }
+            catch
+            {
+                await service.CancelAsync(paymentIntent.StripePaymentIntentId, cancellationToken: ct);
 
-            return Math.Round(total, 2);
+                paymentIntent.Status = "Failed";
+                await _context.SaveChangesAsync(ct);
+
+                throw;
+            }
         }
     }
 

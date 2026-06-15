@@ -19,6 +19,7 @@ import '../services/user_service.dart';
 import '../services/recommendation_service.dart';
 import '../services/payment_service.dart';
 import '../constants/app_constants.dart';
+import '../models/booking_availability.dart';
 
 class AuthProvider with ChangeNotifier {
   UserResponse? user;
@@ -264,8 +265,8 @@ Future<void> updateProfile({
   notifyListeners();
 }
 
-Future<List<BookingResponse>> getBookingsForSpace(int spaceId) {
-  return bookingService.getBookingsForSpace(spaceId);
+Future<List<BookingAvailabilityResponse>> getAvailabilityForSpace(int spaceId) {
+  return bookingService.getAvailabilityForSpace(spaceId);
 }
 
 Future<void> createBooking({

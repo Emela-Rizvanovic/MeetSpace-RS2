@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../models/space.dart';
 import '../providers/auth_provider.dart';
 import 'booking_page.dart';
-import '../constants/app_constants.dart';
 
 class CalendarPage extends StatefulWidget {
   final SpaceResponse space;
@@ -30,38 +29,43 @@ class _CalendarPageState extends State<CalendarPage> {
     _loadBookings();
   }
 
- Future<void> _loadBookings() async {
-  final auth = context.read<AuthProvider>();
+Future<void> _loadBookings() async {
+  try {
+    final auth = context.read<AuthProvider>();
 
-  final bookings =
-      await auth.getBookingsForSpace(widget.space.id);
+    final bookings =
+        await auth.getAvailabilityForSpace(widget.space.id);
 
-  final Map<DateTime, Set<int>> bookedMap = {};
+    final Map<DateTime, Set<int>> bookedMap = {};
 
-  for (var b in bookings) {
-    final blocksAvailability =
-    b.bookingStatusId == BookingStatusIds.pending ||
-    b.bookingStatusId == BookingStatusIds.approved;
+    for (var b in bookings) {
+      final date = DateTime(
+        b.startTime.year,
+        b.startTime.month,
+        b.startTime.day,
+      );
 
-if (!blocksAvailability) continue;
+      bookedMap.putIfAbsent(date, () => {});
 
-    final date = DateTime(
-      b.startTime.year,
-      b.startTime.month,
-      b.startTime.day,
-    );
-
-    bookedMap.putIfAbsent(date, () => {});
-
-    for (int h = b.startTime.hour; h < b.endTime.hour; h++) {
-      bookedMap[date]!.add(h);
+      for (int h = b.startTime.hour; h < b.endTime.hour; h++) {
+        bookedMap[date]!.add(h);
+      }
     }
-  }
 
-  setState(() {
-    _bookedHoursPerDay = bookedMap;
-    _loading = false;
-  });
+    if (!mounted) return;
+
+    setState(() {
+      _bookedHoursPerDay = bookedMap;
+      _loading = false;
+    });
+  } catch (_) {
+    if (!mounted) return;
+
+    setState(() {
+      _bookedHoursPerDay = {};
+      _loading = false;
+    });
+  }
 }
 
   @override

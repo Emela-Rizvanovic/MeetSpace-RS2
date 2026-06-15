@@ -1,6 +1,7 @@
 import 'dart:convert';
 import '../models/booking.dart';
 import 'api_service.dart';
+import '../models/booking_availability.dart';
 
 class BookingService {
   final ApiService api;
@@ -23,21 +24,21 @@ class BookingService {
     throw Exception("Failed to load bookings");
   }
 
-  Future<List<BookingResponse>> getBookingsForSpace(int spaceId) async {
-    final response = await api.get("Booking/space/$spaceId");
+  Future<List<BookingAvailabilityResponse>> getAvailabilityForSpace(int spaceId) async {
+  final response = await api.get("Booking/space/$spaceId/availability");
 
-    if (response.statusCode == 200) {
-      final decoded = jsonDecode(response.body);
+  if (response.statusCode == 200) {
+    final decoded = jsonDecode(response.body);
 
-      if (decoded is List) {
-        return decoded
-            .map((e) => BookingResponse.fromJson(e))
-            .toList();
-      }
+    if (decoded is List) {
+      return decoded
+          .map((e) => BookingAvailabilityResponse.fromJson(e))
+          .toList();
     }
-
-    throw Exception("Failed to load space bookings");
   }
+
+  throw Exception("Failed to load space availability");
+}
 
   Future<void> createBooking(Map<String, dynamic> body) async {
     final response = await api.post("Booking", body);

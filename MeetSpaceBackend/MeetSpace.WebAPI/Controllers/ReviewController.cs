@@ -75,6 +75,29 @@ namespace MeetSpace.WebAPI.Controllers
             return await base.Update(id, request);
         }
 
+        [HttpDelete("{id}")]
+        public override async Task<bool> Delete(int id)
+        {
+            var review = await _reviewService.GetByIdAsync(id);
+
+            if (review == null)
+                return false;
+
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            var roleClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Role);
+
+            if (userIdClaim == null || roleClaim == null)
+                throw new UnauthorizedAccessException("Unauthorized.");
+
+            int currentUserId = int.Parse(userIdClaim.Value);
+            string currentRole = roleClaim.Value;
+
+            if (currentRole != Roles.Admin && review.UserId != currentUserId)
+                throw new UnauthorizedAccessException("You cannot delete this review.");
+
+            return await base.Delete(id);
+        }
+
         [HttpGet("{id}")]
         public override async Task<ReviewResponse?> GetById(int id)
         {

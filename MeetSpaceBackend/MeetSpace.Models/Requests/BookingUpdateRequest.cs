@@ -12,9 +12,8 @@ namespace MeetSpace.Models.Requests
 
         [Range(1, int.MaxValue, ErrorMessage = "Booking status must be a valid selected status.")]
         public int? BookingStatusId { get; set; }
-
         public DateTime? StartTime { get; set; }
-
         public DateTime? EndTime { get; set; }
+        public List<BookingAmenityInsertRequest>? Amenities { get; set; }
     }
 }

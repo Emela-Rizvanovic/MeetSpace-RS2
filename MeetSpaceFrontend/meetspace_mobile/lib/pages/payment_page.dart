@@ -145,19 +145,22 @@ if (!confirmed) return;
     try {
       final auth = context.read<AuthProvider>();
 
-    final hours =
-    widget.endTime.difference(widget.startTime).inMinutes / 60.0;
+      final amenities = widget.selectedAmenities.entries
+    .where((e) => e.value)
+    .map((e) => {
+          "amenityId": e.key,
+          "quantity": 1,
+        })
+    .toList();
 
-double amount = hours * widget.space.pricePerHour;
+final intent = await auth.paymentService.createPaymentIntent(
+  spaceId: widget.space.id,
+  startTime: widget.startTime,
+  endTime: widget.endTime,
+  amenities: amenities,
+);
 
-for (var amenity in widget.amenities) {
-  if (widget.selectedAmenities[amenity.id] == true) {
-    amount += amenity.price;
-  }
-}
-
-      final intent =
-          await auth.paymentService.createPaymentIntent(amount);
+final amount = (intent["amount"] as num).toDouble();
 
       final clientSecret = intent["clientSecret"];
       final intentId = intent["paymentIntentId"];
@@ -172,14 +175,6 @@ for (var amenity in widget.amenities) {
           ),
         ),
       );
-
-      final amenities = widget.selectedAmenities.entries
-          .where((e) => e.value)
-          .map((e) => {
-                "amenityId": e.key,
-                "quantity": 1,
-              })
-          .toList();
 
       await auth.paymentService.confirmPayment(
         spaceId: widget.space.id,
@@ -222,29 +217,25 @@ if (!confirmed) return;
   try {
     final auth = context.read<AuthProvider>();
 
-   final hours =
-    widget.endTime.difference(widget.startTime).inMinutes / 60.0;
-
-double amount = hours * widget.space.pricePerHour;
-
-for (var amenity in widget.amenities) {
-  if (widget.selectedAmenities[amenity.id] == true) {
-    amount += amenity.price;
-  }
-}
-
-    final data =
-        await auth.paymentService.createPaypalOrder(amount);
-
-    if (!mounted) return;
-
-    final amenities = widget.selectedAmenities.entries
+   final amenities = widget.selectedAmenities.entries
     .where((e) => e.value)
     .map((e) => {
           "amenityId": e.key,
           "quantity": 1,
         })
     .toList();
+
+final data = await auth.paymentService.createPaypalOrder(
+  spaceId: widget.space.id,
+  startTime: widget.startTime,
+  endTime: widget.endTime,
+  amenities: amenities,
+);
+
+final amount = (data["amount"] as num).toDouble();
+
+    if (!mounted) return;
+
 
     Navigator.push(
       context,

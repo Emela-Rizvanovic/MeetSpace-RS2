@@ -134,10 +134,18 @@ namespace MeetSpace.WebAPI.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = Roles.Admin)]
         [HttpGet("space/{spaceId}")]
         public async Task<ActionResult<List<BookingResponse>>> GetBySpace(int spaceId, CancellationToken ct)
         {
             var result = await _bookingService.GetBySpaceIdAsync(spaceId, ct);
+            return Ok(result);
+        }
+
+        [HttpGet("space/{spaceId}/availability")]
+        public async Task<ActionResult<List<BookingAvailabilityResponse>>> GetAvailabilityBySpace(int spaceId, CancellationToken ct)
+        {
+            var result = await _bookingService.GetAvailabilityBySpaceIdAsync(spaceId, ct);
             return Ok(result);
         }
 

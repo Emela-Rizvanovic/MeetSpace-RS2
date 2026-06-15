@@ -162,6 +162,20 @@ namespace MeetSpace.WebAPI.Controllers
             return await base.Update(id, request);
         }
 
+        [Authorize(Roles = Roles.Admin)]
+        [HttpDelete("{id}")]
+        public override async Task<bool> Delete(int id)
+        {
+            var result = await _userService.UpdateAsync(
+                id,
+                new UserUpdateRequest
+                {
+                    IsActive = false
+                });
+
+            return result != null;
+        }
+
         [AllowAnonymous]
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken ct)

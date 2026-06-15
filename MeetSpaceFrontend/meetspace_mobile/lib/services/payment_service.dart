@@ -6,11 +6,19 @@ class PaymentService {
 
   PaymentService(this.api);
 
-  Future<Map<String, dynamic>> createPaymentIntent(double amount) async {
-    final body = {
-      "amount": amount,
-      "currency": "bam"
-    };
+Future<Map<String, dynamic>> createPaymentIntent({
+  required int spaceId,
+  required DateTime startTime,
+  required DateTime endTime,
+  required List<Map<String, dynamic>> amenities,
+}) async {
+  final body = {
+    "spaceId": spaceId,
+    "startTime": startTime.toIso8601String(),
+    "endTime": endTime.toIso8601String(),
+    "amenities": amenities,
+    "currency": "bam"
+  };
 
     final response = await api.post("Payment/create-intent", body);
 
@@ -45,8 +53,20 @@ class PaymentService {
     throw Exception("Payment confirmation failed");
   }
 
-Future<Map<String, dynamic>> createPaypalOrder(double amount) async {
-  final response = await api.post("PayPal/create-order", amount);
+Future<Map<String, dynamic>> createPaypalOrder({
+  required int spaceId,
+  required DateTime startTime,
+  required DateTime endTime,
+  required List<Map<String, dynamic>> amenities,
+}) async {
+  final body = {
+    "spaceId": spaceId,
+    "startTime": startTime.toIso8601String(),
+    "endTime": endTime.toIso8601String(),
+    "amenities": amenities
+  };
+
+  final response = await api.post("PayPal/create-order", body);
 
   if (response.statusCode == 200) {
     return jsonDecode(response.body);

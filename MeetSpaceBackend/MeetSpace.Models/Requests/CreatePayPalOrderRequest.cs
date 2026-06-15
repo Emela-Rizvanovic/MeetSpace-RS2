@@ -2,7 +2,7 @@
 
 namespace MeetSpace.Models.Requests
 {
-    public class CreatePaymentIntentRequest
+    public class CreatePayPalOrderRequest
     {
         [Range(1, int.MaxValue, ErrorMessage = "Space is required. Select a valid space.")]
         public int SpaceId { get; set; }
@@ -14,9 +14,5 @@ namespace MeetSpace.Models.Requests
         public DateTime EndTime { get; set; }
 
         public List<BookingAmenityInsertRequest> Amenities { get; set; } = new();
-
-        [Required(ErrorMessage = "Currency is required.")]
-        [RegularExpression(@"^[a-zA-Z]{3}$", ErrorMessage = "Currency must be a valid 3-letter code, e.g. BAM or EUR.")]
-        public string Currency { get; set; } = "bam";
     }
 }

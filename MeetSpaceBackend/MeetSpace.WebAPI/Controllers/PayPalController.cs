@@ -16,10 +16,17 @@ public class PayPalController : ControllerBase
 
     [HttpPost("create-order")]
     public async Task<IActionResult> CreateOrder(
-        [FromBody] decimal amount,
-        CancellationToken ct)
+      [FromBody] CreatePayPalOrderRequest request,
+      CancellationToken ct)
     {
-        var result = await _payPalService.CreateOrderAsync(amount, ct);
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+
+        if (userIdClaim == null)
+            return Unauthorized();
+
+        int currentUserId = int.Parse(userIdClaim.Value);
+
+        var result = await _payPalService.CreateOrderAsync(request, currentUserId, ct);
 
         return Ok(result);
     }

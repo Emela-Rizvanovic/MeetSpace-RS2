@@ -79,14 +79,6 @@ bool _isBookingsLoading = true;
                   user.isActive ? Colors.red : Colors.green,
                   () => _confirmToggle(context),
                 ),
- 
-                const SizedBox(width: 12),
- 
-                _actionButton(
-                  "Delete",
-                  Colors.red,
-                  () => _confirmDelete(context),
-                ),
               ],
             ),
  
@@ -665,104 +657,6 @@ if (mounted) {
     newStatus ? "activated" : "deactivated",
   );
 }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Error: $e")));
-      }
-    }
-  }
- 
-  void _confirmDelete(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      barrierColor: Colors.black54,
-      builder: (_) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 420,
-          padding: const EdgeInsets.all(28),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.delete_outline,
-                    color: Colors.red, size: 28),
-              ),
- 
-              const SizedBox(height: 20),
- 
-              const Text(
-                "Delete user?",
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white),
-              ),
- 
-              const SizedBox(height: 10),
- 
-              Text(
-                "This action cannot be undone.\n'${user.username}' will be permanently removed.",
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70, height: 1.5),
-              ),
- 
-              const SizedBox(height: 24),
- 
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white70,
-                        side: const BorderSide(color: Colors.white24),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text("Cancel"),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text("Delete"),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
- 
-    if (confirmed != true) return;
- 
-    try {
-      final auth = context.read<AuthProvider>();
-      await auth.userService.deleteUser(user.id);
- 
-      if (mounted) Navigator.pop(context, "deleted");
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)

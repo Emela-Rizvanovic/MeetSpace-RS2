@@ -92,12 +92,4 @@ Future<UserResponse> updateUserAdmin({
 
   throw Exception("Failed to update user");
 }
-
-Future<void> deleteUser(int id) async {
-  final response = await api.delete("User/$id");
-
-  if (response.statusCode != 200) {
-    throw Exception("Failed to delete user");
-  }
-}
 }

@@ -35,8 +35,9 @@ namespace MeetSpace.Services.Services
         }
 
         public async Task<PayPalOrderResponse> CreateOrderAsync(
-            decimal amount,
-            CancellationToken ct = default)
+    CreatePayPalOrderRequest request,
+    int currentUserId,
+    CancellationToken ct = default)
         {
             var client = _httpClientFactory.CreateClient();
 
@@ -62,6 +63,13 @@ namespace MeetSpace.Services.Services
             client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", accessToken);
 
+            var amount = await _bookingService.ValidateCreatePrerequisitesAndCalculatePriceAsync(
+    request.SpaceId,
+    request.StartTime,
+    request.EndTime,
+    request.Amenities,
+    ct);
+
             var eurAmount = amount / 1.95583m;
 
             var orderBody = new
@@ -71,11 +79,12 @@ namespace MeetSpace.Services.Services
                 {
                     new
                     {
-                        amount = new
-                        {
-                            currency_code = "EUR",
-                            value = eurAmount.ToString("F2")
-                        }
+                        custom_id = currentUserId.ToString(),
+amount = new
+{
+    currency_code = "EUR",
+    value = eurAmount.ToString("F2")
+}
                     }
                 },
                 application_context = new
@@ -102,10 +111,34 @@ namespace MeetSpace.Services.Services
 
             string orderId = data["id"]?.ToString();
 
+            if (string.IsNullOrWhiteSpace(orderId))
+                throw new BusinessException("PayPal order id was not returned.");
+
+            var paymentDraft = new PaymentIntent
+            {
+                StripePaymentIntentId = orderId,
+                UserId = currentUserId,
+                SpaceId = request.SpaceId,
+                StartTime = request.StartTime,
+                EndTime = request.EndTime,
+                AmenitiesSnapshotJson = System.Text.Json.JsonSerializer.Serialize(request.Amenities),
+                Amount = amount,
+                Currency = "BAM",
+                Provider = "PayPal",
+                ProviderOrderId = orderId,
+                Status = "Created",
+                ExpiresAt = DateTime.UtcNow.AddMinutes(30),
+                IsCompleted = false
+            };
+
+            _context.PaymentIntents.Add(paymentDraft);
+            await _context.SaveChangesAsync(ct);
+
             return new PayPalOrderResponse
             {
                 Url = approvalUrl,
-                OrderId = orderId
+                OrderId = orderId,
+                Amount = amount
             };
         }
 
@@ -115,7 +148,11 @@ namespace MeetSpace.Services.Services
             CancellationToken ct = default)
         {
             var existingPayment = await _context.Payments
-    .FirstOrDefaultAsync(x => x.ExternalTransactionId == request.OrderId, ct);
+    .FirstOrDefaultAsync(x =>
+    x.ExternalTransactionId == request.OrderId &&
+    x.UserId == currentUserId &&
+    x.PaymentMethodId == (int)PaymentMethodEnum.PayPal,
+    ct);
 
             if (existingPayment != null)
             {
@@ -124,6 +161,30 @@ namespace MeetSpace.Services.Services
                     BookingId = existingPayment.BookingId
                 };
             }
+
+            var paymentDraft = await _context.PaymentIntents
+    .FirstOrDefaultAsync(x =>
+        x.Provider == "PayPal" &&
+        x.ProviderOrderId == request.OrderId &&
+        x.UserId == currentUserId,
+        ct);
+
+            if (paymentDraft == null)
+                throw new BusinessException("PayPal order does not belong to the current user.");
+
+            if (paymentDraft.ExpiresAt <= DateTime.UtcNow)
+                throw new BusinessException("PayPal order has expired.");
+
+            var amenities = System.Text.Json.JsonSerializer.Deserialize<List<BookingAmenityInsertRequest>>(
+    paymentDraft.AmenitiesSnapshotJson
+) ?? new();
+
+            var expectedAmount = await _bookingService.ValidateCreatePrerequisitesAndCalculatePriceAsync(
+                paymentDraft.SpaceId,
+                paymentDraft.StartTime,
+                paymentDraft.EndTime,
+                amenities,
+                ct);
 
             var client = _httpClientFactory.CreateClient();
 
@@ -157,6 +218,11 @@ namespace MeetSpace.Services.Services
             var authorizeJson = await authorizeResponse.Content.ReadAsStringAsync(ct);
             var authorizeData = JObject.Parse(authorizeJson);
 
+            var customId = authorizeData["purchase_units"]?[0]?["custom_id"]?.ToString();
+
+            if (!string.IsNullOrWhiteSpace(customId) && customId != currentUserId.ToString())
+                throw new BusinessException("PayPal order does not belong to the current user.");
+
             var authorization = authorizeData["purchase_units"]?[0]?["payments"]?["authorizations"]?[0];
 
             var authorizationStatus = authorization?["status"]?.ToString();
@@ -169,104 +235,106 @@ namespace MeetSpace.Services.Services
             if (string.IsNullOrWhiteSpace(authorizationId))
                 throw new BusinessException("PayPal authorization id was not returned.");
 
-            var expectedAmount = await CalculateExpectedAmountAsync(
-    request.SpaceId,
-    request.StartTime,
-    request.EndTime,
-    request.Amenities,
-    ct);
-
-            var expectedEurAmount = Math.Round(expectedAmount / 1.95583m, 2);
-
-            var authorizedAmountValue = authorization?["amount"]?["value"]?.ToString();
-            var authorizedCurrency = authorization?["amount"]?["currency_code"]?.ToString();
-
-            if (authorizedCurrency != "EUR" ||
-                !decimal.TryParse(authorizedAmountValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var authorizedAmount) ||
-                authorizedAmount != expectedEurAmount)
+            try
             {
-                throw new BusinessException("Authorized amount does not match booking price.");
+                var expectedEurAmount = Math.Round(expectedAmount / 1.95583m, 2);
+
+                var authorizedAmountValue = authorization?["amount"]?["value"]?.ToString();
+                var authorizedCurrency = authorization?["amount"]?["currency_code"]?.ToString();
+
+                if (authorizedCurrency != "EUR" ||
+                    !decimal.TryParse(authorizedAmountValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var authorizedAmount) ||
+                    authorizedAmount != expectedEurAmount)
+                {
+                    throw new BusinessException("Authorized amount does not match booking price.");
+                }
+
+                await using var transaction = await _context.Database.BeginTransactionAsync(ct);
+
+                var bookingRequest = new BookingInsertRequest
+                {
+                    SpaceId = paymentDraft.SpaceId,
+                    UserId = currentUserId,
+                    InternalPaymentStatus = PaymentStatusEnum.Authorized,
+                    StartTime = paymentDraft.StartTime,
+                    EndTime = paymentDraft.EndTime,
+                    Amenities = amenities
+                };
+
+                var bookingResponse = await _bookingService.CreateAsync(bookingRequest, ct);
+
+                await _context.SaveChangesAsync(ct);
+
+                var payment = new Payment
+                {
+                    BookingId = bookingResponse.Id,
+                    UserId = currentUserId,
+                    ExternalTransactionId = request.OrderId,
+                    PaymentMethodId = (int)PaymentMethodEnum.PayPal,
+                    PaymentStatusId = (int)PaymentStatusEnum.Authorized,
+                    Amount = bookingResponse.TotalPrice,
+                    PaymentDate = DateTime.UtcNow,
+                    ProviderAuthorizationId = authorizationId,
+                    PaymentIntentId = paymentDraft.Id,
+                };
+
+                _context.Payments.Add(payment);
+
+                paymentDraft.Status = "Authorized";
+
+                await _context.SaveChangesAsync(ct);
+
+                await transaction.CommitAsync(ct);
+
+                return new PayPalCaptureResponse
+                {
+                    BookingId = bookingResponse.Id
+                };
             }
-
-            await using var transaction = await _context.Database.BeginTransactionAsync(ct);
-
-            var bookingRequest = new BookingInsertRequest
+            catch
             {
-                SpaceId = request.SpaceId,
-                UserId = currentUserId,
-                InternalPaymentStatus = PaymentStatusEnum.Authorized,
-                StartTime = request.StartTime,
-                EndTime = request.EndTime,
-                Amenities = request.Amenities
-                    .Select(x => new BookingAmenityInsertRequest
-                    {
-                        AmenityId = x.AmenityId,
-                        Quantity = x.Quantity
-                    })
-                    .ToList()
-            };
+                await VoidPayPalAuthorizationAsync(authorizationId, ct);
 
-            var bookingResponse =
-                await _bookingService.CreateAsync(bookingRequest, ct);
+                paymentDraft.Status = "Failed";
+                await _context.SaveChangesAsync(ct);
 
-            await _context.SaveChangesAsync(ct);
-
-            var payment = new Payment
-            {
-                BookingId = bookingResponse.Id,
-                UserId = currentUserId,
-                ExternalTransactionId = request.OrderId,
-                PaymentMethodId = (int)PaymentMethodEnum.PayPal,
-                PaymentStatusId = (int)PaymentStatusEnum.Authorized,
-                Amount = bookingResponse.TotalPrice,
-                PaymentDate = DateTime.UtcNow,
-                ProviderAuthorizationId = authorizationId
-            };
-
-            _context.Payments.Add(payment);
-
-            await _context.SaveChangesAsync(ct);
-
-            await transaction.CommitAsync(ct);
-
-            return new PayPalCaptureResponse
-            {
-                BookingId = bookingResponse.Id
-            };
+                throw;
+            }
         }
 
-        private async Task<decimal> CalculateExpectedAmountAsync(
-    int spaceId,
-    DateTime startTime,
-    DateTime endTime,
-    List<BookingAmenityInsertRequest> amenities,
-    CancellationToken ct)
+        private async Task VoidPayPalAuthorizationAsync(string authorizationId, CancellationToken ct)
         {
-            if (endTime <= startTime)
-                throw new BusinessException("EndTime must be greater than StartTime.");
+            var client = _httpClientFactory.CreateClient();
 
-            var space = await _context.Spaces
-                .FirstOrDefaultAsync(x => x.Id == spaceId, ct);
+            var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(
+                $"{_payPalClientId}:{_payPalSecret}"
+            ));
 
-            if (space == null)
-                throw new NotFoundException("Space not found.");
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Basic", auth);
 
-            var hours = (decimal)(endTime - startTime).TotalHours;
-            var total = Math.Round(hours * space.PricePerHour, 2);
+            var tokenResponse = await client.PostAsync(
+                "https://api-m.sandbox.paypal.com/v1/oauth2/token",
+                new FormUrlEncodedContent(new[]
+                {
+            new KeyValuePair<string, string>("grant_type", "client_credentials")
+                }),
+                ct);
 
-            foreach (var item in amenities)
-            {
-                var amenity = await _context.Amenities
-                    .FirstOrDefaultAsync(x => x.Id == item.AmenityId, ct);
+            var tokenJson = await tokenResponse.Content.ReadAsStringAsync(ct);
+            var tokenData = JObject.Parse(tokenJson);
+            string accessToken = tokenData["access_token"]?.ToString();
 
-                if (amenity == null)
-                    throw new NotFoundException($"Amenity {item.AmenityId} not found.");
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", accessToken);
 
-                var quantity = item.Quantity <= 0 ? 1 : item.Quantity;
-                total += Math.Round(amenity.Price * quantity, 2);
-            }
+            var voidResponse = await client.PostAsync(
+                $"https://api-m.sandbox.paypal.com/v2/payments/authorizations/{authorizationId}/void",
+                new StringContent("", Encoding.UTF8, "application/json"),
+                ct);
 
-            return Math.Round(total, 2);
+            if (!voidResponse.IsSuccessStatusCode)
+                throw new BusinessException("PayPal authorization could not be voided after booking failure.");
         }
     }
 }
