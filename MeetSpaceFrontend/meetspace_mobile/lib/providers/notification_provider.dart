@@ -94,7 +94,7 @@ Future<void> setNotificationsEnabled(bool value) async {
       );
 
       await api.put(
-        "notifications/mark-all-read?userId=$userId",
+        "notifications/mark-all-read",
         {},
       );
 
@@ -107,6 +107,35 @@ Future<void> setNotificationsEnabled(bool value) async {
   return;
 }
   }
+
+  Future<void> markAsRead({
+  required String token,
+  required int notificationId,
+}) async {
+  try {
+    final api = ApiService(
+      baseUrl: "http://10.0.2.2:5245/api",
+      token: token,
+    );
+
+    await api.put(
+      "notifications/$notificationId/mark-read",
+      {},
+    );
+
+    _notifications = _notifications
+        .map(
+          (e) => e.id == notificationId
+              ? e.copyWith(isRead: true)
+              : e,
+        )
+        .toList();
+
+    notifyListeners();
+  } catch (_) {
+    return;
+  }
+}
 
   Future<void> connect({
     required String token,

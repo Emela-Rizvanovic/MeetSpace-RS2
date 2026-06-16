@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using MeetSpace.Models.Constants;
 
 [ApiController]
 [Route("api/notifications")]
@@ -13,13 +14,23 @@ public class NotificationsController : ControllerBase
 {
     private readonly IHubContext<NotificationHub> _hubContext;
     private readonly INotificationService _notificationService;
+    private readonly string _internalApiKey;
 
     public NotificationsController(
-      IHubContext<NotificationHub> hubContext,
-      INotificationService notificationService)
+    IHubContext<NotificationHub> hubContext,
+    INotificationService notificationService)
     {
         _hubContext = hubContext;
         _notificationService = notificationService;
+        _internalApiKey = Environment.GetEnvironmentVariable("INTERNAL_API_SECRET")
+            ?? throw new InvalidOperationException("INTERNAL_API_SECRET is not configured.");
+    }
+    private bool IsInternalRequest()
+    {
+        if (!Request.Headers.TryGetValue(InternalAuthConstants.HeaderName, out var providedKey))
+            return false;
+
+        return providedKey == _internalApiKey;
     }
 
     [HttpPost("send")]
@@ -27,6 +38,9 @@ public class NotificationsController : ControllerBase
     [FromBody] BookingStatusChangedMessage message,
     CancellationToken ct)
     {
+        if (!IsInternalRequest())
+            return Forbid();
+
         var notification =
             await _notificationService.CreateBookingStatusNotificationAsync(message, ct);
 
@@ -50,6 +64,9 @@ public class NotificationsController : ControllerBase
         [FromBody] BookingReminderMessage message,
         CancellationToken ct)
     {
+        if (!IsInternalRequest())
+            return Forbid();
+
         var notification =
             await _notificationService.CreateReminderNotificationAsync(message, ct);
 
@@ -98,6 +115,22 @@ public class NotificationsController : ControllerBase
         int currentUserId = int.Parse(userIdClaim.Value);
 
         await _notificationService.MarkAllAsReadAsync(currentUserId, ct);
+
+        return Ok();
+    }
+
+    [Authorize]
+    [HttpPut("{id}/mark-read")]
+    public async Task<IActionResult> MarkRead(int id, CancellationToken ct)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+        if (userIdClaim == null)
+            return Unauthorized();
+
+        int currentUserId = int.Parse(userIdClaim.Value);
+
+        await _notificationService.MarkAsReadAsync(id, currentUserId, ct);
 
         return Ok();
     }

@@ -8,9 +8,34 @@ import 'reviews_page.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import 'login_page.dart';
+import '../providers/notification_provider.dart';
+import '../widgets/notification_sheet.dart';
+import '../navigation/app_navigator.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final auth = context.read<AuthProvider>();
+
+      if (auth.token == null) return;
+
+      context.read<NotificationProvider>().connect(
+            baseUrl: auth.baseUrl,
+            token: auth.token!,
+            navigatorKey: navigatorKey,
+          );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,8 +57,82 @@ class DashboardPage extends StatelessWidget {
       ),
     ),
     const Spacer(),
+    Consumer<NotificationProvider>(
+  builder: (context, notificationProvider, _) {
+    final unreadCount = notificationProvider.unreadCount;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IconButton(
+          tooltip: "Notifications",
+          onPressed: () {
+            final auth = context.read<AuthProvider>();
+
+            showDialog(
+              context: context,
+              builder: (_) => Consumer<NotificationProvider>(
+  builder: (context, provider, _) => NotificationSheet(
+    notifications: provider.notifications,
+                onMarkAllAsRead: () async {
+                  if (auth.token == null) return;
+
+                  await notificationProvider.markAllAsRead(
+                    baseUrl: auth.baseUrl,
+                    token: auth.token!,
+                  );
+                },
+                onMarkAsRead: (notificationId) async {
+                  if (auth.token == null) return;
+
+                  await notificationProvider.markAsRead(
+                    baseUrl: auth.baseUrl,
+                    token: auth.token!,
+                    notificationId: notificationId,
+                  );
+                },
+              ),
+              ),
+            );
+          },
+          icon: const Icon(
+            Icons.notifications_active_outlined,
+            color: Colors.white,
+          ),
+        ),
+        if (unreadCount > 0)
+          Positioned(
+            right: 6,
+            top: 4,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 6,
+                vertical: 2,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.redAccent,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                unreadCount > 9 ? "9+" : unreadCount.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  },
+),
+
+const SizedBox(width: 12),
     TextButton.icon(
       onPressed: () async {
+        await context.read<NotificationProvider>().disconnect();
+
         await context.read<AuthProvider>().logout();
 
         if (!context.mounted) return;

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:io';
-import '../main.dart';
+import '../navigation/app_navigator.dart';
 import 'package:http_parser/http_parser.dart';
 
 class ApiService {

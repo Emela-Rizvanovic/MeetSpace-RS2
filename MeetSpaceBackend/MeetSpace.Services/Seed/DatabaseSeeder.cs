@@ -87,10 +87,15 @@ new PaymentStatus { Id = (int)PaymentStatusEnum.Authorized, Name = "Authorized" 
                 async () =>
                 {
                     context.NotificationTypes.AddRange(
-                        new NotificationType { Id = (int)NotificationTypeEnum.BookingApproved, Name = "BookingApproved" },
-                        new NotificationType { Id = (int)NotificationTypeEnum.BookingRejected, Name = "BookingRejected" },
-                        new NotificationType { Id = (int)NotificationTypeEnum.BookingReminder, Name = "BookingReminder" }
-                    );
+     new NotificationType { Id = (int)NotificationTypeEnum.BookingApproved, Name = "BookingApproved" },
+     new NotificationType { Id = (int)NotificationTypeEnum.BookingRejected, Name = "BookingRejected" },
+     new NotificationType { Id = (int)NotificationTypeEnum.BookingReminder, Name = "BookingReminder" },
+     new NotificationType { Id = (int)NotificationTypeEnum.BookingCancelled, Name = "BookingCancelled" },
+     new NotificationType { Id = (int)NotificationTypeEnum.PaymentAuthorized, Name = "PaymentAuthorized" },
+     new NotificationType { Id = (int)NotificationTypeEnum.PaymentCompleted, Name = "PaymentCompleted" },
+     new NotificationType { Id = (int)NotificationTypeEnum.UserBookingCancelled, Name = "UserBookingCancelled" },
+     new NotificationType { Id = (int)NotificationTypeEnum.BookingCreated, Name = "BookingCreated" }
+ );
 
                     await context.SaveChangesAsync(ct);
                 });

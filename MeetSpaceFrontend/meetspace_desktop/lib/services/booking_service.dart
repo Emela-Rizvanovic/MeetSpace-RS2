@@ -92,8 +92,8 @@ Future<bool> checkConflict({
   int? ignoreId,
 }) async {
   final response = await api.get(
-    "Booking/check-conflict?spaceId=$spaceId&start=$start&end=$end&ignoreId=$ignoreId",
-  );
+  "Booking/check-conflict?spaceId=$spaceId&start=$start&end=$end&ignoreId=$ignoreId",
+);
 
   if (response.statusCode == 200) {
     final data = jsonDecode(response.body);

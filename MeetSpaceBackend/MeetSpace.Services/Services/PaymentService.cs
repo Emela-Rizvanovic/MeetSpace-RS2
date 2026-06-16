@@ -8,6 +8,8 @@ using MeetSpace.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
 using System.Text.Json;
+using MeetSpace.Models.Messages;
+using MeetSpace.Models.Constants;
 
 namespace MeetSpace.Services.Services
 {
@@ -15,13 +17,16 @@ namespace MeetSpace.Services.Services
     {
         private readonly MeetSpaceDbContext _context;
         private readonly IBookingService _bookingService;
+        private readonly IRabbitMQService _rabbitMq;
 
         public PaymentService(
-            MeetSpaceDbContext context,
-            IBookingService bookingService)
+     MeetSpaceDbContext context,
+     IBookingService bookingService,
+     IRabbitMQService rabbitMq)
         {
             _context = context;
             _bookingService = bookingService;
+            _rabbitMq = rabbitMq;
         }
 
         public async Task<PaymentIntentResponse> CreatePaymentIntentAsync(
@@ -164,6 +169,35 @@ namespace MeetSpace.Services.Services
                 await _context.SaveChangesAsync(ct);
 
                 await transaction.CommitAsync(ct);
+
+                await _rabbitMq.PublishAsync(new BookingStatusChangedMessage
+                {
+                    UserId = currentUserId,
+                    SpaceName = bookingResponse.SpaceName,
+                    StartTime = bookingResponse.StartTime,
+                    RelatedBookingId = bookingResponse.Id,
+                    NotificationType = NotificationTypeEnum.PaymentAuthorized
+                }, "meetspace.booking-status");
+
+                var currentUser = await _context.Users
+    .FirstOrDefaultAsync(x => x.Id == currentUserId, ct);
+
+                var admins = await _context.Users
+                    .Where(x => x.Role.Name == Roles.Admin && x.IsActive)
+                    .ToListAsync(ct);
+
+                foreach (var admin in admins)
+                {
+                    await _rabbitMq.PublishAsync(new BookingStatusChangedMessage
+                    {
+                        UserId = admin.Id,
+                        SpaceName = bookingResponse.SpaceName,
+                        StartTime = bookingResponse.StartTime,
+                        RelatedBookingId = bookingResponse.Id,
+                        ActorUsername = currentUser?.Username,
+                        NotificationType = NotificationTypeEnum.BookingCreated
+                    }, "meetspace.booking-status");
+                }
 
                 return new ConfirmPaymentResponse
                 {

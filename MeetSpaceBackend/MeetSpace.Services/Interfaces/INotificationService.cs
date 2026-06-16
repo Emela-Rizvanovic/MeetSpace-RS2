@@ -20,5 +20,7 @@ namespace MeetSpace.Services.Interfaces
         Task MarkAllAsReadAsync(
             int userId,
             CancellationToken ct = default);
+
+        Task MarkAsReadAsync(int notificationId, int userId, CancellationToken ct = default);
     }
 }

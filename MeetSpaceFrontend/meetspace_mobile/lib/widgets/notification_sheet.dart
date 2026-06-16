@@ -5,14 +5,20 @@ import '../models/app_notification.dart';
 
 class NotificationSheet extends StatelessWidget {
   final List<AppNotification> notifications;
+  final Future<void> Function() onMarkAllAsRead;
+  final Future<void> Function(int notificationId) onMarkAsRead;
 
   const NotificationSheet({
     super.key,
     required this.notifications,
+    required this.onMarkAllAsRead,
+    required this.onMarkAsRead,
   });
 
   @override
   Widget build(BuildContext context) {
+    final hasUnread = notifications.any((x) => !x.isRead);
+    
     return Container(
       padding: const EdgeInsets.only(top: 18),
       decoration: const BoxDecoration(
@@ -21,7 +27,7 @@ class NotificationSheet extends StatelessWidget {
           top: Radius.circular(24),
         ),
       ),
-      child: notifications.isEmpty
+           child: notifications.isEmpty
           ? const Center(
               child: Text(
                 "No notifications",
@@ -31,66 +37,103 @@ class NotificationSheet extends StatelessWidget {
                 ),
               ),
             )
-          : ListView.separated(
-              itemCount: notifications.length,
-              separatorBuilder: (_, __) =>
-                  const Divider(color: Colors.white12),
-              itemBuilder: (context, index) {
-                final item = notifications[index];
-
-                return Container(
-                  color: item.isRead
-                      ? Colors.transparent
-                      : Colors.white.withOpacity(0.06),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
-                    ),
-                    leading: Icon(
-                      Icons.notifications_active_outlined,
-                      color: item.isRead
-                          ? Colors.white54
-                          : Colors.orange,
-                    ),
-                    title: Text(
-                      item.title,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontFamily: 'Poppins',
-                        fontWeight: item.isRead
-                            ? FontWeight.w400
-                            : FontWeight.w700,
-                      ),
-                    ),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.message,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontFamily: 'Poppins',
-                            ),
+          : Column(
+              children: [
+                if (hasUnread)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: onMarkAllAsRead,
+                        child: const Text(
+                          "Mark all as read",
+                          style: TextStyle(
+                            color: Color(0xFFB87900),
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            DateFormat('dd MMM yyyy • HH:mm')
-                                .format(item.createdAt),
-                            style: const TextStyle(
-                              color: Colors.white38,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                );
-              },
+                Expanded(
+                  child: ListView.separated(
+                    itemCount: notifications.length,
+                    separatorBuilder: (_, __) =>
+                        const Divider(color: Colors.white12),
+                    itemBuilder: (context, index) {
+                      final item = notifications[index];
+
+                      return Container(
+                        color: item.isRead
+                            ? Colors.transparent
+                            : Colors.white.withOpacity(0.06),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                          leading: Icon(
+                            Icons.notifications_active_outlined,
+                            color: item.isRead
+                                ? Colors.white54
+                                : Colors.orange,
+                          ),
+                          title: Text(
+                            item.title,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'Poppins',
+                              fontWeight: item.isRead
+                                  ? FontWeight.w400
+                                  : FontWeight.w700,
+                            ),
+                          ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.message,
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  DateFormat('dd MMM yyyy • HH:mm')
+                                      .format(item.createdAt),
+                                  style: const TextStyle(
+                                    color: Colors.white38,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          trailing: item.isRead
+                              ? null
+                              : TextButton(
+                                  onPressed: () => onMarkAsRead(item.id),
+                                  child: const Text(
+                                    "Read",
+                                    style: TextStyle(
+                                      color: Color(0xFFB87900),
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
     );
   }

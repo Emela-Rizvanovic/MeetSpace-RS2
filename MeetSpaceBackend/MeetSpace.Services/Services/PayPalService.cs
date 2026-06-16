@@ -11,6 +11,8 @@ using Newtonsoft.Json.Linq;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
+using MeetSpace.Models.Messages;
+using MeetSpace.Models.Constants;
 
 namespace MeetSpace.Services.Services
 {
@@ -21,17 +23,19 @@ namespace MeetSpace.Services.Services
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string _payPalClientId;
         private readonly string _payPalSecret;
-
+        private readonly IRabbitMQService _rabbitMq;
         public PayPalService(
        MeetSpaceDbContext context,
-       IBookingService bookingService,
-       IHttpClientFactory httpClientFactory)
+IBookingService bookingService,
+IHttpClientFactory httpClientFactory,
+IRabbitMQService rabbitMq)
         {
             _context = context;
             _bookingService = bookingService;
             _httpClientFactory = httpClientFactory;
             _payPalClientId = Environment.GetEnvironmentVariable("PAYPAL_CLIENT_ID")!;
             _payPalSecret = Environment.GetEnvironmentVariable("PAYPAL_SECRET")!;
+            _rabbitMq = rabbitMq;
         }
 
         public async Task<PayPalOrderResponse> CreateOrderAsync(
@@ -285,6 +289,35 @@ amount = new
                 await _context.SaveChangesAsync(ct);
 
                 await transaction.CommitAsync(ct);
+
+                await _rabbitMq.PublishAsync(new BookingStatusChangedMessage
+                {
+                    UserId = currentUserId,
+                    SpaceName = bookingResponse.SpaceName,
+                    StartTime = bookingResponse.StartTime,
+                    RelatedBookingId = bookingResponse.Id,
+                    NotificationType = NotificationTypeEnum.PaymentAuthorized
+                }, "meetspace.booking-status");
+
+                var currentUser = await _context.Users
+    .FirstOrDefaultAsync(x => x.Id == currentUserId, ct);
+
+                var admins = await _context.Users
+                    .Where(x => x.Role.Name == Roles.Admin && x.IsActive)
+                    .ToListAsync(ct);
+
+                foreach (var admin in admins)
+                {
+                    await _rabbitMq.PublishAsync(new BookingStatusChangedMessage
+                    {
+                        UserId = admin.Id,
+                        SpaceName = bookingResponse.SpaceName,
+                        StartTime = bookingResponse.StartTime,
+                        RelatedBookingId = bookingResponse.Id,
+                        ActorUsername = currentUser?.Username,
+                        NotificationType = NotificationTypeEnum.BookingCreated
+                    }, "meetspace.booking-status");
+                }
 
                 return new PayPalCaptureResponse
                 {

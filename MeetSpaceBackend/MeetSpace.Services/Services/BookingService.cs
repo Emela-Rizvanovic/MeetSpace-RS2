@@ -491,7 +491,17 @@ namespace MeetSpace.Services.Services
                 UserId = entity.UserId,
                 SpaceName = entity.Space.Name,
                 StartTime = entity.StartTime,
-                IsApproved = true
+                IsApproved = true,
+                RelatedBookingId = entity.Id
+            }, "meetspace.booking-status");
+
+            await _rabbitMq.PublishAsync(new BookingStatusChangedMessage
+            {
+                UserId = entity.UserId,
+                SpaceName = entity.Space.Name,
+                StartTime = entity.StartTime,
+                RelatedBookingId = entity.Id,
+                NotificationType = NotificationTypeEnum.PaymentCompleted
             }, "meetspace.booking-status");
         }
 
@@ -538,7 +548,8 @@ namespace MeetSpace.Services.Services
                 SpaceName = entity.Space.Name,
                 StartTime = entity.StartTime,
                 IsApproved = false,
-                Reason = reason
+                Reason = reason,
+                RelatedBookingId = entity.Id
             }, "meetspace.booking-status");
         }
 
@@ -565,6 +576,10 @@ namespace MeetSpace.Services.Services
 
             if (entity.StartTime <= DateTime.UtcNow)
                 throw new BusinessException("Only future bookings can be cancelled.");
+
+            var requiresManualPaymentReview =
+    entity.BookingStatusId == (int)BookingStatusEnum.Approved &&
+    entity.PaymentStatusId == (int)PaymentStatusEnum.Completed;
 
             ValidateStatusTransition(
      entity.BookingStatusId,
@@ -596,8 +611,31 @@ namespace MeetSpace.Services.Services
                     StartTime = entity.StartTime,
                     IsApproved = false,
                     IsCancellation = true,
-                    Reason = reason
+                    Reason = reason,
+                    RelatedBookingId = entity.Id,
+                    RequiresManualPaymentReview = requiresManualPaymentReview
                 }, "meetspace.booking-status");
+            }
+            else
+            {
+                var admins = await _context.Users
+                    .Where(x => x.Role.Name == Roles.Admin && x.IsActive)
+                    .ToListAsync(ct);
+
+                foreach (var admin in admins)
+                {
+                    await _rabbitMq.PublishAsync(new BookingStatusChangedMessage
+                    {
+                        UserId = admin.Id,
+                        SpaceName = entity.Space.Name,
+                        StartTime = entity.StartTime,
+                        Reason = reason,
+                        RelatedBookingId = entity.Id,
+                        ActorUsername = entity.User.Username,
+                        NotificationType = NotificationTypeEnum.UserBookingCancelled,
+                        RequiresManualPaymentReview = requiresManualPaymentReview
+                    }, "meetspace.booking-status");
+                }
             }
         }
 
@@ -932,7 +970,8 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
             {
                 UserId = booking.UserId,
                 SpaceName = booking.Space.Name,
-                StartTime = booking.StartTime
+                StartTime = booking.StartTime,
+                RelatedBookingId = booking.Id
             };
 
             await _rabbitMq.PublishAsync(

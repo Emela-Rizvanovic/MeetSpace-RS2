@@ -443,24 +443,32 @@ const SizedBox(height: 6),
     );
   }
 
-  Future<void> _loadConflict() async {
+ Future<void> _loadConflict() async {
   final booking = widget.booking;
 
-  final result = await context
-      .read<AuthProvider>()
-      .bookingService
-      .checkConflict(
-        spaceId: booking.spaceId,
-        start: booking.startTime,
-        end: booking.endTime,
-        ignoreId: booking.id,
-      );
+  try {
+    final result = await context
+        .read<AuthProvider>()
+        .bookingService
+        .checkConflict(
+          spaceId: booking.spaceId,
+          start: booking.startTime,
+          end: booking.endTime,
+          ignoreId: booking.id,
+        );
 
-  setState(() {
-    hasConflict = result;
-  });
+    if (!mounted) return;
 
-  
+    setState(() {
+      hasConflict = result;
+    });
+  } catch (_) {
+    if (!mounted) return;
+
+    setState(() {
+      hasConflict = false;
+    });
+  }
 }
 
 Future<bool> _confirmSendReminder(BuildContext context) async {

@@ -99,11 +99,6 @@ Consumer<NotificationProvider>(
       onTap: () async {
         final auth = context.read<AuthProvider>();
 
-        await notificationProvider.markAllAsRead(
-          token: auth.token!,
-          userId: auth.user!.id,
-        );
-
         if (!context.mounted) return;
 
         showModalBottomSheet(
@@ -112,10 +107,23 @@ Consumer<NotificationProvider>(
           isScrollControlled: true,
           builder: (_) => SizedBox(
             height: MediaQuery.of(context).size.height * 0.7,
-            child: NotificationSheet(
-              notifications:
-                  notificationProvider.notifications,
-            ),
+            child: Consumer<NotificationProvider>(
+  builder: (context, provider, _) => NotificationSheet(
+    notifications: provider.notifications,
+  onMarkAllAsRead: () async {
+    await notificationProvider.markAllAsRead(
+      token: auth.token!,
+      userId: auth.user!.id,
+    );
+  },
+  onMarkAsRead: (notificationId) async {
+    await notificationProvider.markAsRead(
+      token: auth.token!,
+      notificationId: notificationId,
+    );
+  },
+),
+          ),
           ),
         );
       },

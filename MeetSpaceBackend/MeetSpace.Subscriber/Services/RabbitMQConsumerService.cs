@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
+using MeetSpace.Models.Constants;
 
 namespace MeetSpace.Subscriber.Services
 {
@@ -13,6 +14,7 @@ namespace MeetSpace.Subscriber.Services
         private readonly ILogger<RabbitMQConsumerService> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string _apiBaseUrl;
+        private readonly string _internalApiKey;
         public RabbitMQConsumerService(
     IConfiguration config,
     IEmailService emailService,
@@ -23,6 +25,8 @@ namespace MeetSpace.Subscriber.Services
             _logger = logger;
             _httpClientFactory = httpClientFactory;
             _apiBaseUrl = Environment.GetEnvironmentVariable("API_BASE_URL")!;
+            _internalApiKey = Environment.GetEnvironmentVariable("INTERNAL_API_SECRET")
+    ?? throw new InvalidOperationException("INTERNAL_API_SECRET is not configured.");
 
             var factory = new ConnectionFactory()
             {
@@ -91,6 +95,8 @@ namespace MeetSpace.Subscriber.Services
 
                     var client = _httpClientFactory.CreateClient();
 
+                    client.DefaultRequestHeaders.Add(InternalAuthConstants.HeaderName, _internalApiKey);
+
                     var url = $"{_apiBaseUrl}/api/notifications/send";
 
                     var payload = JsonConvert.SerializeObject(message);
@@ -124,6 +130,8 @@ namespace MeetSpace.Subscriber.Services
                         return;
 
                     var client = _httpClientFactory.CreateClient();
+
+                    client.DefaultRequestHeaders.Add(InternalAuthConstants.HeaderName, _internalApiKey);
 
                     var url = $"{_apiBaseUrl}/api/notifications/reminder";
 

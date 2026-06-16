@@ -1,5 +1,6 @@
 ﻿using MeetSpace.Models.Entities;
 using MeetSpace.Models.Enums;
+using MeetSpace.Models.Exceptions;
 using MeetSpace.Models.Messages;
 using MeetSpace.Models.Responses;
 using MeetSpace.Services.Database;
@@ -21,26 +22,68 @@ namespace MeetSpace.Services.Services
             BookingStatusChangedMessage message,
             CancellationToken ct = default)
         {
-            var isApproved = message.IsApproved;
+            var type = message.NotificationType;
+
+            if (type == null)
+            {
+                if (message.IsCancellation)
+                    type = NotificationTypeEnum.BookingCancelled;
+                else if (message.IsApproved)
+                    type = NotificationTypeEnum.BookingApproved;
+                else
+                    type = NotificationTypeEnum.BookingRejected;
+            }
+
+            var title = type switch
+            {
+                NotificationTypeEnum.BookingApproved => "Booking approved",
+                NotificationTypeEnum.BookingRejected => "Booking rejected",
+                NotificationTypeEnum.BookingCancelled => "Booking cancelled",
+                NotificationTypeEnum.PaymentAuthorized => "Payment authorized",
+                NotificationTypeEnum.PaymentCompleted => "Payment completed",
+                NotificationTypeEnum.UserBookingCancelled => "Booking cancelled by user",
+                NotificationTypeEnum.BookingCreated => "New booking request",
+                _ => "Notification"
+            };
+
+            var manualReviewText = message.RequiresManualPaymentReview
+    ? "\nPayment was already completed for this approved reservation. Manual refund review is required because automatic refund is not implemented."
+    : "";
+
+            var text = type switch
+            {
+                NotificationTypeEnum.BookingApproved =>
+                    $"Your reservation for {message.SpaceName} has been approved.",
+
+                NotificationTypeEnum.BookingRejected =>
+                    $"Your reservation for {message.SpaceName} was rejected. \nReason: {message.Reason}",
+
+                NotificationTypeEnum.BookingCancelled =>
+    $"Your reservation for {message.SpaceName} was cancelled. \nReason: {message.Reason}{manualReviewText}",
+
+                NotificationTypeEnum.PaymentAuthorized =>
+                    $"Your payment for {message.SpaceName} was authorized. Your reservation is waiting for administrator approval.",
+
+                NotificationTypeEnum.PaymentCompleted =>
+                    $"Your payment for {message.SpaceName} has been completed.",
+
+                NotificationTypeEnum.UserBookingCancelled =>
+    $"{message.ActorUsername ?? "User"} cancelled a reservation for {message.SpaceName}. \nReason: {message.Reason}{manualReviewText}",
+
+                NotificationTypeEnum.BookingCreated =>
+                $"{message.ActorUsername ?? "User"} created a pending reservation for {message.SpaceName}. Please review it.",
+
+                _ => $"Notification for {message.SpaceName}."
+            };
 
             var notification = new Notification
             {
                 UserId = message.UserId,
-                NotificationTypeId = isApproved
-                    ? (int)NotificationTypeEnum.BookingApproved
-                    : (int)NotificationTypeEnum.BookingRejected,
-                Title = message.IsCancellation
-    ? "Booking cancelled"
-    : isApproved
-        ? "Booking approved"
-        : "Booking rejected",
-
-                Message = message.IsCancellation
-    ? $"Your reservation for {message.SpaceName} was cancelled. \nReason: {message.Reason}"
-    : isApproved
-        ? $"Your reservation for {message.SpaceName} has been approved."
-        : $"Your reservation for {message.SpaceName} was rejected. \nReason: {message.Reason}",
+                NotificationTypeId = (int)type.Value,
+                Title = title,
+                Message = text,
                 IsRead = false,
+                RelatedBookingId = message.RelatedBookingId,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -61,6 +104,7 @@ namespace MeetSpace.Services.Services
                 Title = "Upcoming booking!",
                 Message = $"Don't forget your reservation at {message.SpaceName}.",
                 IsRead = false,
+                RelatedBookingId = message.RelatedBookingId,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -103,6 +147,23 @@ namespace MeetSpace.Services.Services
             {
                 item.IsRead = true;
             }
+
+            await _context.SaveChangesAsync(ct);
+        }
+
+        public async Task MarkAsReadAsync(
+    int notificationId,
+    int userId,
+    CancellationToken ct = default)
+        {
+            var notification = await _context.Notifications
+                .FirstOrDefaultAsync(x => x.Id == notificationId && x.UserId == userId, ct);
+
+            if (notification == null)
+                throw new NotFoundException("Notification not found.");
+
+            notification.IsRead = true;
+            notification.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync(ct);
         }

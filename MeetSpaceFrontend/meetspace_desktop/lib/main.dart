@@ -3,13 +3,20 @@ import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'pages/login_page.dart';
 import 'pages/dashboard_page.dart'; 
+import 'providers/notification_provider.dart';
+import 'navigation/app_navigator.dart';
 
-final GlobalKey<NavigatorState> navigatorKey =
-    GlobalKey<NavigatorState>();
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AuthProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => NotificationProvider(),
+        ),
+      ],
       child: const MyApp(),
     ),
   );

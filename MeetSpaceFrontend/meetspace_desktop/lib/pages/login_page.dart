@@ -45,26 +45,24 @@ class _LoginPageState extends State<LoginPage>
       await Provider.of<AuthProvider>(context, listen: false)
           .login(_usernameController.text, _passwordController.text);
 
-      Navigator.pushReplacement(
+      if (!mounted) return;
+
+Navigator.pushReplacement(
   context,
   MaterialPageRoute(builder: (_) => const DashboardPage()),
 );
 
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Welcome back 👋"),
-          backgroundColor: Color.fromARGB(255, 165, 110, 9),
-        ),
-      );
-
+    
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Login failed")));
-    }
+  if (!mounted) return;
 
-    setState(() => loading = false);
+  ScaffoldMessenger.of(context)
+      .showSnackBar(const SnackBar(content: Text("Login failed")));
+}
+
+    if (mounted) {
+  setState(() => loading = false);
+}
   }
 
   @override
