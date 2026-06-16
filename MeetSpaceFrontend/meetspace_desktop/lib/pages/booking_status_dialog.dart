@@ -442,7 +442,7 @@ class _BookingStatusesDialogState
             .showSnackBar(
           const SnackBar(
             content: Text(
-              "Cannot delete booking status because it is in use.",
+              "Cannot delete booking status because it is required by the system or already in use.",
             ),
 
             backgroundColor:

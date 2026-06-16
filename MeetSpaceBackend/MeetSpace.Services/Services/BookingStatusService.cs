@@ -8,6 +8,8 @@ using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using MeetSpace.Models.Enums;
+using MeetSpace.Models.Exceptions;
 
 namespace MeetSpace.Services.Services
 {
@@ -47,6 +49,19 @@ namespace MeetSpace.Services.Services
                 throw new ArgumentException("Booking status with this name already exists.");
 
             await base.BeforeUpdate(entity, request, cancellationToken);
+        }
+
+        protected override async Task BeforeDelete(BookingStatus entity, CancellationToken cancellationToken = default)
+        {
+            var isSystemValue = Enum.IsDefined(typeof(BookingStatusEnum), entity.Id);
+            if (isSystemValue)
+                throw new BusinessException("System booking statuses are required by the booking workflow and cannot be deleted.");
+
+            var isUsed = await _context.Bookings.AnyAsync(x => x.BookingStatusId == entity.Id, cancellationToken);
+            if (isUsed)
+                throw new BusinessException("Cannot delete booking status because it is used by existing bookings.");
+
+            await base.BeforeDelete(entity, cancellationToken);
         }
     }
 }

@@ -7,6 +7,9 @@ using MeetSpace.Services.BaseServices;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
+using MeetSpace.Models.Enums;
+using MeetSpace.Models.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace MeetSpace.Services.Services
 {
@@ -27,6 +30,21 @@ namespace MeetSpace.Services.Services
             }
 
             return query;
+        }
+
+        protected override async Task BeforeDelete(PaymentStatus entity, CancellationToken cancellationToken = default)
+        {
+            var isSystemValue = Enum.IsDefined(typeof(PaymentStatusEnum), entity.Id);
+            if (isSystemValue)
+                throw new BusinessException("System payment statuses are required by the payment workflow and cannot be deleted.");
+
+            var isUsed = await _context.Payments.AnyAsync(x => x.PaymentStatusId == entity.Id, cancellationToken)
+                || await _context.Bookings.AnyAsync(x => x.PaymentStatusId == entity.Id, cancellationToken);
+
+            if (isUsed)
+                throw new BusinessException("Cannot delete payment status because it is used by existing payments or bookings.");
+
+            await base.BeforeDelete(entity, cancellationToken);
         }
 
     }

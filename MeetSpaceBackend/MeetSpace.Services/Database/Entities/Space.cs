@@ -9,6 +9,8 @@
         public int Capacity { get; set; }
         public int FacilityId { get; set; }
         public int SpaceTypeId { get; set; }
+        public bool IsActive { get; set; } = true;
+        public DateTime? ArchivedAt { get; set; }
         public Facility? Facility { get; set; }
         public SpaceType? SpaceType { get; set; }
         public ICollection<SpaceImage> Images { get; set; } = new HashSet<SpaceImage>();

@@ -60,6 +60,7 @@ internal class Program
         builder.Services.AddScoped<INotificationService, NotificationService>();
         builder.Services.AddScoped<IPaymentService, PaymentService>();
         builder.Services.AddScoped<IPayPalService, PayPalService>();
+        builder.Services.AddScoped<INotificationTypeService, NotificationTypeService>();
 
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<SpaceProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<FacilityProfile>());
@@ -75,6 +76,7 @@ internal class Program
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<CityProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<PaymentMethodProfile>());
         builder.Services.AddAutoMapper(cfg => cfg.AddProfile<PaymentStatusProfile>());
+        builder.Services.AddAutoMapper(cfg => cfg.AddProfile<NotificationTypeProfile>());
 
         var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY");
         var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER");

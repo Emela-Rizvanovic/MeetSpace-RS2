@@ -29,6 +29,11 @@ namespace MeetSpace.Services.Services
             if (!string.IsNullOrWhiteSpace(search.Name))
                 query = query.Where(s => s.Name.Contains(search.Name));
 
+            if (search.IsActive.HasValue)
+                query = query.Where(s => s.IsActive == search.IsActive.Value);
+            else
+                query = query.Where(s => s.IsActive);
+
             if (search.FacilityId.HasValue)
                 query = query.Where(s => s.FacilityId == search.FacilityId.Value);
 
@@ -243,6 +248,19 @@ namespace MeetSpace.Services.Services
             if (entity == null)
                 return false;
 
+            var hasBookings = await _context.Bookings
+    .AnyAsync(b => b.SpaceId == id, cancellationToken);
+
+            if (hasBookings)
+            {
+                entity.IsActive = false;
+                entity.ArchivedAt = DateTime.UtcNow;
+                entity.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync(cancellationToken);
+                return true;
+            }
+
             foreach (var img in entity.Images)
             {
                 await _blobService.DeleteSpaceImageAsync(img.ImageUrl);
@@ -321,8 +339,8 @@ namespace MeetSpace.Services.Services
         public async Task<List<SpaceImageResponse>> AddImagesAsync(int spaceId, List<IFormFile> files)
         {
             var space = await _context.Spaces
-                .Include(s => s.Images)
-                .FirstOrDefaultAsync(s => s.Id == spaceId);
+    .Include(s => s.Images)
+    .FirstOrDefaultAsync(s => s.Id == spaceId && s.IsActive);
 
             if (space == null)
                 throw new NotFoundException("Space not found.");

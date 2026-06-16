@@ -123,12 +123,25 @@ Future<void> updateSpace({
   }
 }
 
-Future<void> deleteSpace(int id) async {
+Future<String> deleteSpace(int id) async {
   final response = await api.delete("Space/$id");
 
   if (response.statusCode != 200) {
-    throw Exception("Failed to delete space");
+    throw Exception("Failed to remove space");
   }
+
+  final getResponse = await api.get("Space/$id");
+
+  if (getResponse.statusCode == 200 && getResponse.body.isNotEmpty) {
+    final decoded = jsonDecode(getResponse.body);
+
+    if (decoded is Map<String, dynamic> &&
+        decoded['isActive'] == false) {
+      return "deactivated";
+    }
+  }
+
+  return "deleted";
 }
 
 }

@@ -53,9 +53,9 @@ namespace MeetSpace.Services.Services
         public async Task<List<SpaceResponse>> GetByUserAsync(int userId)
         {
             return await _context.Favorites
-                .Where(f => f.UserId == userId)
+                .Where(f => f.UserId == userId && f.Space != null && f.Space.IsActive)
                 .Include(f => f.Space)
-                    .ThenInclude(s => s.Images)
+                            .ThenInclude(s => s.Images)
                 .Include(f => f.Space)
                     .ThenInclude(s => s.SpaceAmenities)
                 .Include(f => f.Space)
@@ -73,6 +73,8 @@ namespace MeetSpace.Services.Services
                     FacilityName = f.Space.Facility.Name,
                     FacilityAddress = f.Space.Facility.Address,
                     SpaceTypeId = f.Space.SpaceTypeId,
+                    IsActive = f.Space.IsActive,
+                    ArchivedAt = f.Space.ArchivedAt,
                     CreatedAt = f.Space.CreatedAt,
                     UpdatedAt = f.Space.UpdatedAt,
 

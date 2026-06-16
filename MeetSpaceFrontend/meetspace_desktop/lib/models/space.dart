@@ -11,6 +11,8 @@ class SpaceResponse {
   final String? facilityName;
   final String? facilityAddress;
   final int spaceTypeId;
+  final bool isActive;
+final DateTime? archivedAt;
   final String? spaceTypeName;
   final List<SpaceImageResponse> images;
   final List<AmenityResponse> amenities;
@@ -29,6 +31,8 @@ class SpaceResponse {
     required this.facilityName,
     required this.facilityAddress,
     required this.spaceTypeId,
+    required this.isActive,
+required this.archivedAt,
     required this.spaceTypeName,
     required this.images,
     required this.amenities,
@@ -52,6 +56,10 @@ class SpaceResponse {
       facilityName: json['facilityName']?.toString(),
       facilityAddress: json['facilityAddress']?.toString(),
       spaceTypeId: (json['spaceTypeId'] as num).toInt(),
+      isActive: json['isActive'] as bool? ?? true,
+archivedAt: json['archivedAt'] == null
+    ? null
+    : DateTime.parse(json['archivedAt'].toString()),
       spaceTypeName: json['spaceTypeName']?.toString(),
       images: imgs is List
           ? imgs

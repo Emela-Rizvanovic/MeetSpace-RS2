@@ -19,6 +19,7 @@ import '../services/payment_method_service.dart';
 import '../services/payment_status_service.dart';
 import '../services/booking_status_service.dart';
 import '../constants/app_constants.dart';
+import '../services/notification_type_service.dart';
 
 class AuthProvider with ChangeNotifier {
   UserResponse? user;
@@ -82,6 +83,9 @@ UserService get userService =>
 
     BookingStatusService get bookingStatusService =>
     BookingStatusService(api);
+
+    NotificationTypeService get notificationTypeService =>
+    NotificationTypeService(api);
 
 final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 

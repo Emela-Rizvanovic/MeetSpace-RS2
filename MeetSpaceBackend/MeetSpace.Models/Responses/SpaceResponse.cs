@@ -16,6 +16,8 @@
         public string? RecommendationReason { get; set; }
 
         public int SpaceTypeId { get; set; }
+        public bool IsActive { get; set; }
+        public DateTime? ArchivedAt { get; set; }
         public string? SpaceTypeName { get; set; }
 
         public List<SpaceImageResponse> Images { get; set; } = new();

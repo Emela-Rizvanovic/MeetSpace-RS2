@@ -40,6 +40,14 @@ namespace MeetSpace.Services.Database
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<User>()
+    .HasIndex(u => u.Username)
+    .IsUnique();
+
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+
             modelBuilder.Entity<Favorite>()
                 .HasKey(f => new { f.UserId, f.SpaceId });
 
@@ -120,6 +128,18 @@ namespace MeetSpace.Services.Database
             modelBuilder.Entity<Booking>()
     .Property(b => b.PaymentStatusId)
     .HasDefaultValue(1);
+
+            modelBuilder.Entity<Booking>()
+    .HasOne(b => b.Space)
+    .WithMany(s => s.Bookings)
+    .HasForeignKey(b => b.SpaceId)
+    .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Booking>()
+                .HasOne(b => b.User)
+                .WithMany(u => u.Bookings)
+                .HasForeignKey(b => b.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<BookingAuditLog>()
     .HasOne(x => x.Admin)

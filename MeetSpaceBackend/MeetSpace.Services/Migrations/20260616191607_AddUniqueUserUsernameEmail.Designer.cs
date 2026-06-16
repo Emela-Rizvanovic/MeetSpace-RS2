@@ -4,6 +4,7 @@ using MeetSpace.Services.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MeetSpace.Services.Migrations
 {
     [DbContext(typeof(MeetSpaceDbContext))]
-    partial class MeetSpaceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260616191607_AddUniqueUserUsernameEmail")]
+    partial class AddUniqueUserUsernameEmail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -616,9 +619,6 @@ namespace MeetSpace.Services.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("ArchivedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<int>("Capacity")
                         .HasColumnType("int");
 
@@ -631,9 +631,6 @@ namespace MeetSpace.Services.Migrations
 
                     b.Property<int>("FacilityId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -880,13 +877,13 @@ namespace MeetSpace.Services.Migrations
                     b.HasOne("MeetSpace.Models.Entities.Space", "Space")
                         .WithMany("Bookings")
                         .HasForeignKey("SpaceId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("MeetSpace.Models.Entities.User", "User")
                         .WithMany("Bookings")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("BookingStatus");

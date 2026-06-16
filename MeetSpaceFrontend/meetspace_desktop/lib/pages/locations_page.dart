@@ -513,16 +513,23 @@ const SizedBox(height: 10),
     );
   }
 
-  if (result == "deleted") {
-    await _loadSpaces();
+ if (result == "deleted" || result == "deactivated") {
+  await _loadSpaces();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Space deleted successfully"),
-        backgroundColor: Colors.red,
+  if (!mounted) return;
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        result == "deactivated"
+            ? "Space deactivated successfully"
+            : "Space deleted successfully",
       ),
-    );
-  }
+      backgroundColor:
+          result == "deactivated" ? Colors.orange : Colors.red,
+    ),
+  );
+}
 },
                     child: _AdminSpaceCard(space: s),
                   );

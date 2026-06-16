@@ -15,7 +15,7 @@ namespace MeetSpace.Services.Database.Entities
         [Required, Column("email"), MaxLength(100)]
         public string Email { get; set; }
 
-        [Required, Column("reset_code"), MaxLength(10)]
+        [Required, Column("reset_code"), MaxLength(512)]
         public string ResetCode { get; set; }
 
         [Column("created_at")]
@@ -26,6 +26,8 @@ namespace MeetSpace.Services.Database.Entities
 
         [Column("is_used")]
         public bool IsUsed { get; set; } = false;
+        [Column("attempt_count")]
+        public int AttemptCount { get; set; } = 0;
 
         [Column("used_at")]
         public DateTime? UsedAt { get; set; }

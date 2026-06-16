@@ -2,6 +2,7 @@
 {
     public class SpaceSearchObject : BaseSearchObject
     {
+        public bool? IsActive { get; set; }
         public string? Name { get; set; }
         public int? FacilityId { get; set; }
         public int? SpaceTypeId { get; set; }

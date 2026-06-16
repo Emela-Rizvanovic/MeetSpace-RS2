@@ -115,7 +115,7 @@ namespace MeetSpace.Services.Services
                 throw new BusinessException("Time slot already booked.");
 
             var space = await _context.Spaces
-                .FirstOrDefaultAsync(s => s.Id == spaceId, ct);
+                .FirstOrDefaultAsync(s => s.Id == spaceId && s.IsActive, ct);
 
             if (space == null)
                 throw new NotFoundException("Space not found.");
@@ -274,7 +274,7 @@ namespace MeetSpace.Services.Services
                 throw new BusinessException("Time slot already booked.");
 
             var space = await _context.Spaces
-                .FirstOrDefaultAsync(s => s.Id == spaceId, ct);
+                .FirstOrDefaultAsync(s => s.Id == spaceId && s.IsActive, ct);
 
             if (space == null)
                 throw new NotFoundException("Space not found.");

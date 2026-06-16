@@ -209,7 +209,7 @@ Row(
   },
   icon: const Icon(Icons.settings),
   label:
-      const Text("Manage payment data"),
+      const Text("Manage system data"),
   style: OutlinedButton.styleFrom(
     foregroundColor: Colors.white,
     side:

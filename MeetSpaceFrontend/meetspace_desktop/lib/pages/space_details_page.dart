@@ -60,7 +60,7 @@ Widget build(BuildContext context) {
 }
 }),
               const SizedBox(width: 12),
-              _actionButton("Delete", Colors.red, () => _confirmDelete(context)),
+              _actionButton("Deactivate", Colors.red, () => _confirmDelete(context)),
             ],
           ),
 
@@ -308,7 +308,7 @@ void _confirmDelete(BuildContext context) async {
             const SizedBox(height: 20),
 
             const Text(
-              "Delete space?",
+              "Deactivate space?",
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -319,7 +319,7 @@ void _confirmDelete(BuildContext context) async {
             const SizedBox(height: 10),
 
             const Text(
-              "This action cannot be undone.\nThe space and all related data will be permanently removed.",
+              "If this space has booking history, it will be deactivated and hidden from future bookings. Spaces without booking history may be permanently deleted.",
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.white70,
@@ -359,7 +359,7 @@ void _confirmDelete(BuildContext context) async {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text("Delete"),
+                    child: const Text("Deactivate"),
                   ),
                 ),
               ],
@@ -375,9 +375,11 @@ void _confirmDelete(BuildContext context) async {
   try {
     final auth = context.read<AuthProvider>();
 
-    await auth.spaceService.deleteSpace(space.id);
+    final result = await auth.spaceService.deleteSpace(space.id);
 
-    Navigator.pop(context, "deleted"); 
+if (!context.mounted) return;
+
+Navigator.pop(context, result);
 
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(

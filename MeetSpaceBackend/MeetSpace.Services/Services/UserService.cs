@@ -12,12 +12,14 @@ using MeetSpace.Services.Interfaces;
 using MeetSpace.Services.Security;
 using Microsoft.EntityFrameworkCore;
 using MeetSpace.Models.Exceptions;
+using System.Security.Cryptography;
 
 public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User, UserInsertRequest, UserUpdateRequest>, IUserService
 {
     private readonly IPasswordHasher _passwordHasher;
     private readonly IBlobService _blobService;
     private readonly IRabbitMQService _rabbitMQService;
+    private const int MaxPasswordResetAttempts = 5;
 
     public UserService(MeetSpaceDbContext context, IMapper mapper, IPasswordHasher passwordHasher, IBlobService blobService, IRabbitMQService rabbitMQService)
         : base(context, mapper)
@@ -58,8 +60,19 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
 
     protected override async Task BeforeInsert(User entity, UserInsertRequest request, CancellationToken cancellationToken = default)
     {
-        var existing = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
-        if (existing != null)
+        request.Username = request.Username.Trim();
+        request.Email = request.Email.Trim();
+
+        var usernameExists = await _context.Users
+            .AnyAsync(u => u.Username == request.Username, cancellationToken);
+
+        if (usernameExists)
+            throw new BusinessException("Username already exists.");
+
+        var emailExists = await _context.Users
+            .AnyAsync(u => u.Email == request.Email, cancellationToken);
+
+        if (emailExists)
             throw new BusinessException("Email already exists.");
 
         if (!request.RoleId.HasValue)
@@ -75,6 +88,28 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
 
     protected override async Task BeforeUpdate(User entity, UserUpdateRequest request, CancellationToken cancellationToken = default)
     {
+        if (!string.IsNullOrWhiteSpace(request.Username))
+        {
+            request.Username = request.Username.Trim();
+
+            var usernameExists = await _context.Users
+                .AnyAsync(u => u.Id != entity.Id && u.Username == request.Username, cancellationToken);
+
+            if (usernameExists)
+                throw new BusinessException("Username already exists.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Email))
+        {
+            request.Email = request.Email.Trim();
+
+            var emailExists = await _context.Users
+                .AnyAsync(u => u.Id != entity.Id && u.Email == request.Email, cancellationToken);
+
+            if (emailExists)
+                throw new BusinessException("Email already exists.");
+        }
+
         entity.UpdatedAt = DateTime.UtcNow;
         await base.BeforeUpdate(entity, request, cancellationToken);
     }
@@ -207,6 +242,9 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
         if (!_passwordHasher.Verify(request.Password, user.PasswordHash))
             return null;
 
+        if (!user.IsActive)
+            throw new BusinessException("Your account has been deactivated.");
+
         if (user.Role?.Name != Roles.Admin)
             throw new UnauthorizedAccessException("Access denied. User is not an admin.");
 
@@ -216,6 +254,9 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
 
     public async Task<UserResponse> RegisterAsync(UserInsertRequest request, CancellationToken ct)
     {
+        request.Username = request.Username.Trim();
+        request.Email = request.Email.Trim();
+
         bool usernameExists = await _context.Users
             .AnyAsync(u => u.Username == request.Username, ct);
 
@@ -264,13 +305,15 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
         }
 
         var resetCode = GenerateResetCode();
-        var expiresAt = DateTime.UtcNow.AddMinutes(15); 
+        var expiresAt = DateTime.UtcNow.AddMinutes(15);
+        var resetCodeHash = _passwordHasher.Hash(resetCode);
 
         var passwordReset = new PasswordReset
         {
             UserId = user.Id,
             Email = user.Email,
-            ResetCode = resetCode,
+            ResetCode = resetCodeHash,
+            AttemptCount = 0,
             ExpiresAt = expiresAt
         };
 
@@ -292,7 +335,7 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
         return new ForgotPasswordResponse
         {
             Success = true,
-            Message = "Reset code has been sent to your email."
+            Message = "If the email exists, a reset code has been sent."
         };
     }
 
@@ -309,15 +352,49 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
         }
 
         var passwordReset = await _context.PasswordResets
-            .FirstOrDefaultAsync(pr =>
-                pr.UserId == user.Id &&
-                pr.Email == request.Email &&
-                pr.ResetCode == request.ResetCode &&
-                !pr.IsUsed &&
-                pr.ExpiresAt > DateTime.UtcNow, ct);
+     .Where(pr =>
+         pr.UserId == user.Id &&
+         pr.Email == request.Email &&
+         !pr.IsUsed &&
+         pr.ExpiresAt > DateTime.UtcNow)
+     .OrderByDescending(pr => pr.CreatedAt)
+     .FirstOrDefaultAsync(ct);
 
         if (passwordReset == null)
         {
+            return new ForgotPasswordResponse
+            {
+                Success = false,
+                Message = "Invalid or expired reset code."
+            };
+        }
+
+        if (passwordReset.AttemptCount >= MaxPasswordResetAttempts)
+        {
+            passwordReset.IsUsed = true;
+            passwordReset.UsedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync(ct);
+
+            return new ForgotPasswordResponse
+            {
+                Success = false,
+                Message = "Invalid or expired reset code."
+            };
+        }
+
+        if (!_passwordHasher.Verify(request.ResetCode, passwordReset.ResetCode))
+        {
+            passwordReset.AttemptCount++;
+
+            if (passwordReset.AttemptCount >= MaxPasswordResetAttempts)
+            {
+                passwordReset.IsUsed = true;
+                passwordReset.UsedAt = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync(ct);
+
             return new ForgotPasswordResponse
             {
                 Success = false,
@@ -342,8 +419,9 @@ public class UserService : BaseCRUDService<UserResponse, UserSearchObject, User,
 
     private string GenerateResetCode()
     {
-        var random = new Random();
-        return random.Next(100000, 999999).ToString(); 
+        return RandomNumberGenerator
+            .GetInt32(100000, 1000000)
+            .ToString();
     }
 
     public async Task<bool> IsTokenRevokedAsync(string jti, CancellationToken ct = default)

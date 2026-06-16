@@ -320,7 +320,8 @@ new PaymentStatus { Id = (int)PaymentStatusEnum.Authorized, Name = "Authorized" 
                 PricePerHour = 35,
                 Capacity = 30,
                 FacilityId = mepasMall.Id,
-                SpaceTypeId = conferenceRoom.Id
+                SpaceTypeId = conferenceRoom.Id,
+                IsActive = true
             };
 
             var coworkingHub = new Space
@@ -330,7 +331,8 @@ new PaymentStatus { Id = (int)PaymentStatusEnum.Authorized, Name = "Authorized" 
                 PricePerHour = 12,
                 Capacity = 20,
                 FacilityId = intera.Id,
-                SpaceTypeId = coworkingSpace.Id
+                SpaceTypeId = coworkingSpace.Id,
+                IsActive = true
             };
 
             var interaILab = new Space
@@ -340,7 +342,8 @@ new PaymentStatus { Id = (int)PaymentStatusEnum.Authorized, Name = "Authorized" 
                 PricePerHour = 18,
                 Capacity = 15,
                 FacilityId = intera.Id,
-                SpaceTypeId = lab.Id
+                SpaceTypeId = lab.Id,
+                IsActive = true
             };
 
             var interaConferenceRoom = new Space
@@ -350,7 +353,8 @@ new PaymentStatus { Id = (int)PaymentStatusEnum.Authorized, Name = "Authorized" 
                 PricePerHour = 25,
                 Capacity = 28,
                 FacilityId = intera.Id,
-                SpaceTypeId = conferenceRoom.Id
+                SpaceTypeId = conferenceRoom.Id,
+                IsActive = true
             };
 
             var interaItClassroom = new Space
@@ -360,7 +364,8 @@ new PaymentStatus { Id = (int)PaymentStatusEnum.Authorized, Name = "Authorized" 
                 PricePerHour = 22,
                 Capacity = 24,
                 FacilityId = intera.Id,
-                SpaceTypeId = classroom.Id
+                SpaceTypeId = classroom.Id,
+                IsActive = true
             };
 
             var oldTownNest = new Space
@@ -370,7 +375,8 @@ new PaymentStatus { Id = (int)PaymentStatusEnum.Authorized, Name = "Authorized" 
                 PricePerHour = 16,
                 Capacity = 6,
                 FacilityId = oldTown.Id,
-                SpaceTypeId = privateOffice.Id
+                SpaceTypeId = privateOffice.Id,
+                IsActive = true
             };
 
             context.Spaces.AddRange(

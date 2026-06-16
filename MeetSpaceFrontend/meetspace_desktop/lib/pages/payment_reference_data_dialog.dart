@@ -8,6 +8,8 @@ import '../widgets/admin_styles.dart';
 import '../widgets/payment_statuses_section.dart';
 import '../widgets/payment_methods_section.dart';
 import '../widgets/confirm_delete_dialog.dart';
+import '../models/notification_type.dart';
+import '../widgets/notification_types_section.dart';
 
 class PaymentReferenceDataDialog
     extends StatefulWidget {
@@ -59,12 +61,25 @@ class _PaymentReferenceDataDialogState
   int _paymentMethodTotalPages =
       1;
 
+  List<NotificationType> _notificationTypes = [];
+
+bool _isLoadingNotificationTypes = false;
+
+String _notificationTypeSearch = "";
+
+int _notificationTypePage = 0;
+
+final int _notificationTypePageSize = 4;
+
+int _notificationTypeTotalPages = 1;
+
   @override
   void initState() {
     super.initState();
 
     _loadPaymentStatuses();
     _loadPaymentMethods();
+    _loadNotificationTypes();
   }
 
   String _selected =
@@ -126,7 +141,7 @@ class _PaymentReferenceDataDialogState
     children: [
       const Expanded(
         child: Text(
-          "PAYMENT DATA",
+          "SYSTEM DATA",
           style: TextStyle(
             color: Colors.white70,
             letterSpacing: 2,
@@ -153,6 +168,10 @@ const SizedBox(
                   _buildMenuItem(
                     "Payment methods",
                   ),
+
+                  _buildMenuItem(
+  "Notification types",
+),
 
                   const Spacer(),
 
@@ -429,6 +448,72 @@ const SizedBox(
             });
 
             _loadPaymentMethods();
+          },
+        );
+
+              case "Notification types":
+
+        return NotificationTypesSection(
+          notificationTypes: _notificationTypes,
+
+          isLoading: _isLoadingNotificationTypes,
+
+          currentPage: _notificationTypePage,
+
+          totalPages: _notificationTypeTotalPages,
+
+          onSearch: (value) {
+            setState(() {
+              _notificationTypeSearch = value;
+              _notificationTypePage = 0;
+            });
+
+            _loadNotificationTypes();
+          },
+
+          onAdd: () async {
+            await _showNotificationTypeDialog();
+          },
+
+          onEdit: (type) async {
+            await _showNotificationTypeDialog(
+              type: type,
+            );
+          },
+
+          onDelete: (type) async {
+            await _deleteNotificationType(
+              type,
+            );
+          },
+
+          onPrevious: _notificationTypePage > 0
+              ? () {
+                  setState(() {
+                    _notificationTypePage--;
+                  });
+
+                  _loadNotificationTypes();
+                }
+              : null,
+
+          onNext: _notificationTypePage <
+                  _notificationTypeTotalPages - 1
+              ? () {
+                  setState(() {
+                    _notificationTypePage++;
+                  });
+
+                  _loadNotificationTypes();
+                }
+              : null,
+
+          onPageSelected: (page) {
+            setState(() {
+              _notificationTypePage = page;
+            });
+
+            _loadNotificationTypes();
           },
         );
 
@@ -807,6 +892,133 @@ const SizedBox(
     }
   }
 
+    Future<void> _showNotificationTypeDialog({
+    NotificationType? type,
+  }) async {
+    final formKey = GlobalKey<FormState>();
+
+    final controller = TextEditingController(
+      text: type?.name ?? "",
+    );
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          backgroundColor: AdminStyles.cardColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  type == null
+                      ? "Add notification type"
+                      : "Edit notification type",
+                  style: const TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close, color: Colors.white70),
+                tooltip: "Close",
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: 400,
+            child: Form(
+              key: formKey,
+              child: TextFormField(
+                controller: controller,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: (value) => Validators.required(
+                  value,
+                  "Notification type name",
+                ),
+                style: const TextStyle(
+                  color: Colors.white,
+                ),
+                decoration: AdminStyles.inputDecoration(
+                  "Notification type name",
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              style: AdminStyles.cancelButton,
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) {
+                  return;
+                }
+
+                try {
+                  final auth = context.read<AuthProvider>();
+
+                  final body = {
+                    "name": controller.text,
+                  };
+
+                  if (type == null) {
+                    await auth.notificationTypeService.insert(body);
+                  } else {
+                    await auth.notificationTypeService.update(
+                      type.id,
+                      body,
+                    );
+                  }
+
+                  Navigator.pop(
+                    context,
+                    true,
+                  );
+                } catch (_) {
+                  if (!mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Action failed"),
+                    ),
+                  );
+                }
+              },
+              style: AdminStyles.primaryButton,
+              child: const Text("Save"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == true) {
+      _notificationTypePage = 0;
+      await _loadNotificationTypes();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              type == null
+                  ? "Notification type added successfully"
+                  : "Notification type updated successfully",
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void>
       _deletePaymentStatus(
     PaymentStatus status,
@@ -863,11 +1075,57 @@ const SizedBox(
             .showSnackBar(
           const SnackBar(
             content: Text(
-              "Cannot delete payment status because it is in use.",
+              "Cannot delete payment status because it is required by the system or already in use.",
             ),
 
             backgroundColor:
                 Colors.orange,
+          ),
+        );
+      }
+    }
+  }
+
+    Future<void> _deleteNotificationType(
+    NotificationType type,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) {
+        return ConfirmDeleteDialog(
+          title: "Delete notification type",
+          message: "Are you sure you want to delete ${type.name}?",
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      try {
+        final auth = context.read<AuthProvider>();
+
+        await auth.notificationTypeService.delete(
+          type.id,
+        );
+
+        await _loadNotificationTypes();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "Notification type deleted successfully",
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Cannot delete notification type because it is required by the system or already in use.",
+            ),
+            backgroundColor: Colors.orange,
           ),
         );
       }
@@ -930,7 +1188,7 @@ const SizedBox(
             .showSnackBar(
           const SnackBar(
             content: Text(
-              "Cannot delete payment method because it is in use.",
+              "Cannot delete payment method because it is required by the system or already in use.",
             ),
 
             backgroundColor:
@@ -1061,6 +1319,42 @@ desc: true,
       setState(() {
         _isLoadingMethods =
             false;
+      });
+    }
+  }
+
+    Future<void> _loadNotificationTypes() async {
+    try {
+      setState(() {
+        _isLoadingNotificationTypes = true;
+      });
+
+      final auth = context.read<AuthProvider>();
+
+      final result = await auth.notificationTypeService.getPaged(
+        page: _notificationTypePage,
+        pageSize: _notificationTypePageSize,
+        name: _notificationTypeSearch,
+        sortBy: "Id",
+        desc: true,
+      );
+
+      final items = result["items"] as List;
+
+      setState(() {
+        _notificationTypes = items
+            .map(
+              (e) => NotificationType.fromJson(e),
+            )
+            .toList();
+
+        _notificationTypeTotalPages = result["totalPages"] ?? 1;
+
+        _isLoadingNotificationTypes = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingNotificationTypes = false;
       });
     }
   }

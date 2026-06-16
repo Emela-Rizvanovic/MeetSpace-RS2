@@ -106,6 +106,7 @@ namespace MeetSpace.Services.Services
             await _context.SaveChangesAsync();
 
             var spaces = await _context.Spaces
+                .Where(s => s.IsActive)
     .Where(s => recommendedIds.Contains(s.Id))
     .Include(s => s.Images)
     .Include(s => s.Facility)
@@ -173,10 +174,11 @@ namespace MeetSpace.Services.Services
         private async Task<List<SpaceResponse>> GetTopRatedSpaces(int count)
         {
             var spaces = await _context.Spaces
-                .Include(s => s.Reviews)
-                .Include(s => s.Images)
-                .Include(s => s.Facility)
-                .ToListAsync();
+    .Where(s => s.IsActive)
+    .Include(s => s.Reviews)
+    .Include(s => s.Images)
+    .Include(s => s.Facility)
+    .ToListAsync();
 
             var ordered = spaces
                 .OrderByDescending(s => s.Reviews.Any() ? s.Reviews.Average(r => r.Rating) : 0)
