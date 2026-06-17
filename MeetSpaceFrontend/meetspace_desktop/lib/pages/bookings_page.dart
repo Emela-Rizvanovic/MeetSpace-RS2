@@ -5,6 +5,7 @@ import '../models/booking.dart';
 import 'booking_status_dialog.dart';
 import 'booking_history_page.dart';
 import '../constants/app_constants.dart';
+import 'qr_ticket_validation_dialog.dart';
 
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
@@ -88,6 +89,34 @@ void initState() {
     ),
 
     const Spacer(),
+
+    OutlinedButton.icon(
+  onPressed: () async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const QrTicketValidationDialog(),
+    );
+  },
+  icon: const Icon(Icons.qr_code_scanner),
+  label: const Text("Validate QR ticket"),
+  style: OutlinedButton.styleFrom(
+    foregroundColor: Colors.white,
+    side: const BorderSide(
+      color: Colors.white24,
+    ),
+    padding: const EdgeInsets.symmetric(
+      horizontal: 20,
+      vertical: 16,
+    ),
+    minimumSize: const Size(0, 52),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(14),
+    ),
+  ),
+),
+
+const SizedBox(width: 16),
 
     OutlinedButton.icon(
      onPressed: () {

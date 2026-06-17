@@ -3,16 +3,25 @@ import 'package:signalr_netcore/signalr_client.dart';
 class SignalRService {
   HubConnection? _connection;
 
-  Future<void> connect(String token, Function(Map<String, dynamic>) onMessage) async {
-    _connection = HubConnectionBuilder()
-        .withUrl(
-          "http://10.0.2.2:5245/notificationHub", 
-          options: HttpConnectionOptions(
-            accessTokenFactory: () async => token,
-          ),
-        )
-        .withAutomaticReconnect()
-        .build();
+ Future<void> connect({
+  required String token,
+  required String apiBaseUrl,
+  required Function(Map<String, dynamic>) onMessage,
+}) async {
+  final hubUrl = apiBaseUrl.replaceFirst(
+    RegExp(r'/api/?$'),
+    '/notificationHub',
+  );
+
+  _connection = HubConnectionBuilder()
+      .withUrl(
+        hubUrl,
+        options: HttpConnectionOptions(
+          accessTokenFactory: () async => token,
+        ),
+      )
+      .withAutomaticReconnect()
+      .build();
 
    _connection!.on("ReceiveNotification", (arguments) {
   if (arguments != null && arguments.isNotEmpty) {

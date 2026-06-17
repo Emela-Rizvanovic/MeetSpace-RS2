@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../models/booking.dart';
 import '../providers/auth_provider.dart';
 import '../constants/app_constants.dart';
 import 'menu_page.dart';
 import 'edit_profile_page.dart';
-
-
+import 'dart:convert';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class MyProfilePage extends StatefulWidget {
   const MyProfilePage({super.key});
@@ -629,6 +628,9 @@ const _BookingCardFromApi({
         booking.bookingStatusId == BookingStatusIds.approved) &&
     booking.startTime.isAfter(DateTime.now());
 
+    final canShowQr =
+    booking.bookingStatusId == BookingStatusIds.approved && booking.isPaid;
+
     final timeLine =
         "${_fmtDateTimeLocal(booking.startTime)} → ${_fmtDateTimeLocal(booking.endTime)}";
 
@@ -770,6 +772,36 @@ const _BookingCardFromApi({
     ),
   ),
 ],
+if (canShowQr) ...[
+  const SizedBox(height: 12),
+  SizedBox(
+    width: double.infinity,
+    child: ElevatedButton.icon(
+      onPressed: () {
+        showDialog(
+          context: context,
+          builder: (_) => _BookingQrDialog(booking: booking),
+        );
+      },
+      icon: const Icon(Icons.qr_code),
+      label: const Text(
+        "Show QR ticket",
+        style: TextStyle(
+          fontFamily: "Poppins",
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFFA56E09),
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+    ),
+  ),
+],
 if (canCancel) ...[
   const SizedBox(height: 12),
   SizedBox(
@@ -804,6 +836,107 @@ if (canCancel) ...[
     final local = dt.toLocal();
     String two(int n) => n.toString().padLeft(2, '0');
     return "${two(local.day)}.${two(local.month)}.${local.year} ${two(local.hour)}:${two(local.minute)}";
+  }
+}
+
+class _BookingQrDialog extends StatelessWidget {
+  final BookingResponse booking;
+
+  const _BookingQrDialog({required this.booking});
+
+  @override
+  Widget build(BuildContext context) {
+    final qrData = jsonEncode({
+      "bookingId": booking.id,
+    });
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2E2E2E),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black45,
+              blurRadius: 18,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    "QR ticket",
+                    style: TextStyle(
+                      fontFamily: "Poppins",
+                      color: Color(0xFFA56E09),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 24,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close, color: Colors.white70),
+                  tooltip: "Close",
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              booking.spaceName ?? "Booked space",
+              style: const TextStyle(
+                fontFamily: "Poppins",
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "${_BookingCardFromApi._fmtDateTimeLocal(booking.startTime)} - ${_BookingCardFromApi._fmtDateTimeLocal(booking.endTime)}",
+              style: const TextStyle(
+                fontFamily: "Poppins",
+                color: Colors.white70,
+                fontWeight: FontWeight.w300,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(18),
+                color: Colors.white,
+                child: QrImageView(
+                  data: qrData,
+                  size: 260,
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            const Text(
+              "Show this QR ticket to the administrator for reservation validation.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: "Poppins",
+                color: Colors.white70,
+                fontWeight: FontWeight.w300,
+                fontSize: 13,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

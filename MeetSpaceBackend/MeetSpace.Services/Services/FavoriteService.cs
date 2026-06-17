@@ -92,11 +92,17 @@ namespace MeetSpace.Services.Services
                         }).ToList(),
 
                     Amenities = f.Space.SpaceAmenities
-                        .Select(a => new AmenityResponse
-                        {
-                            Id = a.SpaceId,
-                            Name = a.Amenity.Name,
-                        }).ToList()
+    .Where(a => a.Amenity != null)
+    .Select(a => new AmenityResponse
+    {
+        Id = a.Amenity.Id,
+        Name = a.Amenity.Name,
+        Description = a.Amenity.Description,
+        Price = a.Amenity.Price,
+        AmenityCategoryId = a.Amenity.AmenityCategoryId,
+        CreatedAt = a.Amenity.CreatedAt,
+        UpdatedAt = a.Amenity.UpdatedAt
+    }).ToList()
                 })
                 .ToListAsync();
         }

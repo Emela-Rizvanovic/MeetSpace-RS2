@@ -253,10 +253,13 @@ final spaceService = auth.spaceService;
                 const SizedBox(height: 12),
 
                 Align(
-                  alignment: Alignment.centerLeft,
-                  child: Wrap(
-                    spacing: 8,
-                    children: _amenities.map((a) {
+  alignment: Alignment.centerLeft,
+  child: Padding(
+    padding: const EdgeInsets.only(top: 4),
+    child: Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: _amenities.map((a) {
                       final id = a['id'];
                       return FilterChip(
                         label: Text(a['name']),
@@ -272,6 +275,7 @@ final spaceService = auth.spaceService;
                         },
                       );
                     }).toList(),
+                  ),
                   ),
                 ),
 
@@ -337,6 +341,7 @@ if (widget.space != null && widget.space!.images.isNotEmpty) ...[
     }).toList(),
   ),
 ],
+const SizedBox(height: 18),
                 GestureDetector(
                   onTap: _pickImages,
                   child: Container(

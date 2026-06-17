@@ -200,14 +200,27 @@ namespace MeetSpace.Services.Services
                 }
             }
 
-            if (request.AmenityIds != null && request.AmenityIds.Count > 0)
+            if (request.ReplaceAmenities || request.AmenityIds != null)
             {
-                var newIdsDistinct = request.AmenityIds.Distinct().ToList();
+                var newIdsDistinct = (request.AmenityIds ?? new List<int>())
+    .Distinct()
+    .ToList();
 
                 var validIds = await _context.Amenities
                     .Where(a => newIdsDistinct.Contains(a.Id))
                     .Select(a => a.Id)
                     .ToListAsync(cancellationToken);
+
+                var invalidIds = newIdsDistinct
+                    .Except(validIds)
+                    .ToList();
+
+                if (invalidIds.Any())
+                {
+                    throw new BusinessException(
+                        $"Invalid amenity IDs: {string.Join(", ", invalidIds)}."
+                    );
+                }
 
                 _context.SpaceAmenities.RemoveRange(entity.SpaceAmenities);
 

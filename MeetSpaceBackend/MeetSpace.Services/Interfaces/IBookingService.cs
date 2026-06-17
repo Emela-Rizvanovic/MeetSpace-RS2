@@ -21,5 +21,6 @@ namespace MeetSpace.Services.Interfaces
     List<BookingAmenityInsertRequest>? amenities,
     CancellationToken ct = default);
         Task SendReminderAsync(int bookingId, CancellationToken ct = default);
+        Task<TicketValidationResponse> ValidateTicketAsync(string qrData, CancellationToken ct = default);
     }
 }

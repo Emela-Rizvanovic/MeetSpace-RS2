@@ -35,6 +35,7 @@ class _HomePageState extends State<HomePage> {
   await context.read<NotificationProvider>().connect(
       token: token,
       userId: auth.user!.id,
+      baseUrl: auth.baseUrl,
       navigatorKey: navigatorKey,
 );
   });
@@ -114,12 +115,14 @@ Consumer<NotificationProvider>(
     await notificationProvider.markAllAsRead(
       token: auth.token!,
       userId: auth.user!.id,
+      baseUrl: auth.baseUrl,
     );
   },
   onMarkAsRead: (notificationId) async {
     await notificationProvider.markAsRead(
       token: auth.token!,
       notificationId: notificationId,
+      baseUrl: auth.baseUrl,
     );
   },
 ),

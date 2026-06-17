@@ -105,6 +105,8 @@ Future<void> updateSpace({
     "Capacity": capacity.toString(),
     "FacilityId": facilityId.toString(),
     "SpaceTypeId": spaceTypeId.toString(),
+    
+    "ReplaceAmenities": "true",
   };
 
   final response = await api.multipartPut(

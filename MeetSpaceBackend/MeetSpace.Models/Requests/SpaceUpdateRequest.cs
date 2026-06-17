@@ -28,5 +28,6 @@ namespace MeetSpace.Models.Requests
         public List<int>? DeleteImageIds { get; set; }
 
         public List<int>? AmenityIds { get; set; }
+        public bool ReplaceAmenities { get; set; }
     }
 }

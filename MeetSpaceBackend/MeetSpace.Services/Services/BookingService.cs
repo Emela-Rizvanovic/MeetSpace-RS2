@@ -18,6 +18,7 @@ using Stripe;
 using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Json;
 
 namespace MeetSpace.Services.Services
 {
@@ -977,6 +978,103 @@ b.BookingStatusId != (int)BookingStatusEnum.Cancelled &&
             await _rabbitMq.PublishAsync(
                 message,
                 "meetspace.booking-reminder");
+        }
+
+        public async Task<TicketValidationResponse> ValidateTicketAsync(string qrData, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(qrData))
+            {
+                return InvalidTicket("QR ticket data is empty.");
+            }
+
+            int bookingId;
+
+            try
+            {
+                using var document = JsonDocument.Parse(qrData);
+
+                if (!document.RootElement.TryGetProperty("bookingId", out var bookingIdElement) ||
+                    !bookingIdElement.TryGetInt32(out bookingId) ||
+                    bookingId <= 0)
+                {
+                    return InvalidTicket("QR ticket does not contain a valid booking id.");
+                }
+            }
+            catch
+            {
+                return InvalidTicket("QR ticket format is invalid.");
+            }
+
+            var booking = await _context.Bookings
+                .Include(b => b.User)
+                .Include(b => b.Space)
+                    .ThenInclude(s => s.Facility)
+                .Include(b => b.BookingStatus)
+                .Include(b => b.PaymentStatus)
+                .FirstOrDefaultAsync(b => b.Id == bookingId, ct);
+
+            if (booking == null)
+            {
+                return InvalidTicket("Booking was not found.");
+            }
+
+            if (booking.BookingStatusId == (int)BookingStatusEnum.Cancelled)
+            {
+                return InvalidTicket("Ticket is not valid because the booking was cancelled.", booking);
+            }
+
+            if (booking.BookingStatusId == (int)BookingStatusEnum.Rejected)
+            {
+                return InvalidTicket("Ticket is not valid because the booking was rejected.", booking);
+            }
+
+            if (booking.BookingStatusId != (int)BookingStatusEnum.Approved)
+            {
+                return InvalidTicket("Ticket is not valid because the booking has not been approved yet.", booking);
+            }
+
+            if (booking.PaymentStatusId != (int)PaymentStatusEnum.Completed)
+            {
+                return InvalidTicket("Ticket is not valid because payment is not completed.", booking);
+            }
+
+            if (booking.EndTime < DateTime.Now)
+            {
+                return InvalidTicket("Ticket is not valid because the booking time has passed.", booking);
+            }
+
+            return new TicketValidationResponse
+            {
+                IsValid = true,
+                Message = "Ticket is valid.",
+                BookingId = booking.Id,
+                Username = booking.User.Username,
+                UserFullName = $"{booking.User.FirstName} {booking.User.LastName}",
+                SpaceName = booking.Space.Name,
+                FacilityAddress = booking.Space.Facility.Address,
+                BookingStatus = booking.BookingStatus.Name,
+                PaymentStatus = booking.PaymentStatus.Name,
+                StartTime = booking.StartTime,
+                EndTime = booking.EndTime
+            };
+        }
+
+        private TicketValidationResponse InvalidTicket(string message, Booking? booking = null)
+        {
+            return new TicketValidationResponse
+            {
+                IsValid = false,
+                Message = message,
+                BookingId = booking?.Id,
+                Username = booking?.User?.Username,
+                UserFullName = booking?.User == null ? null : $"{booking.User.FirstName} {booking.User.LastName}",
+                SpaceName = booking?.Space?.Name,
+                FacilityAddress = booking?.Space?.Facility?.Address,
+                BookingStatus = booking?.BookingStatus?.Name,
+                PaymentStatus = booking?.PaymentStatus?.Name,
+                StartTime = booking?.StartTime,
+                EndTime = booking?.EndTime
+            };
         }
     }
 }

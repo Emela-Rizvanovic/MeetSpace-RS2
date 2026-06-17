@@ -133,4 +133,17 @@ Future<void> sendReminder(int id) async {
   }
 }
 
+Future<Map<String, dynamic>> validateTicket(String qrData) async {
+  final response = await api.post(
+    "Booking/validate-ticket",
+    {"qrData": qrData},
+  );
+
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  }
+
+  throw Exception("Ticket validation failed");
+}
+
 }

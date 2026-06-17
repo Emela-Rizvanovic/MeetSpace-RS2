@@ -51,13 +51,15 @@ class _PayPalWebViewState extends State<PayPalWebView> {
 
     final auth = context.read<AuthProvider>();
 
-  await auth.paymentService.capturePaypalOrder(
+  final captureResult = await auth.paymentService.capturePaypalOrder(
   orderId: widget.orderId,
   spaceId: widget.spaceId,
   startTime: widget.startTime,
   endTime: widget.endTime,
   amenities: widget.amenities,
 );
+
+final bookingId = captureResult["bookingId"] as int;
 
     if (!mounted) return NavigationDecision.prevent;
 
@@ -70,6 +72,7 @@ class _PayPalWebViewState extends State<PayPalWebView> {
       endTime: widget.endTime,
       totalPrice: widget.totalPrice,
       guests: widget.space.capacity,
+      bookingId: bookingId,
     ),
   ),
 );

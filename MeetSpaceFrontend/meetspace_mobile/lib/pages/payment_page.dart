@@ -35,6 +35,8 @@ class _PaymentPageState extends State<PaymentPage> {
 
   bool _loading = false;
 
+  bool _acceptedTerms = false;
+
   String _method = "card"; 
 
 Future<bool> _confirmPayment(String method) async {
@@ -176,13 +178,15 @@ final amount = (intent["amount"] as num).toDouble();
         ),
       );
 
-      await auth.paymentService.confirmPayment(
-        spaceId: widget.space.id,
-        startTime: widget.startTime,
-        endTime: widget.endTime,
-        paymentIntentId: intentId,
-        amenities: amenities,
-      );
+      final confirmResult = await auth.paymentService.confirmPayment(
+  spaceId: widget.space.id,
+  startTime: widget.startTime,
+  endTime: widget.endTime,
+  paymentIntentId: intentId,
+  amenities: amenities,
+);
+
+final bookingId = confirmResult["bookingId"] as int;
 
      if (!mounted) return;
 
@@ -195,6 +199,7 @@ Navigator.pushReplacement(
       endTime: widget.endTime,
       totalPrice: amount,
       guests: widget.space.capacity,
+      bookingId: bookingId,
     ),
   ),
 );
@@ -297,32 +302,86 @@ final amount = (data["amount"] as num).toDouble();
     );
   }
 
-  Widget _button(String text, VoidCallback onPressed) {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: _loading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _method == "paypal"
-              ? const Color(0xFF2E4DF6)
-              : Colors.black,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+Widget _button(String text, VoidCallback onPressed) {
+  final enabled = !_loading && _acceptedTerms;
+
+  return SizedBox(
+    width: double.infinity,
+    height: 50,
+    child: ElevatedButton(
+      onPressed: enabled ? onPressed : null,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: _method == "paypal"
+            ? const Color(0xFF2E4DF6)
+            : Colors.black,
+        disabledBackgroundColor: Colors.black.withOpacity(0.35),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+      child: _loading
+          ? const CircularProgressIndicator(color: Colors.white)
+          : Text(
+              text,
+              style: TextStyle(
+                color: enabled ? Colors.white : Colors.white54,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+    ),
+  );
+}
+
+Widget _termsCheckbox() {
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      Checkbox(
+        value: _acceptedTerms,
+        activeColor: const Color(0xFFA56E09),
+        checkColor: Colors.white,
+        side: const BorderSide(color: Colors.white70),
+        onChanged: _loading
+            ? null
+            : (value) {
+                setState(() {
+                  _acceptedTerms = value ?? false;
+                });
+              },
+      ),
+      Expanded(
+        child: GestureDetector(
+          onTap: _loading
+              ? null
+              : () {
+                  setState(() {
+                    _acceptedTerms = !_acceptedTerms;
+                  });
+                },
+          child: const Text.rich(
+            TextSpan(
+              text: "I accept the ",
+              children: [
+                TextSpan(
+                  text: "Terms and conditions",
+                  style: TextStyle(
+                    decoration: TextDecoration.underline,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              height: 1.3,
+            ),
           ),
         ),
-        child: _loading
-            ? const CircularProgressIndicator(color: Colors.white)
-            : Text(
-                text,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
       ),
-    );
-  }
+    ],
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -442,9 +501,13 @@ const SizedBox(height: 20),
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 8),
 
-                _button("Pay", _pay),
+_termsCheckbox(),
+
+const SizedBox(height: 16),
+
+_button("Pay", _pay),
               ],
 
               if (_method == "paypal") ...[
@@ -455,9 +518,13 @@ const SizedBox(height: 20),
                   style: TextStyle(color: Colors.white70),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
-                _button("Continue with PayPal", _payWithPaypal),
+_termsCheckbox(),
+
+const SizedBox(height: 16),
+
+_button("Continue with PayPal", _payWithPaypal),
               ],
 
               const SizedBox(height: 50),

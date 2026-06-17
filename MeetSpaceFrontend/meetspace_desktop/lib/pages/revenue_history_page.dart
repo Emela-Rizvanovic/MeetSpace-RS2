@@ -8,6 +8,7 @@ import '../services/revenue_service.dart';
 import '../utils/pdf_helper.dart';
 import 'package:open_file/open_file.dart';
 import 'payment_reference_data_dialog.dart';
+import 'package:printing/printing.dart';
 
 class RevenueHistoryPage extends StatefulWidget {
   const RevenueHistoryPage({super.key});
@@ -142,6 +143,27 @@ Future<void> _generatePdf() async {
     const SnackBar(content: Text("Failed to generate PDF")),
   );
 }
+}
+
+Future<void> _printPdf() async {
+  try {
+    final pdf = await PdfHelper.generateRevenuePdf(
+      _data,
+      from: _fromDate,
+      to: _toDate,
+    );
+
+    await Printing.layoutPdf(
+      name: "revenue_report.pdf",
+      onLayout: (_) async => pdf.save(),
+    );
+  } catch (_) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Failed to print PDF")),
+    );
+  }
 }
 
   @override
@@ -328,18 +350,43 @@ _dateButton("To", _toDate, () => _pickDate(false)),
 
 Align(
   alignment: Alignment.centerRight,
-  child: ElevatedButton.icon(
-    onPressed: _generatePdf,
-    icon: const Icon(Icons.picture_as_pdf),
-    label: const Text("Generate PDF"),
-    style: ElevatedButton.styleFrom(
-      backgroundColor: brandOrange,
-      foregroundColor: Colors.black,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
+  child: Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      ElevatedButton.icon(
+        onPressed: _generatePdf,
+        icon: const Icon(Icons.picture_as_pdf),
+        label: const Text("Generate PDF"),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: brandOrange,
+          foregroundColor: Colors.black,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 16,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
       ),
-    ),
+      const SizedBox(width: 12),
+      ElevatedButton.icon(
+        onPressed: _printPdf,
+        icon: const Icon(Icons.print),
+        label: const Text("Print"),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 16,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      ),
+    ],
   ),
 ),
             ],

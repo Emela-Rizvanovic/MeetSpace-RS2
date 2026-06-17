@@ -29,12 +29,13 @@ bool get notificationsEnabled =>
   Future<void> loadNotifications({
     required String token,
     required int userId,
+    required String baseUrl,
   }) async {
     try {
       final api = ApiService(
-        baseUrl: "http://10.0.2.2:5245/api",
-        token: token,
-      );
+  baseUrl: baseUrl,
+  token: token,
+);
 
       final response = await api.get(
         "notifications",
@@ -84,14 +85,15 @@ Future<void> setNotificationsEnabled(bool value) async {
 }
 
   Future<void> markAllAsRead({
-    required String token,
-    required int userId,
-  }) async {
+  required String token,
+  required int userId,
+  required String baseUrl,
+}) async {
     try {
       final api = ApiService(
-        baseUrl: "http://10.0.2.2:5245/api",
-        token: token,
-      );
+  baseUrl: baseUrl,
+  token: token,
+);
 
       await api.put(
         "notifications/mark-all-read",
@@ -111,12 +113,13 @@ Future<void> setNotificationsEnabled(bool value) async {
   Future<void> markAsRead({
   required String token,
   required int notificationId,
+  required String baseUrl,
 }) async {
   try {
     final api = ApiService(
-      baseUrl: "http://10.0.2.2:5245/api",
-      token: token,
-    );
+  baseUrl: baseUrl,
+  token: token,
+);
 
     await api.put(
       "notifications/$notificationId/mark-read",
@@ -141,6 +144,7 @@ Future<void> setNotificationsEnabled(bool value) async {
     required String token,
     required int userId,
     required GlobalKey<NavigatorState> navigatorKey,
+    required String baseUrl,
   }) async {
 
     await loadNotificationPreference();
@@ -152,11 +156,15 @@ if (!_notificationsEnabled) {
     if (_connected) return;
 
     await loadNotifications(
-      token: token,
-      userId: userId,
-    );
+  token: token,
+  userId: userId,
+  baseUrl: baseUrl,
+);
 
-    await _signalR.connect(token, (data) {
+    await _signalR.connect(
+  token: token,
+  apiBaseUrl: baseUrl,
+  onMessage: (data) {
       final context = navigatorKey.currentContext;
 
       if (context == null) return;

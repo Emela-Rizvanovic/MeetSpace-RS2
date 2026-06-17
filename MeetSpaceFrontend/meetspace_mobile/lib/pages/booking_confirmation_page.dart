@@ -9,6 +9,7 @@ class BookingConfirmationPage extends StatelessWidget {
   final DateTime endTime;
   final double totalPrice;
   final int guests;
+  final int bookingId;
 
   const BookingConfirmationPage({
     super.key,
@@ -17,6 +18,7 @@ class BookingConfirmationPage extends StatelessWidget {
     required this.endTime,
     required this.totalPrice,
     required this.guests,
+    required this.bookingId,
   });
 
   static const bg = Color(0xFF3B3B3B);
@@ -30,10 +32,7 @@ class BookingConfirmationPage extends StatelessWidget {
         "${_two(startTime.hour)}:${_two(startTime.minute)} - ${_two(endTime.hour)}:${_two(endTime.minute)}";
 
     final qrData = jsonEncode({
-  "space": space.name,
-  "date": startTime.toIso8601String(),
-  "end": endTime.toIso8601String(),
-  "price": totalPrice,
+  "bookingId": bookingId,
 });
 
     return PopScope(

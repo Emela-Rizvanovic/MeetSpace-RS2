@@ -75,7 +75,7 @@ Future<Map<String, dynamic>> createPaypalOrder({
   throw Exception("Failed to create PayPal order");
 }
 
-Future<void> capturePaypalOrder({
+Future<Map<String, dynamic>> capturePaypalOrder({
   required String orderId,
   required int spaceId,
   required DateTime startTime,
@@ -92,9 +92,11 @@ Future<void> capturePaypalOrder({
 
   final response = await api.post("PayPal/capture", body);
 
-  if (response.statusCode != 200) {
-    throw Exception("PayPal capture failed");
-  }
+  if (response.statusCode == 200) {
+  return jsonDecode(response.body);
+}
+
+throw Exception("PayPal capture failed");
 }
 
 }

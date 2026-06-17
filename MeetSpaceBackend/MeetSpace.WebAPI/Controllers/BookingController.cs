@@ -218,6 +218,16 @@ namespace MeetSpace.WebAPI.Controllers
             );
         }
 
+        [Authorize(Roles = Roles.Admin)]
+        [HttpPost("validate-ticket")]
+        public async Task<ActionResult<TicketValidationResponse>> ValidateTicket(
+    [FromBody] TicketValidationRequest request,
+    CancellationToken ct)
+        {
+            var result = await _bookingService.ValidateTicketAsync(request.QrData, ct);
+            return Ok(result);
+        }
+
 
     }
 }
