@@ -183,10 +183,10 @@ final s = _space ?? widget.space;
         : s.facilityAddress!.trim();
 
     final capacityText =
-        s.capacity > 0 ? 'Up to ${s.capacity} people' : 'Capacity not set';
+        s.capacity > 0 ? 'Up to ${s.capacity} people' : 'Up to 2 people';
 
     final priceText = s.pricePerHour > 0
-        ? 'BAM ${s.pricePerHour.toStringAsFixed(0)}'
+        ? 'BAM ${s.pricePerHour.toStringAsFixed(2).replaceFirst(RegExp(r"\.?0+$"), "")}'
         : 'BAM -';
 
     final description = (s.description).trim().isEmpty

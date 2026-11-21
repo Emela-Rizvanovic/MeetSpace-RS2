@@ -13,6 +13,7 @@ import 'pages/explore_spaces_page.dart';
 import 'pages/about_us_page.dart';
 import 'pages/contact_page.dart';
 import 'pages/settings_page.dart';
+import 'pages/demand_trends_page.dart';
 import 'pages/edit_profile_page.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'providers/notification_provider.dart';
@@ -99,6 +100,7 @@ class MyApp extends StatelessWidget {
         '/about-us': (_) => const AboutUsPage(),
         '/contact': (_) => const ContactPage(),
         '/settings': (_) => const SettingsPage(),
+        '/demand-trends': (_) => const DemandTrendsPage(),
         '/edit-profile': (_) => const EditProfilePage(),
       },
     );

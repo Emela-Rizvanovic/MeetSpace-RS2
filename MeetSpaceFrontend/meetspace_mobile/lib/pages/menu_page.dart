@@ -20,6 +20,10 @@ class MenuPage extends StatelessWidget {
         },
       ),
       _MenuItem(
+        title: 'Demand trends',
+        onTap: () => Navigator.pushNamed(context, '/demand-trends'),
+      ),
+      _MenuItem(
         title: 'Extra services',
          onTap: () {
           Navigator.pushNamed(context, '/extra-services');

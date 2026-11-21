@@ -89,6 +89,16 @@ namespace MeetSpace.Services.Database
                 .Property(s => s.PricePerHour)
                 .HasPrecision(18, 2);
 
+            modelBuilder.Entity<Space>()
+                .HasIndex(s => s.SpaceCode)
+                .IsUnique()
+                .HasFilter("[SpaceCode] IS NOT NULL");
+
+            modelBuilder.Entity<Space>().Property(s => s.SpaceCode).HasMaxLength(40);
+            modelBuilder.Entity<Space>().Property(s => s.PriceBasis).HasMaxLength(20).HasDefaultValue("Simulated");
+            modelBuilder.Entity<Space>().Property(s => s.PriceSource).HasMaxLength(500);
+            modelBuilder.Entity<Space>().Property(s => s.PriceNotes).HasMaxLength(500);
+
             modelBuilder.Entity<Payment>()
                 .HasOne(p => p.User)
                 .WithMany()

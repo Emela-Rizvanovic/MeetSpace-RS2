@@ -1,0 +1,13 @@
+﻿FacilityCode,FacilityName,Address,CityCode,SourceCode,DataOrigin
+FAC-CODEHUB-MOS,Code Hub Mostar,"Kardinala Stepinca bb, zgrada Ledara",CITY-MOS,SRC-MOS-CODEHUB,Javni izvor
+FAC-HOTEL-MEPAS,Hotel Mepas,Kneza Višeslava b.b.,CITY-MOS,SRC-MOS-MEPAS,Javni izvor
+FAC-INTERA,INTERA Tehnološki Park,Bišće polje bb,CITY-MOS,SRC-MOS-INTERA,Javni izvor
+FAC-OLDTOWN-NEST,Old Town Nest,Kapetanovina 1,CITY-MOS,SRC-MOS-OLDTOWN,Javni izvor
+FAC-MOTIFF,Motiff Coworking,Valtera Perića 20,CITY-SAR,SRC-SAR-MOTIFF,Javni izvor
+FAC-SKRIPTA,SKRIPTA IdeaLab,Emerika Bluma 9,CITY-SAR,SRC-SAR-SKRIPTA,Javni izvor
+FAC-TERSHOUSE,tershouse Roof Gardens,Kolodvorska 12,CITY-SAR,SRC-SAR-TERSHOUSE,Javni izvor
+FAC-MIKROHUB,Mikrohub,Alipašina 2,CITY-SAR,SRC-SAR-MIKROHUB,Javni izvor
+FAC-QUOROOM,Quo Room,Bulevar vojvode Stepe Stepanovića 93,CITY-BL,SRC-BL-QUOROOM,Javni izvor
+FAC-SPACEBL,S:PACE Coworking,Bulevar vojvode Stepe Stepanovića 171E,CITY-BL,SRC-BL-SPACE,Javni izvor
+FAC-KODEPUNKT,Kodepunkt,Milana Karanovića 55,CITY-BL,SRC-BL-KODEPUNKT,Javni izvor
+FAC-BIT-TUZLA,BIT Centar – Code Hub Tuzla,Trg slobode 16,CITY-TZ,SRC-TZ-BIT; SRC-TZ-CODEHUB,Zvanični i javni listing

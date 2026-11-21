@@ -639,9 +639,27 @@ namespace MeetSpace.Services.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PriceBasis")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasDefaultValue("Simulated")
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("PriceNotes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<decimal>("PricePerHour")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("PriceSource")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("SpaceCode")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
 
                     b.Property<int>("SpaceTypeId")
                         .HasColumnType("int");
@@ -654,6 +672,10 @@ namespace MeetSpace.Services.Migrations
                     b.HasIndex("FacilityId");
 
                     b.HasIndex("SpaceTypeId");
+
+                    b.HasIndex("SpaceCode")
+                        .IsUnique()
+                        .HasFilter("[SpaceCode] IS NOT NULL");
 
                     b.ToTable("Spaces");
                 });

@@ -36,7 +36,11 @@ class _BookingPageState extends State<BookingPage> {
   bool _loading = true;
   bool _booking = false;
 
-  final List<int> _hoursList =
+  // 16:00 is the closing boundary, so it can be selected as an end time
+  // but never as the start of a new reservation.
+  final List<int> _startHoursList =
+      List.generate(8, (index) => 8 + index);
+  final List<int> _endHoursList =
       List.generate(9, (index) => 8 + index);
 
   @override
@@ -108,6 +112,9 @@ class _BookingPageState extends State<BookingPage> {
   double get _finalTotal =>
       _baseTotal + _amenitiesTotal;
 
+  String _formatBam(double value) =>
+      value.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
+
   Future<void> _book() async {
    if (_startHour == null || _endHour == null) {
   setState(() {
@@ -123,14 +130,12 @@ if (_endHour! <= _startHour!) {
   return;
 }
 
-    for (int h = _startHour!; h < _endHour!; h++) {
-   if (_bookedHours.contains(h)) {
+    if (_rangeHasBookedHours(_startHour!, _endHour!)) {
   setState(() {
     _timeError = "Selected time overlaps with an existing booking.";
   });
   return;
 }
-    }
 
     setState(() {
   _timeError = null;
@@ -162,6 +167,13 @@ if (_endHour! <= _startHour!) {
         ),
       ),
     );
+  }
+
+  bool _rangeHasBookedHours(int startHour, int endHour) {
+    for (var hour = startHour; hour < endHour; hour++) {
+      if (_bookedHours.contains(hour)) return true;
+    }
+    return false;
   }
 
   @override
@@ -216,7 +228,7 @@ if (_endHour! <= _startHour!) {
 const SizedBox(height: 18),
 
                     _inputBox(
-                        "BAM ${widget.space.pricePerHour.toStringAsFixed(0)} per hour – starter"),
+                        "BAM ${_formatBam(widget.space.pricePerHour)} per hour"),
 
                     const SizedBox(height: 14),
 
@@ -248,6 +260,19 @@ const SizedBox(height: 18),
                       ),
                     ),
                     const SizedBox(height: 10),
+
+                    if (_startHour == null)
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 10),
+                        child: Text(
+                          "Select a start time first to see available end times.",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontFamily: "Poppins",
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
 
                     _buildHourSelector(isStart: false),
 
@@ -318,7 +343,7 @@ const SizedBox(height: 18),
                     const SizedBox(height: 12),
 
                     _priceRow(
-                        "BAM ${widget.space.pricePerHour.toStringAsFixed(0)} x $_hours hours",
+                        "BAM ${_formatBam(widget.space.pricePerHour)} x $_hours hours",
                         "BAM ${_baseTotal.toStringAsFixed(2)}"),
 
                     ..._amenities
@@ -378,11 +403,14 @@ const SizedBox(height: 18),
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: _hoursList.map((hour) {
+      children: (isStart ? _startHoursList : _endHoursList).map((hour) {
         final isSelected =
             isStart ? _startHour == hour : _endHour == hour;
-        final isBooked =
-            _bookedHours.contains(hour);
+        final isBooked = isStart
+            ? _bookedHours.contains(hour)
+            : _startHour == null ||
+                (hour > _startHour! &&
+                    _rangeHasBookedHours(_startHour!, hour));
         final isInvalidEnd = !isStart &&
             _startHour != null &&
             hour <= _startHour!;
@@ -405,8 +433,8 @@ final isPastHour =
                     if (isStart) {
                       _startHour = hour;
                       if (_endHour != null &&
-                          _endHour! <=
-                              _startHour!) {
+                          (_endHour! <= hour ||
+                              _rangeHasBookedHours(hour, _endHour!))) {
                         _endHour = null;
                       }
                     } else {

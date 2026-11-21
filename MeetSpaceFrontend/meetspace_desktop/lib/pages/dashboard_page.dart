@@ -5,6 +5,7 @@ import 'amenities_page.dart';
 import 'revenue_page.dart';
 import 'users_page.dart';
 import 'reviews_page.dart';
+import 'analytics_page.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import 'login_page.dart';
@@ -177,6 +178,21 @@ const SizedBox(width: 12),
                 mainAxisSpacing: 25,
                 childAspectRatio: 1.6,
                children: [
+  GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AnalyticsPage()),
+      );
+    },
+    child: const DashboardCard(
+      title: "Space demand analysis",
+      description:
+          "Compare confirmed reservations and reserved hours across spaces, locations and periods.",
+      iconPath: "assets/icons/globe.png",
+    ),
+  ),
+
   GestureDetector(
     onTap: () {
       Navigator.push(

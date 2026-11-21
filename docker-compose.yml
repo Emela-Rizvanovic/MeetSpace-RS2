@@ -45,9 +45,10 @@ services:
       rabbitmq:
         condition: service_healthy
     environment:
-      ASPNETCORE_ENVIRONMENT: "Production"
+      ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: "http://+:8080"
       DB_CONNECTION: "Server=sqlserver,1433;Database=220184;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;"
+      BI_DB_CONNECTION: "Server=sqlserver,1433;Database=MeetSpaceBI;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;"
       JWT_KEY: "${JWT_KEY}"
       JWT_ISSUER: "${JWT_ISSUER}"
       JWT_AUDIENCE: "${JWT_AUDIENCE}"

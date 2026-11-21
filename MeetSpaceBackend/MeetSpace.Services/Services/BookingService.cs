@@ -97,6 +97,8 @@ namespace MeetSpace.Services.Services
     List<BookingAmenityInsertRequest>? amenities,
     CancellationToken ct = default)
         {
+            ValidateHourlyBookingWindow(startTime, endTime);
+
             if (endTime <= startTime)
                 throw new BusinessException("EndTime must be greater than StartTime.");
 
@@ -255,6 +257,8 @@ namespace MeetSpace.Services.Services
     List<BookingAmenityInsertRequest>? amenities,
     CancellationToken ct = default)
         {
+            ValidateHourlyBookingWindow(startTime, endTime);
+
             if (endTime <= startTime)
                 throw new BusinessException("EndTime must be greater than StartTime.");
 
@@ -311,6 +315,19 @@ namespace MeetSpace.Services.Services
             }
 
             return Math.Round(total, 2);
+        }
+
+        private static void ValidateHourlyBookingWindow(DateTime startTime, DateTime endTime)
+        {
+            if (startTime.TimeOfDay.Ticks % TimeSpan.TicksPerHour != 0 ||
+                endTime.TimeOfDay.Ticks % TimeSpan.TicksPerHour != 0)
+                throw new BusinessException("Bookings must start and end on a full hour.");
+
+            if (startTime.Date != endTime.Date)
+                throw new BusinessException("Bookings must start and end on the same day.");
+
+            if (startTime.Hour < 8 || startTime.Hour >= 16 || endTime.Hour > 16)
+                throw new BusinessException("Bookings are available from 08:00 to 16:00.");
         }
 
         public override async Task<BookingResponse> CreateAsync(BookingInsertRequest request, CancellationToken cancellationToken = default)

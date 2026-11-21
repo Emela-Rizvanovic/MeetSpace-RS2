@@ -53,6 +53,7 @@ internal class Program
         builder.Services.AddScoped<IBookingStatusService, BookingStatusService>();
         builder.Services.AddScoped<IRecommendationService, RecommendationService>();
         builder.Services.AddScoped<IRevenueService, RevenueService>();
+        builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
         builder.Services.AddScoped<ICountryService, CountryService>();
         builder.Services.AddScoped<ICityService, CityService>();
         builder.Services.AddScoped<IPaymentMethodService, PaymentMethodService>();

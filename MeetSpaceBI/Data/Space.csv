@@ -1,0 +1,38 @@
+SpaceCode,SpaceName,SpaceTypeCode,FacilityCode,Capacity,MeetSpaceSpaceId,NameBasis,SourceCode
+SP-MOS-CODE-OPEN,Open Space,TYPE-WORK,FAC-CODEHUB-MOS,12,,Opisni naziv usluge; kapacitet nije naveden; kapacitet simuliran za demonstracijsku aplikaciju,SRC-MOS-CODEHUB
+SP-MOS-CODE-WESTEROS,Westeros,TYPE-MEETING,FAC-CODEHUB-MOS,2,,Javno navedeni naziv i kapacitet,SRC-MOS-CODEHUB
+SP-MOS-CODE-HOGWARTS,Hogwarts,TYPE-MEETING,FAC-CODEHUB-MOS,8,,Javno navedeni naziv i kapacitet,SRC-MOS-CODEHUB
+SP-MOS-CODE-MIDDLE-EARTH,Middle-Earth,TYPE-MEETING,FAC-CODEHUB-MOS,10,,Javno navedeni naziv i kapacitet,SRC-MOS-CODEHUB
+SP-MOS-MEPAS-QUEEN,Queen,TYPE-BUSINESS-EVENT,FAC-HOTEL-MEPAS,700,,Javno navedeni naziv i kapacitet,SRC-MOS-MEPAS
+SP-MOS-MEPAS-PRINCESS,Princess,TYPE-TRAINING,FAC-HOTEL-MEPAS,200,,Javno navedeni naziv i kapacitet,SRC-MOS-MEPAS
+SP-MOS-MEPAS-LADY,Lady,TYPE-MEETING,FAC-HOTEL-MEPAS,22,,Javno navedeni naziv i kapacitet,SRC-MOS-MEPAS
+SP-MOS-INTERA-CONF,Konferencijska sala INTERA,TYPE-MEETING,FAC-INTERA,12,,Opisni naziv prema objavljenoj ponudi; kapacitet nije naveden; kapacitet simuliran za demonstracijsku aplikaciju,SRC-MOS-INTERA
+SP-MOS-INTERA-PRES,Prezentacijska sala INTERA,TYPE-TRAINING,FAC-INTERA,18,,Opisni naziv prema objavljenoj ponudi; kapacitet nije naveden; kapacitet simuliran za demonstracijsku aplikaciju,SRC-MOS-INTERA
+SP-MOS-OLDTOWN-COWORK,Coworking prostor,TYPE-WORK,FAC-OLDTOWN-NEST,10,,Objavljeni coworking prostor; kapacitet i zasebno rezervisanje nisu javno navedeni; kapacitet simuliran za demonstracijsku aplikaciju,SRC-MOS-OLDTOWN
+SP-SAR-MOTIFF-COWORK,Coworking prostor – dnevni pristup,TYPE-WORK,FAC-MOTIFF,12,,Opisni naziv prema objavljenom dnevnom pristupu; kapacitet nije naveden; kapacitet simuliran za demonstracijsku aplikaciju,SRC-SAR-MOTIFF
+SP-SAR-MOTIFF-CONF,Conference Room,TYPE-MEETING,FAC-MOTIFF,8,,Javno navedeni kapacitet,SRC-SAR-MOTIFF
+SP-SAR-MOTIFF-EVENT,Event Space,TYPE-BUSINESS-EVENT,FAC-MOTIFF,40,,Javno navedeni kapacitet,SRC-SAR-MOTIFF
+SP-SAR-SKRIPTA-IDEALAB,SKRIPTA IdeaLab,TYPE-BUSINESS-EVENT,FAC-SKRIPTA,30,,Javno navedeni prostor i površina 100 m²; kapacitet nije objavljen; kapacitet simuliran za demonstracijsku aplikaciju,SRC-SAR-SKRIPTA
+SP-SAR-TERSHOUSE-COWORK,Coworking floor,TYPE-WORK,FAC-TERSHOUSE,40,,Javno navedena površina 286 m²; kapacitet nije objavljen; kapacitet simuliran za demonstracijsku aplikaciju,SRC-SAR-TERSHOUSE
+SP-SAR-TERSHOUSE-CONF1,Conference Room 1,TYPE-MEETING,FAC-TERSHOUSE,40,,Jedna od dvije jednake sale; kapacitet do 40,SRC-SAR-TERSHOUSE
+SP-SAR-TERSHOUSE-CONF2,Conference Room 2,TYPE-MEETING,FAC-TERSHOUSE,40,,Jedna od dvije jednake sale; kapacitet do 40,SRC-SAR-TERSHOUSE
+SP-SAR-TERSHOUSE-AMPHI,Outdoor Amphitheater,TYPE-BUSINESS-EVENT,FAC-TERSHOUSE,80,,Javno navedeni prostor; kapacitet nije objavljen; kapacitet simuliran za demonstracijsku aplikaciju,SRC-SAR-TERSHOUSE
+SP-SAR-MIKROHUB-COWORK,Coworking desk,TYPE-WORK,FAC-MIKROHUB,10,,Javno navedeni dnevni pristup; broj mjesta nije naveden; kapacitet simuliran za demonstracijsku aplikaciju,SRC-SAR-MIKROHUB
+SP-SAR-MIKROHUB-MEETING,Meeting room,TYPE-MEETING,FAC-MIKROHUB,8,,Javno navedena mogućnost korištenja; kapacitet nije naveden; kapacitet simuliran za demonstracijsku aplikaciju,SRC-SAR-MIKROHUB
+SP-BL-QUO-OPEN,Open space,TYPE-WORK,FAC-QUOROOM,12,,Javno navedena površina 73 m²; kapacitet nije naveden; kapacitet simuliran za demonstracijsku aplikaciju,SRC-BL-QUOROOM
+SP-BL-QUO-ZOOM,Private Zoom Room,TYPE-MEETING,FAC-QUOROOM,2,,Javno navedena soba; kapacitet nije naveden; kapacitet simuliran za demonstracijsku aplikaciju,SRC-BL-QUOROOM
+SP-BL-QUO-CONF,Sala za sastanke i edukacije,TYPE-TRAINING,FAC-QUOROOM,14,,Kapacitet je izostavljen jer javna stranica navodi 13 i 15 mjesta u različitim odjeljcima; kapacitet simuliran za demonstracijsku aplikaciju,SRC-BL-QUOROOM
+SP-BL-SPACE-WORK,Radni prostor,TYPE-WORK,FAC-SPACEBL,12,,Opisni naziv prema javnoj ponudi; kapacitet nije naveden; kapacitet simuliran za demonstracijsku aplikaciju,SRC-BL-SPACE
+SP-BL-SPACE-CONF,Konferencijska sala,TYPE-MEETING,FAC-SPACEBL,12,,Javno navedena sala; korištenje po dogovoru; kapacitet simuliran za demonstracijsku aplikaciju,SRC-BL-SPACE
+SP-BL-SPACE-SILENT1,Gluha soba 1,TYPE-WORK,FAC-SPACEBL,2,,Jedna od dvije gluhe sobe navedene na stranici; kapacitet simuliran za demonstracijsku aplikaciju,SRC-BL-SPACE
+SP-BL-SPACE-SILENT2,Gluha soba 2,TYPE-WORK,FAC-SPACEBL,2,,Jedna od dvije gluhe sobe navedene na stranici; kapacitet simuliran za demonstracijsku aplikaciju,SRC-BL-SPACE
+SP-BL-KODE-HOTDESK,Hot Desk,TYPE-WORK,FAC-KODEPUNKT,12,,Javno navedeni proizvod/usluga; kapacitet nije naveden; kapacitet simuliran za demonstracijsku aplikaciju,SRC-BL-KODEPUNKT
+SP-BL-KODE-MEET1,Meeting Room 1,TYPE-MEETING,FAC-KODEPUNKT,8,,Lokalni identifikator za jednu od tri sale; službeno pojedinačno ime nije navedeno; kapacitet simuliran za demonstracijsku aplikaciju,SRC-BL-KODEPUNKT
+SP-BL-KODE-MEET2,Meeting Room 2,TYPE-MEETING,FAC-KODEPUNKT,8,,Lokalni identifikator za jednu od tri sale; službeno pojedinačno ime nije navedeno; kapacitet simuliran za demonstracijsku aplikaciju,SRC-BL-KODEPUNKT
+SP-BL-KODE-MEET3,Meeting Room 3,TYPE-MEETING,FAC-KODEPUNKT,8,,Lokalni identifikator za jednu od tri sale; službeno pojedinačno ime nije navedeno; kapacitet simuliran za demonstracijsku aplikaciju,SRC-BL-KODEPUNKT
+SP-BL-KODE-TUTORIAL,Tutorial Room,TYPE-TRAINING,FAC-KODEPUNKT,16,,Javno navedena prostorija za obuku; kapacitet nije naveden; kapacitet simuliran za demonstracijsku aplikaciju,SRC-BL-KODEPUNKT
+SP-BL-KODE-PRIVATE,Private Office,TYPE-WORK,FAC-KODEPUNKT,4,,Javno navedeni kapacitet prostora za četiri osobe,SRC-BL-KODEPUNKT
+SP-TZ-CODE-WORK,Radna sala,TYPE-WORK,FAC-BIT-TUZLA,9,,Naziv i kapacitet prema javnom prostoru/listingu,SRC-TZ-CODEHUB
+SP-TZ-CODE-TRAIN,Trening sala,TYPE-TRAINING,FAC-BIT-TUZLA,12,,Naziv i kapacitet prema javnom prostoru/listingu,SRC-TZ-CODEHUB
+SP-TZ-CODE-MEETING,Sala za sastanke,TYPE-MEETING,FAC-BIT-TUZLA,12,,Naziv i kapacitet prema javnom prostoru/listingu,SRC-TZ-CODEHUB
+SP-TZ-CODE-EVENT,Sala za događaje,TYPE-BUSINESS-EVENT,FAC-BIT-TUZLA,42,,Naziv i kapacitet prema javnom prostoru/listingu,SRC-TZ-CODEHUB

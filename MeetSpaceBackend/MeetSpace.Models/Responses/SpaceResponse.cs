@@ -3,9 +3,12 @@
     public class SpaceResponse
     {
         public int Id { get; set; }
+        public string? SpaceCode { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public decimal PricePerHour { get; set; }
+        public string PriceBasis { get; set; } = "Simulated";
+        public string? PriceNotes { get; set; }
         public int Capacity { get; set; }
         public int FacilityId { get; set; }
         public string? FacilityName { get; set; }

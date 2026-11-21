@@ -127,7 +127,7 @@ cd MeetSpace-RS2
 
 ### 2. Extract Environment Configuration
 
-Locate the protected archive in the repository root:
+For the source repository, locate the protected archive in the repository root:
 
 ```text
 .env-tajne.zip
@@ -140,6 +140,8 @@ Extract its content into the same root folder. The extracted file must be:
 ```
 
 The archive password is provided separately through DLWMS.
+
+For the practical delivery ZIP, obtain the project's `.env` separately and place it in the extracted project root before starting Docker Compose.
 
 ### 3. Start All Backend Services
 
@@ -159,6 +161,28 @@ After startup, the API automatically:
 3. inserts the initial seed data.
 
 No manual database configuration is required.
+
+### Business Intelligence Database
+
+The BI model is stored separately in `MeetSpaceBI`; it does not replace or modify the operational MeetSpace database. The prepared source data contains 5,000 simulated reservations, of which 4,000 have the Approved status. Reservations use full-hour start and end times from 08:00 to 16:00.
+
+The final Excel workbook is `outputs/meetspace-bi-20261114/MeetSpace_BI_podaci_v6_satni.xlsx`. Its space catalog includes the 22 simulated capacities used by the current application and BI model. The historical half-hour workbook is a local archive. The PowerShell setup script executes the prepared SQL load in `MeetSpaceBI/Sql`. The matching CSV files in `MeetSpaceBI/Data` are editable source data for review and regeneration.
+
+After starting Docker Compose, open PowerShell in the repository root and run this single command:
+
+```powershell
+.\MeetSpaceBI\Sql\setup_bi.ps1
+```
+
+The script uses the running SQL Server container and the existing `.env` credentials. On a new empty BI database, it creates the database and staging tables, loads the prepared data, builds the dimensional model and synchronizes space capacities. If the expected model is already present (4 cities, 12 facilities, 4 space types, 37 spaces, 19 sources, 5,000 reservations with 4,000 Approved, 400 Pending, 300 Rejected and 300 Cancelled, 365 dates, 24 hours, 4 booking statuses and 12,145 hourly fact rows), it synchronizes only the 22 simulated capacity values in the BI catalog; reservation and hourly fact rows are left unchanged. The state check also validates the reservation intervals, the 12,145 total hours and 9,704 Approved hours, capacities, status flags, calendar range and staging-to-dimension space mapping. If it finds an incomplete or unexpected state, it stops without deleting or reloading data.
+
+The operational app catalog and BI space catalog contain the same 37 capacity values. Where no public capacity was available, the value is simulated for the application and marked as such in the BI source data. Run `MeetSpaceBI\Sql\06_sync_space_capacities.sql` only through `setup_bi.ps1`; it validates the complete BI model before updating metadata and does not touch the operational MeetSpace database.
+
+Open `MeetSpaceBI/PowerBI/MeetSpace_BI.pbix` in Power BI Desktop. For a refresh, use the SQL Server instance in the connection settings (`localhost,14330` for the Docker setup) and the `MeetSpaceBI` database. Supply the local SQL credentials if prompted. With 2025 selected and no other filters, expect 4,000 approved reservations and 9,704 reserved hours. See [BI verification and demonstration](MeetSpaceBI/Verification.md) for sample periods and instructions for the application checks.
+
+Do not use `docker compose down -v` to refresh the BI model: that removes the Docker database volumes, including the operational MeetSpace database. The normal BI setup command never removes or recreates volumes.
+
+`MeetSpaceBI\Sql\04_align_reservation_hours.sql` is a legacy one-time repair for an earlier model built from half-hour source times. It expects 13,015 fact rows and is not part of a new setup. `MeetSpaceBI\Sql\05_restore_original_reservation_hours.sql` is its rollback and restores those earlier half-hour times. Do not run either script as part of the current setup. The current CSV and staging-load SQL already contain the aligned full-hour data.
 
 ### 4. Stop Backend Services
 

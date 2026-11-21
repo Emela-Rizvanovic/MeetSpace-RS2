@@ -293,12 +293,21 @@ final amount = (data["amount"] as num).toDouble();
 
   Widget _icon(String path) {
     return Container(
-      padding: const EdgeInsets.all(6),
+      width: 40,
+      height: 30,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(6),
       ),
-      child: Image.asset(path, height: 18),
+      child: Padding(
+        padding: const EdgeInsets.all(5),
+        child: Image.asset(
+          path,
+          width: 30,
+          height: 20,
+          fit: BoxFit.contain,
+        ),
+      ),
     );
   }
 
@@ -430,9 +439,10 @@ const SizedBox(height: 20),
               GestureDetector(
                 onTap: () => setState(() => _method = "card"),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
+                    Expanded(
+                      child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           _method == "card"
@@ -441,15 +451,22 @@ const SizedBox(height: 20),
                           color: Colors.blue,
                         ),
                         const SizedBox(width: 8),
-                        const Text("Credit/Debit Card",
-                            style: TextStyle(color: Colors.white)),
+                        const Flexible(
+                          child: Text(
+                            "Credit/Debit Card",
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
                       ],
-                    ),
+                    )),
+                    const SizedBox(width: 8),
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        _icon("assets/icons/mastercard.png"),
+                        _icon("assets/icons/Mastercard.png"),
                         const SizedBox(width: 6),
-                        _icon("assets/icons/visa.png"),
+                        _icon("assets/icons/Visa.png"),
                       ],
                     )
                   ],
@@ -460,9 +477,10 @@ const SizedBox(height: 20),
               GestureDetector(
                 onTap: () => setState(() => _method = "paypal"),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
+                    Expanded(
+                      child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           _method == "paypal"
@@ -471,11 +489,17 @@ const SizedBox(height: 20),
                           color: Colors.blue,
                         ),
                         const SizedBox(width: 8),
-                        const Text("PayPal",
-                            style: TextStyle(color: Colors.white)),
+                        const Flexible(
+                          child: Text(
+                            "PayPal",
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
                       ],
-                    ),
-                    _icon("assets/icons/paypal.png"),
+                    )),
+                    const SizedBox(width: 8),
+                    _icon("assets/icons/PayPal.png"),
                   ],
                 ),
               ),

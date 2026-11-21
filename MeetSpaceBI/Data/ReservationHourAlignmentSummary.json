@@ -1,0 +1,17 @@
+{
+  "reservationCount": 5000,
+  "firstStartHour": 8,
+  "lastEndHour": 16,
+  "wholeHourDurations": true,
+  "reservationsKeptOnOriginalStartDate": true,
+  "factRowsExpected": 12145,
+  "durationHoursTotal": 12145,
+  "durationHourCounts": {
+    "1": 783,
+    "2": 2083,
+    "3": 1527,
+    "4": 455,
+    "5": 117,
+    "6": 35
+  }
+}

@@ -3,5 +3,9 @@
 !.env.example
 !.env-tajne.zip
 
+/tmp/
+/outputs/MeetSpace-prakticni-dio.zip
+/outputs/meetspace-bi-20261114/*_LEGACY_*.xlsx
+
 thresholds_new.pnm
 *.pnm

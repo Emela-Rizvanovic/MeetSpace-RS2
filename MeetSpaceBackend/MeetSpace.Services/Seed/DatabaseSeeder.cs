@@ -4,6 +4,7 @@ using MeetSpace.Models.Enums;
 using MeetSpace.Services.Database;
 using MeetSpace.Services.Security;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace MeetSpace.Services.Seed
 {
@@ -15,10 +16,360 @@ namespace MeetSpace.Services.Seed
             CancellationToken ct = default)
         {
             if (await context.Roles.AnyAsync(ct))
+            {
+                await SyncOperationalCatalogAsync(context, ct);
                 return;
+            }
 
             await SeedFixedDataAsync(context, ct);
             await SeedReferenceDataAsync(context, passwordHasher, ct);
+            await SyncOperationalCatalogAsync(context, ct);
+        }
+
+        private static async Task SyncOperationalCatalogAsync(
+            MeetSpaceDbContext context,
+            CancellationToken ct)
+        {
+            var catalogPath = Path.Combine(AppContext.BaseDirectory, "Seed", "operational_catalog.json");
+            if (!File.Exists(catalogPath))
+                throw new FileNotFoundException("Operational space catalog file was not found.", catalogPath);
+
+            var catalog = JsonSerializer.Deserialize<List<OperationalCatalogEntry>>(
+                await File.ReadAllTextAsync(catalogPath, ct),
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                ?? throw new InvalidDataException("Operational space catalog is empty or invalid.");
+
+            if (catalog.Count != 37 || catalog.Select(x => x.SpaceCode).Distinct().Count() != catalog.Count)
+                throw new InvalidDataException("Operational catalog must contain 37 unique space codes.");
+
+            await using var transaction = await context.Database.BeginTransactionAsync(ct);
+
+            var country = await context.Countries.FirstOrDefaultAsync(
+                x => x.Name == "Bosna i Hercegovina" || x.Name == "Bosnia and Herzegovina", ct);
+            if (country == null)
+            {
+                country = new Country { Name = "Bosna i Hercegovina" };
+                context.Countries.Add(country);
+                await context.SaveChangesAsync(ct);
+            }
+
+            var cityNames = catalog.Select(x => x.CityName).Distinct().ToList();
+            var cities = await context.Cities.ToListAsync(ct);
+            foreach (var name in cityNames)
+            {
+                var city = cities.FirstOrDefault(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+                if (city == null)
+                {
+                    city = new City { Name = name, CountryId = country.Id };
+                    context.Cities.Add(city);
+                    cities.Add(city);
+                }
+                else
+                {
+                    city.Name = name;
+                    city.CountryId = country.Id;
+                }
+            }
+            await context.SaveChangesAsync(ct);
+
+            var legacyFacilityAliases = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Hotel Mepas"] = "Mepas Mall",
+                ["INTERA Tehnološki Park"] = "Intera Technology Park",
+                ["Old Town Nest"] = "Old Town Workspace"
+            };
+            var facilities = await context.Facilities.ToListAsync(ct);
+            foreach (var row in catalog.GroupBy(x => x.FacilityName).Select(x => x.First()))
+            {
+                var facility = facilities.FirstOrDefault(x =>
+                    x.Name.Equals(row.FacilityName, StringComparison.OrdinalIgnoreCase));
+                if (facility == null && legacyFacilityAliases.TryGetValue(row.FacilityName, out var legacyName))
+                    facility = facilities.FirstOrDefault(x => x.Name.Equals(legacyName, StringComparison.OrdinalIgnoreCase));
+
+                var city = cities.First(x => x.Name.Equals(row.CityName, StringComparison.OrdinalIgnoreCase));
+                if (facility == null)
+                {
+                    facility = new Facility { Name = row.FacilityName, Address = row.Address, CityId = city.Id };
+                    context.Facilities.Add(facility);
+                    facilities.Add(facility);
+                }
+                else
+                {
+                    facility.Name = row.FacilityName;
+                    facility.Address = row.Address;
+                    facility.CityId = city.Id;
+                    facility.Description = null;
+                    facility.ContactEmail = null;
+                    facility.ContactPhone = null;
+                }
+            }
+            await context.SaveChangesAsync(ct);
+
+            var types = await context.SpaceTypes.ToListAsync(ct);
+            var typeAliases = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Radni prostor"] = "Coworking Space",
+                ["Prostor za sastanke"] = "Conference Room",
+                ["Prostor za edukacije"] = "Classroom",
+                ["Prostor za poslovne događaje"] = "Lab"
+            };
+            var typeIds = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            foreach (var name in catalog.Select(x => x.SpaceTypeName).Distinct())
+            {
+                var type = types.FirstOrDefault(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+                if (type == null && typeAliases.TryGetValue(name, out var alias))
+                {
+                    type = types.FirstOrDefault(x => x.Name.Equals(alias, StringComparison.OrdinalIgnoreCase));
+                    if (type != null) type.Name = name;
+                }
+                if (type == null)
+                {
+                    type = new SpaceType { Name = name };
+                    context.SpaceTypes.Add(type);
+                    types.Add(type);
+                }
+                typeIds[name] = type.Id;
+            }
+            await context.SaveChangesAsync(ct);
+            foreach (var type in types.Where(x => typeIds.ContainsKey(x.Name)))
+                typeIds[type.Name] = type.Id;
+
+            var workTypeId = typeIds["Radni prostor"];
+            var legacyPrivateOffice = types.FirstOrDefault(x => x.Name.Equals("Private Office", StringComparison.OrdinalIgnoreCase));
+            if (legacyPrivateOffice != null)
+            {
+                await context.Spaces.Where(x => x.SpaceTypeId == legacyPrivateOffice.Id)
+                    .ExecuteUpdateAsync(update => update.SetProperty(x => x.SpaceTypeId, workTypeId), ct);
+                context.SpaceTypes.Remove(legacyPrivateOffice);
+                await context.SaveChangesAsync(ct);
+            }
+
+            var facilitiesByName = facilities.ToDictionary(x => x.Name, StringComparer.OrdinalIgnoreCase);
+            var spaces = await context.Spaces.ToListAsync(ct);
+            var spaceByCode = spaces.Where(x => x.SpaceCode != null)
+                .ToDictionary(x => x.SpaceCode!, StringComparer.OrdinalIgnoreCase);
+
+            var now = DateTime.UtcNow;
+            foreach (var legacy in spaces.Where(x => x.SpaceCode == null && x.IsActive))
+            {
+                legacy.IsActive = false;
+                legacy.ArchivedAt ??= now;
+            }
+
+            foreach (var row in catalog)
+            {
+                if (!facilitiesByName.TryGetValue(row.FacilityName, out var facility))
+                    throw new InvalidDataException($"Facility '{row.FacilityName}' is missing from the catalog.");
+
+                if (!typeIds.TryGetValue(row.SpaceTypeName, out var typeId))
+                    throw new InvalidDataException($"Space type '{row.SpaceTypeName}' is missing from the catalog.");
+
+                if (!spaceByCode.TryGetValue(row.SpaceCode, out var space))
+                {
+                    space = new Space { SpaceCode = row.SpaceCode, CreatedAt = now };
+                    context.Spaces.Add(space);
+                    spaceByCode.Add(row.SpaceCode, space);
+                    spaces.Add(space);
+                }
+
+                space.Name = row.SpaceName;
+                space.Description = BuildOperationalSpaceDescription(row.SpaceName, row.SpaceTypeName);
+                space.PricePerHour = row.PricePerHour;
+                space.PriceBasis = row.PriceBasis;
+                space.PriceSource = row.PriceSource;
+                space.PriceNotes = row.PriceNotes;
+                space.Capacity = row.Capacity;
+                space.FacilityId = facility.Id;
+                space.SpaceTypeId = typeId;
+                space.IsActive = true;
+                space.ArchivedAt = null;
+                space.UpdatedAt = now;
+            }
+
+            await context.SaveChangesAsync(ct);
+            await SeedOperationalSpaceDetailsAsync(
+                context,
+                spaces.Where(x => x.SpaceCode != null && x.IsActive).ToList(),
+                ct);
+            await transaction.CommitAsync(ct);
+        }
+
+        private static string BuildOperationalSpaceDescription(string name, string typeName) => typeName switch
+        {
+            "Radni prostor" => $"{name} is a comfortable workspace for focused work, independent professionals and everyday productivity.",
+            "Prostor za sastanke" => $"{name} is a private meeting space suited to team discussions, client meetings and focused collaboration.",
+            "Prostor za edukacije" => $"{name} is arranged for training sessions, workshops and collaborative learning.",
+            "Prostor za poslovne događaje" => $"{name} is a flexible venue for presentations, workshops and business gatherings.",
+            _ => $"{name} is a welcoming space for work and collaboration."
+        };
+
+        private static async Task SeedOperationalSpaceDetailsAsync(
+            MeetSpaceDbContext context,
+            List<Space> spaces,
+            CancellationToken ct)
+        {
+            var categoryNames = new[] { "Equipment", "Food and Drinks", "Services" };
+            var categories = await context.AmenityCategories.ToListAsync(ct);
+            foreach (var name in categoryNames)
+            {
+                if (categories.Any(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
+                    continue;
+
+                var category = new AmenityCategory { Name = name };
+                context.AmenityCategories.Add(category);
+                categories.Add(category);
+            }
+            await context.SaveChangesAsync(ct);
+
+            var categoryIds = categories.ToDictionary(x => x.Name, x => x.Id, StringComparer.OrdinalIgnoreCase);
+            var amenitySpecs = new[]
+            {
+                (Name: "Projector", Description: "HD projector for presentations and workshops.", Price: 10m, Category: "Equipment"),
+                (Name: "Whiteboard", Description: "Whiteboard with markers.", Price: 5m, Category: "Equipment"),
+                (Name: "Sound System", Description: "Audio setup for meetings and events.", Price: 20m, Category: "Equipment"),
+                (Name: "Coffee", Description: "Coffee service for participants.", Price: 3m, Category: "Food and Drinks"),
+                (Name: "Catering", Description: "Light catering for meetings and events.", Price: 15m, Category: "Food and Drinks"),
+                (Name: "Technical Support", Description: "On-site technical assistance.", Price: 25m, Category: "Services"),
+                (Name: "Parking", Description: "Reserved parking space.", Price: 5m, Category: "Services")
+            };
+            var amenities = await context.Amenities.ToListAsync(ct);
+            foreach (var spec in amenitySpecs)
+            {
+                if (amenities.Any(x => x.Name.Equals(spec.Name, StringComparison.OrdinalIgnoreCase)))
+                    continue;
+
+                var amenity = new Amenity
+                {
+                    Name = spec.Name,
+                    Description = spec.Description,
+                    Price = spec.Price,
+                    AmenityCategoryId = categoryIds[spec.Category]
+                };
+                context.Amenities.Add(amenity);
+                amenities.Add(amenity);
+            }
+            await context.SaveChangesAsync(ct);
+
+            var amenityIds = amenities.ToDictionary(x => x.Name, x => x.Id, StringComparer.OrdinalIgnoreCase);
+            var spaceIds = spaces.Select(x => x.Id).ToList();
+            var existingLinks = await context.SpaceAmenities
+                .Where(x => spaceIds.Contains(x.SpaceId))
+                .ToListAsync(ct);
+            var spaceTypeNames = await context.SpaceTypes.ToDictionaryAsync(x => x.Id, x => x.Name, ct);
+
+            var workImages = new[]
+            {
+                "https://meetspaceimages.blob.core.windows.net/space-images/coworkinghub1.png",
+                "https://meetspaceimages.blob.core.windows.net/space-images/coworkinghub2.png",
+                "https://meetspaceimages.blob.core.windows.net/space-images/coworkinghub3.png",
+                "https://meetspaceimages.blob.core.windows.net/space-images/oldtownnest1.png"
+            };
+            var meetingImages = new[]
+            {
+                "https://meetspaceimages.blob.core.windows.net/space-images/mepas1.png",
+                "https://meetspaceimages.blob.core.windows.net/space-images/interaconferenceroom1.png",
+                "https://meetspaceimages.blob.core.windows.net/space-images/interaconferenceroom2.png"
+            };
+            var educationImages = new[]
+            {
+                "https://meetspaceimages.blob.core.windows.net/space-images/itclassroom1.png",
+                "https://meetspaceimages.blob.core.windows.net/space-images/itclassroom2.png",
+                "https://meetspaceimages.blob.core.windows.net/space-images/itclassroom3.png"
+            };
+            var eventImages = new[]
+            {
+                "https://meetspaceimages.blob.core.windows.net/space-images/fablab1.png",
+                "https://meetspaceimages.blob.core.windows.net/space-images/fablab2.png",
+                "https://meetspaceimages.blob.core.windows.net/space-images/mepas2.png"
+            };
+
+            var clients = await context.Users
+                .Where(x => x.IsActive && x.RoleId != 1)
+                .OrderBy(x => x.Id)
+                .ToListAsync(ct);
+            var existingReviewSpaceIds = await context.Reviews
+                .Where(x => spaceIds.Contains(x.SpaceId))
+                .Select(x => x.SpaceId)
+                .Distinct()
+                .ToListAsync(ct);
+            var reviewComments = new[]
+            {
+                "Comfortable, well arranged and a good fit for the session.",
+                "A pleasant space with everything needed for a productive visit.",
+                "Convenient location and a welcoming setup for the whole group.",
+                "The space was clean, practical and easy to use."
+            };
+
+            for (var index = 0; index < spaces.Count; index++)
+            {
+                var space = spaces[index];
+                var typeName = spaceTypeNames[space.SpaceTypeId];
+                var targetAmenities = typeName switch
+                {
+                    "Radni prostor" => new[] { "Coffee", "Parking" },
+                    "Prostor za sastanke" => new[] { "Projector", "Whiteboard", "Coffee" },
+                    "Prostor za edukacije" => new[] { "Projector", "Whiteboard", "Technical Support" },
+                    _ => new[] { "Sound System", "Catering", "Technical Support" }
+                };
+
+                if (!existingLinks.Any(x => x.SpaceId == space.Id))
+                {
+                    foreach (var amenityName in targetAmenities)
+                    {
+                        context.SpaceAmenities.Add(new SpaceAmenity
+                        {
+                            SpaceId = space.Id,
+                            AmenityId = amenityIds[amenityName]
+                        });
+                    }
+                }
+
+                var imageUrls = typeName switch
+                {
+                    "Radni prostor" => workImages,
+                    "Prostor za sastanke" => meetingImages,
+                    "Prostor za edukacije" => educationImages,
+                    _ => eventImages
+                };
+                var existingImageCount = await context.SpaceImages.CountAsync(x => x.SpaceId == space.Id, ct);
+                if (existingImageCount == 0)
+                {
+                    context.SpaceImages.Add(new SpaceImage
+                    {
+                        SpaceId = space.Id,
+                        ImageUrl = imageUrls[index % imageUrls.Length]
+                    });
+                }
+
+                if (!existingReviewSpaceIds.Contains(space.Id) && clients.Count > 0)
+                {
+                    context.Reviews.Add(new Review
+                    {
+                        UserId = clients[index % clients.Count].Id,
+                        SpaceId = space.Id,
+                        Rating = index % 4 == 0 ? 4 : 5,
+                        Comment = reviewComments[index % reviewComments.Length],
+                        CreatedAt = DateTime.UtcNow.AddDays(-index - 1)
+                    });
+                }
+            }
+
+            await context.SaveChangesAsync(ct);
+        }
+
+        private sealed class OperationalCatalogEntry
+        {
+            public string SpaceCode { get; set; } = string.Empty;
+            public string SpaceName { get; set; } = string.Empty;
+            public string SpaceTypeName { get; set; } = string.Empty;
+            public string FacilityName { get; set; } = string.Empty;
+            public string Address { get; set; } = string.Empty;
+            public string CityName { get; set; } = string.Empty;
+            public int Capacity { get; set; }
+            public decimal PricePerHour { get; set; }
+            public string PriceBasis { get; set; } = "Simulated";
+            public string? PriceSource { get; set; }
+            public string? PriceNotes { get; set; }
         }
 
         private static async Task SeedFixedDataAsync(

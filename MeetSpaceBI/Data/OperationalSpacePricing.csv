@@ -1,0 +1,38 @@
+SpaceCode,PricePerHourBAM,PriceBasis,PriceSource,PriceNote
+SP-MOS-CODE-OPEN,15.00,Simulated,,No public hourly price found; demo rate
+SP-MOS-CODE-WESTEROS,15.00,Public,https://code-hub.eu/wp-content/uploads/2025/04/Price-list-2025-Meeting-Rooms_Code-Hub-Mostar.pdf,Published hourly rate
+SP-MOS-CODE-HOGWARTS,25.00,Public,https://code-hub.eu/wp-content/uploads/2025/04/Price-list-2025-Meeting-Rooms_Code-Hub-Mostar.pdf,Published hourly rate
+SP-MOS-CODE-MIDDLE-EARTH,30.00,Public,https://code-hub.eu/wp-content/uploads/2025/04/Price-list-2025-Meeting-Rooms_Code-Hub-Mostar.pdf,Published hourly rate
+SP-MOS-MEPAS-QUEEN,60.00,Simulated,https://mepas-hotel.ba/kongresni-centar/,No public hourly price found; demo rate
+SP-MOS-MEPAS-PRINCESS,45.00,Simulated,https://mepas-hotel.ba/kongresni-centar/,No public hourly price found; demo rate
+SP-MOS-MEPAS-LADY,35.00,Simulated,https://mepas-hotel.ba/kongresni-centar/,No public hourly price found; demo rate
+SP-MOS-INTERA-CONF,30.00,Simulated,https://intera.ba/en/business-incubator/,No public hourly price found; demo rate
+SP-MOS-INTERA-PRES,40.00,Simulated,https://intera.ba/en/business-incubator/,No public hourly price found; demo rate
+SP-MOS-OLDTOWN-COWORK,15.00,Simulated,https://oldtownnest.com/,No public hourly price found; demo rate
+SP-SAR-MOTIFF-COWORK,15.00,Simulated,https://www.coworking.motiff.io/bs/,Public day-rate only; hourly demo rate
+SP-SAR-MOTIFF-CONF,90.00,Public,https://www.coworking.motiff.io/bs/prostor-za-dogadaje-i-sastanke-u-sarajevu-motiff-coworking/,Published first-hour rate; each following hour is published at 40 KM
+SP-SAR-MOTIFF-EVENT,250.00,Public,https://www.coworking.motiff.io/bs/prostor-za-dogadaje-i-sastanke-u-sarajevu-motiff-coworking/,Published first-hour rate; each following hour is published at 100 KM
+SP-SAR-SKRIPTA-IDEALAB,50.00,Simulated,https://www.skripta.ba/prostor,No public hourly price found; demo rate
+SP-SAR-TERSHOUSE-COWORK,15.00,Simulated,https://www.tershouse.ba/roofgardens,No public hourly price found; demo rate
+SP-SAR-TERSHOUSE-CONF1,40.00,Simulated,https://www.tershouse.ba/roofgardens,No public hourly price found; demo rate
+SP-SAR-TERSHOUSE-CONF2,40.00,Simulated,https://www.tershouse.ba/roofgardens,No public hourly price found; demo rate
+SP-SAR-TERSHOUSE-AMPHI,60.00,Simulated,https://www.tershouse.ba/roofgardens,No public hourly price found; demo rate
+SP-SAR-MIKROHUB-COWORK,15.00,Simulated,https://mikrohub.ba/,Public day-rate only; hourly demo rate
+SP-SAR-MIKROHUB-MEETING,25.00,Simulated,https://mikrohub.ba/,No public hourly price found; demo rate
+SP-BL-QUO-OPEN,15.00,Simulated,https://quoroom.co/coworking/,No public hourly price found for open space; demo rate
+SP-BL-QUO-ZOOM,25.00,Simulated,https://quoroom.co/coworking/,No public hourly price found for private zoom room; demo rate
+SP-BL-QUO-CONF,50.00,Public,https://quoroom.co/coworking/,Published meeting-room hourly rate
+SP-BL-SPACE-WORK,15.00,Simulated,https://space-bl.com/cijene/,Public daily/monthly rates only; hourly demo rate
+SP-BL-SPACE-CONF,30.00,Simulated,https://space-bl.com/sadrzaj/,No public hourly price found; demo rate
+SP-BL-SPACE-SILENT1,10.00,Simulated,https://space-bl.com/sadrzaj/,No public hourly price found; demo rate
+SP-BL-SPACE-SILENT2,10.00,Simulated,https://space-bl.com/sadrzaj/,No public hourly price found; demo rate
+SP-BL-KODE-HOTDESK,11.72,Public,https://kodepunkt.com/;https://fined.cbbh.ba/press/edukacija/886,Published EUR 5.99/hour converted at the fixed rate of 1 EUR = 1.95583 BAM
+SP-BL-KODE-MEET1,21.49,Public,https://kodepunkt.com/;https://fined.cbbh.ba/press/edukacija/886,Published EUR 10.99/hour converted at the fixed rate of 1 EUR = 1.95583 BAM
+SP-BL-KODE-MEET2,21.49,Public,https://kodepunkt.com/;https://fined.cbbh.ba/press/edukacija/886,Published EUR 10.99/hour converted at the fixed rate of 1 EUR = 1.95583 BAM
+SP-BL-KODE-MEET3,21.49,Public,https://kodepunkt.com/;https://fined.cbbh.ba/press/edukacija/886,Published EUR 10.99/hour converted at the fixed rate of 1 EUR = 1.95583 BAM
+SP-BL-KODE-TUTORIAL,39.10,Public,https://kodepunkt.com/;https://fined.cbbh.ba/press/edukacija/886,Published EUR 19.99/hour converted at the fixed rate of 1 EUR = 1.95583 BAM
+SP-BL-KODE-PRIVATE,40.00,Simulated,https://kodepunkt.com/,Only monthly private-office price is published; demo hourly rate
+SP-TZ-CODE-WORK,15.00,Simulated,https://www.bitcentar.com/;https://zoyya.com/hr/code-hub-tuzla,No public hourly price found; demo rate
+SP-TZ-CODE-TRAIN,40.00,Simulated,https://www.bitcentar.com/;https://zoyya.com/hr/code-hub-tuzla,No public hourly price found; demo rate
+SP-TZ-CODE-MEETING,30.00,Simulated,https://www.bitcentar.com/;https://zoyya.com/hr/code-hub-tuzla,No public hourly price found; demo rate
+SP-TZ-CODE-EVENT,60.00,Simulated,https://www.bitcentar.com/;https://zoyya.com/hr/code-hub-tuzla,No public hourly price found; demo rate

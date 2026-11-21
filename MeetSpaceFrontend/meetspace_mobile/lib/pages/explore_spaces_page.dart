@@ -76,11 +76,15 @@ Map<String, dynamic> _getSortParams() {
 }
 
   Future<void> _loadAllSpacesForSearch() async {
-  final auth = context.read<AuthProvider>();
-  final data = await auth.getSpaces(); 
-  setState(() {
-    _allSpaces = data;
-  });
+    final auth = context.read<AuthProvider>();
+    final result = await auth.spaceService.getPaged(
+      page: 0,
+      pageSize: 100,
+    );
+    if (!mounted) return;
+    setState(() {
+      _allSpaces = result.items;
+    });
 }
 
 Future<List<SpaceResponse>> _loadSpaces() async {
@@ -128,8 +132,23 @@ return _spaces;
   }
   
   Future<List<SpaceResponse>> _loadRecommended() async {
-  final auth = context.read<AuthProvider>();
-  return auth.recommendationService.getRecommendedSpaces();
+    final auth = context.read<AuthProvider>();
+    try {
+      final recommended = await auth.recommendationService.getRecommendedSpaces();
+      if (recommended.isNotEmpty) return recommended;
+    } catch (_) {
+      // Keep Explore useful when personalized recommendations are unavailable.
+    }
+
+    final spaces = await auth.getSpaces();
+    spaces.sort((a, b) {
+      final ratingOrder = b.averageRating.compareTo(a.averageRating);
+      if (ratingOrder != 0) return ratingOrder;
+      final reviewOrder = b.totalReviews.compareTo(a.totalReviews);
+      if (reviewOrder != 0) return reviewOrder;
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
+    return spaces.take(5).toList();
 }
 
 Widget _buildFilterButton({
@@ -649,7 +668,7 @@ if (_mode == ExploreMode.all) ...[
     try {
       await auth.recommendationService.markClicked(s.id);
     } catch (_) {
-  return;
+      // Recommendation tracking must not block opening the space details.
 }
   }
 
@@ -697,7 +716,7 @@ if (_mode == ExploreMode.all) ...[
   Widget _buildPagination() {
   return Center(
     child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.black.withOpacity(0.2),
         borderRadius: BorderRadius.circular(20),
@@ -718,33 +737,16 @@ if (_mode == ExploreMode.all) ...[
             ),
           ),
 
-          const SizedBox(width: 8),
-
-          for (int i = 0; i < _totalPages; i++)
-            GestureDetector(
-              onTap: () {
-                setState(() => _page = i);
-                _future = _loadSpaces();
-              },
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: _page == i ? brandOrange : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  "${i + 1}",
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: _page == i ? Colors.white : Colors.white70,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+          const SizedBox(width: 14),
+          Text(
+            "${_page + 1} / $_totalPages",
+            style: const TextStyle(
+              fontSize: 13,
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
             ),
-
-          const SizedBox(width: 8),
+          ),
+          const SizedBox(width: 14),
 
           GestureDetector(
             onTap: _page < _totalPages - 1
@@ -808,18 +810,21 @@ class _SpaceCard extends StatelessWidget {
 
   static const Color brandOrange = Color.fromARGB(255, 165, 110, 9);
 
+  static String _formatPrice(double value) =>
+      value.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
+
   @override
   Widget build(BuildContext context) {
 
     final imageUrl = space.firstImageOrEmpty;
     
     final price = space.pricePerHour > 0
-    ? "BAM ${space.pricePerHour.toStringAsFixed(0)}"
+    ? "BAM ${_formatPrice(space.pricePerHour)}"
     : "BAM -";
 
 final capacityText = space.capacity > 0
     ? "Up to ${space.capacity} people"
-    : "Capacity not set";
+    : "Up to 2 people";
 
 final address = (space.facilityAddress ?? '').trim().isEmpty
     ? 'Address not available'
